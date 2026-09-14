@@ -29,6 +29,12 @@ import { templateFor } from '../templates'
 const ICON_BTN =
   'inline-flex cursor-pointer items-center gap-1.25 py-1 text-[9.5px] uppercase tracking-[0.13em]'
 
+/** "4 / 5" -> 0.8, so a hero can be sized by its shape. */
+function ratioOf(aspect: string): number {
+  const [w, h] = aspect.split('/').map((part) => Number(part.trim()))
+  return w && h ? w / h : 1.5
+}
+
 export default function EntityDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
@@ -45,6 +51,10 @@ export default function EntityDetailPage() {
   const e = entity.data
   const template = templateFor(e.type)
   const TypeIcon = template.icon
+  // Portrait-shaped art wants a narrow column, landscape art a wide one. Both
+  // then land around 210-280px tall, so heroes stay a consistent weight on the
+  // page whatever shape the template asks for.
+  const tallHero = ratioOf(template.heroAspect) < 1.2
 
   return (
     <>
@@ -70,25 +80,44 @@ export default function EntityDetailPage() {
           )}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.32 }}
-        >
-          <Portrait entity={e} aspect={template.heroAspect} style={{ maxHeight: 260 }} />
-        </motion.div>
+        {/*
+          One column on a phone, portrait beside the title from md up. On a wide
+          screen a full-width hero is not a hero: capping its height alone left
+          the box 100% wide, which flattened a 4/5 character into a 3:1 strip and
+          let object-cover crop the face out of it. Bounding the *width* instead
+          lets the aspect ratio hold, and the room left over gives the title a
+          column rather than an empty half-line.
+        */}
+        <div className="flex flex-col gap-2.25 md:flex-row md:items-end md:gap-5">
+          <motion.div
+            className={cx('md:shrink-0', tallHero ? 'md:w-56' : 'md:w-80')}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.32 }}
+          >
+            {/* The height cap is a phone concern; in a fixed column it would
+                letterbox all over again. */}
+            <Portrait
+              entity={e}
+              aspect={template.heroAspect}
+              className="max-h-65 md:max-h-none"
+            />
+          </motion.div>
 
-        <div>
-          <h1 className="type-title m-0">{e.name}</h1>
-          {e.summary && <div className="type-meta mt-1">{e.summary}</div>}
-        </div>
+          <div className="flex min-w-0 flex-col gap-2.25 md:flex-1 md:pb-1">
+            <div>
+              <h1 className="type-title m-0">{e.name}</h1>
+              {e.summary && <div className="type-meta mt-1">{e.summary}</div>}
+            </div>
 
-        <div className="flex flex-wrap gap-1.75">
-          <Pill tone="neutral">
-            <TypeIcon aria-hidden />
-            {template.label}
-          </Pill>
-          <KnowledgePill knowledge={e.knowledge} />
+            <div className="flex flex-wrap gap-1.75">
+              <Pill tone="neutral">
+                <TypeIcon aria-hidden />
+                {template.label}
+              </Pill>
+              <KnowledgePill knowledge={e.knowledge} />
+            </div>
+          </div>
         </div>
       </PageHead>
 
@@ -121,7 +150,11 @@ export default function EntityDetailPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.06 }}
           >
-            <Markdown source={e.bodyMd} />
+            {/* A 740px line of 13.5px prose is roughly 110 characters, which is
+                well past where the eye loses its place returning to the left. */}
+            <div className="md:max-w-[72ch]">
+              <Markdown source={e.bodyMd} />
+            </div>
           </motion.div>
         )}
 
@@ -170,9 +203,13 @@ function SpecList({ entity }: { entity: Entity }) {
 
   if (rows.length === 0) return null
 
+  // Two label/value pairs per row on a wide screen — each pair is a few words,
+  // so one per row left most of the panel empty.
   return (
     <motion.dl
-      className={panelClass('m-0 grid grid-cols-[auto_1fr] gap-x-3.5 gap-y-1.5 text-[13.5px]')}
+      className={panelClass(
+        'm-0 grid grid-cols-[auto_1fr] gap-x-3.5 gap-y-1.5 text-[13.5px] md:grid-cols-[auto_1fr_auto_1fr] md:gap-x-6',
+      )}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -180,7 +217,9 @@ function SpecList({ entity }: { entity: Entity }) {
       {rows.map(({ field, value }) => (
         <div key={field.key} className="contents">
           <dt className="type-meta self-center">{field.label}</dt>
-          <dd className="m-0">
+          {/* min-w-0 so a long value wraps inside its 1fr track instead of
+              widening it and pushing the second pair off the panel. */}
+          <dd className="m-0 min-w-0">
             {typeof value === 'boolean' ? (
               value ? (
                 'Yes'
