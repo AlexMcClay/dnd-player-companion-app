@@ -1,0 +1,29 @@
+{
+  "name": "party-codex",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "setup": "npm install && npm run infra:up && npm run db:migrate && npm run db:seed",
+    "dev": "concurrently -n api,web -c magenta,cyan \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm -w @codex/backend run dev",
+    "dev:web": "npm -w @codex/frontend run dev",
+    "build": "npm -w @codex/frontend run build",
+    "typecheck": "npm -w @codex/backend run typecheck && npm -w @codex/frontend run typecheck",
+    "db:migrate": "npm -w @codex/backend run db:migrate",
+    "db:seed": "npm -w @codex/backend run db:seed",
+    "db:reset": "npm -w @codex/backend run db:reset",
+    "db:studio": "npm -w @codex/backend run db:studio",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "infra:nuke": "docker compose down -v"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.7.3"
+  }
+}

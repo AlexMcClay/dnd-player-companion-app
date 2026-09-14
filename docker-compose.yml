@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: codex-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: codex
+      POSTGRES_PASSWORD: codex
+      POSTGRES_DB: codex
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codex -d codex"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    # MinIO publishes to quay.io, not Docker Hub.
+    image: quay.io/minio/minio:latest
+    container_name: codex-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: codexminio
+      MINIO_ROOT_PASSWORD: codexminio123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # One-shot: creates the `assets` bucket and makes it public-read, then exits.
+  minio-init:
+    image: quay.io/minio/mc:latest
+    container_name: codex-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 codexminio codexminio123 &&
+      mc mb --ignore-existing local/assets &&
+      mc anonymous set download local/assets &&
+      echo '>> bucket assets ready (public-read)'
+      "
+
+volumes:
+  pgdata:
+  miniodata:

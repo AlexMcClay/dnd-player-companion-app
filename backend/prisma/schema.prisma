@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// One table for everything the party knows about.
+///
+/// `type` is a plain string ('player' | 'npc' | 'monster' | 'item' | 'recipe',
+/// and whatever you add later) so a new kind of entry is a new form template in
+/// the frontend, not a migration.
+///
+/// `search` is a generated tsvector column. Prisma cannot express generated
+/// columns, so it lives in the migration SQL and is declared Unsupported here.
+/// Full-text queries go through $queryRaw in src/routes/entities.ts.
+model Entity {
+  id        String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type      String
+  name      String
+  summary   String?
+  bodyMd    String?                  @map("body_md")
+  data      Json                     @default("{}")
+  imageKey  String?                  @map("image_key")
+  tags      String[]                 @default([])
+  knowledge String                   @default("unknown")
+  ownerId   String?                  @map("owner_id") @db.Uuid
+  quantity  Int                      @default(1)
+  search    Unsupported("tsvector")?
+  createdAt DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  /// Items point at the player carrying them. Null means unowned / party stash.
+  owner Entity?  @relation("Ownership", fields: [ownerId], references: [id], onDelete: SetNull)
+  owned Entity[] @relation("Ownership")
+
+  @@index([type, knowledge])
+  @@index([ownerId])
+  @@map("entities")
+}

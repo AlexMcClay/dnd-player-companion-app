@@ -1,0 +1,137 @@
+/**
+ * Per-type templates. This is the extensibility point: the database stores
+ * `type` as a plain string and `data` as JSON, so adding "locations" or
+ * "spells" later means adding a template here — no migration, no API change.
+ */
+
+export type FieldKind = 'text' | 'number' | 'boolean' | 'ingredients'
+
+export interface FieldDef {
+  key: string
+  label: string
+  kind: FieldKind
+  placeholder?: string
+}
+
+export interface EntityTemplate {
+  type: string
+  label: string
+  plural: string
+  /** Word shown in an empty image box. */
+  portraitWord: string
+  /** width / height of the hero image on the detail page. */
+  heroAspect: string
+  /** Adds owner + quantity controls to the form and ownership to the detail page. */
+  ownable?: boolean
+  fields: FieldDef[]
+}
+
+export const TEMPLATES: Record<string, EntityTemplate> = {
+  player: {
+    type: 'player',
+    label: 'Player',
+    plural: 'Players',
+    portraitWord: 'Portrait',
+    heroAspect: '4 / 5',
+    fields: [
+      { key: 'role', label: 'Class / role', kind: 'text', placeholder: 'Scout' },
+      { key: 'level', label: 'Level', kind: 'number' },
+      { key: 'pronouns', label: 'Pronouns', kind: 'text', placeholder: 'she/her' },
+    ],
+  },
+  npc: {
+    type: 'npc',
+    label: 'NPC',
+    plural: 'NPCs',
+    portraitWord: 'Portrait',
+    heroAspect: '4 / 3',
+    fields: [
+      { key: 'role', label: 'Role', kind: 'text', placeholder: 'Harbourmaster' },
+      { key: 'location', label: 'Location', kind: 'text', placeholder: 'Ashgate' },
+      { key: 'stance', label: 'Stance', kind: 'text', placeholder: 'Uneasy ally' },
+      { key: 'firstMet', label: 'First met', kind: 'text', placeholder: 'Session 9' },
+    ],
+  },
+  faction: {
+    type: 'faction',
+    label: 'Faction',
+    plural: 'Factions',
+    portraitWord: 'Crest',
+    heroAspect: '1 / 1',
+    fields: [
+      { key: 'kind', label: 'Kind', kind: 'text', placeholder: 'Militant order' },
+      { key: 'reach', label: 'Reach', kind: 'text', placeholder: 'Coastwide' },
+      { key: 'stance', label: 'Stance', kind: 'text', placeholder: 'Hostile' },
+    ],
+  },
+  monster: {
+    type: 'monster',
+    label: 'Monster',
+    plural: 'Bestiary',
+    portraitWord: 'Beast plate',
+    heroAspect: '3 / 2',
+    fields: [
+      { key: 'kind', label: 'Kind', kind: 'text', placeholder: 'Aberration' },
+      { key: 'habitat', label: 'Habitat', kind: 'text', placeholder: 'Marrow shallows' },
+      { key: 'groupSize', label: 'Group size', kind: 'text', placeholder: 'Pack of 3–6' },
+    ],
+  },
+  item: {
+    type: 'item',
+    label: 'Item',
+    plural: 'Items',
+    portraitWord: 'Item art',
+    heroAspect: '3 / 2',
+    ownable: true,
+    fields: [
+      { key: 'effect', label: 'Effect', kind: 'text', placeholder: '2d6 fire in a 10 ft burst' },
+      { key: 'attuned', label: 'Attuned', kind: 'boolean' },
+      { key: 'charges', label: 'Charges', kind: 'text', placeholder: '1 of 3' },
+      { key: 'source', label: 'Source', kind: 'text', placeholder: 'Tidewretch' },
+    ],
+  },
+  recipe: {
+    type: 'recipe',
+    label: 'Recipe',
+    plural: 'Crafting',
+    portraitWord: 'Item art',
+    heroAspect: '3 / 2',
+    fields: [
+      { key: 'ingredients', label: 'Reagents', kind: 'ingredients' },
+      { key: 'output', label: 'Produces', kind: 'text', placeholder: 'Emberdraught' },
+      { key: 'skill', label: 'Skill', kind: 'text', placeholder: 'Alchemy (Intelligence)' },
+      { key: 'dc', label: 'Target', kind: 'text', placeholder: 'DC 14' },
+      { key: 'checks', label: 'Checks', kind: 'text', placeholder: '2 successes' },
+      { key: 'time', label: 'Base time', kind: 'text', placeholder: '6 h per check' },
+    ],
+  },
+}
+
+/** Falls back to a generic template so an unrecognised type still renders. */
+export function templateFor(type: string): EntityTemplate {
+  return (
+    TEMPLATES[type] ?? {
+      type,
+      label: type,
+      plural: type,
+      portraitWord: 'Image',
+      heroAspect: '3 / 2',
+      fields: [],
+    }
+  )
+}
+
+/** Bottom tab bar. Codex folds the lore types into one tab, as in the design. */
+export interface TabDef {
+  path: string
+  label: string
+  types: string[]
+}
+
+export const TABS: TabDef[] = [
+  { path: '/party', label: 'Party', types: ['player', 'npc'] },
+  { path: '/codex', label: 'Codex', types: ['faction', 'monster'] },
+  { path: '/items', label: 'Items', types: ['item'] },
+  { path: '/craft', label: 'Craft', types: ['recipe'] },
+  { path: '/search', label: 'Search', types: [] },
+]

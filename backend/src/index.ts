@@ -1,0 +1,37 @@
+import cors from 'cors'
+import express, { type NextFunction, type Request, type Response } from 'express'
+import { env } from './env.js'
+import { attachDm } from './middleware/dmKey.js'
+import { entitiesRouter } from './routes/entities.js'
+import { uploadsRouter } from './routes/uploads.js'
+
+const app = express()
+
+app.use(cors())
+app.use(express.json({ limit: '1mb' }))
+app.use(attachDm)
+
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, dm: req.isDm })
+})
+
+// Lets the UI confirm a typed passphrase before storing it.
+app.post('/api/dm/verify', (req, res) => {
+  res.status(req.isDm ? 200 : 401).json({ ok: req.isDm })
+})
+
+app.use('/api/entities', entitiesRouter)
+app.use('/api/uploads', uploadsRouter)
+
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Not found' })
+})
+
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  console.error(err)
+  res.status(500).json({ error: 'Internal error' })
+})
+
+app.listen(env.port, () => {
+  console.log(`api listening on http://localhost:${env.port}`)
+})
