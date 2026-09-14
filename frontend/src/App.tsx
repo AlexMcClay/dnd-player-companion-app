@@ -1,6 +1,7 @@
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion'
 import { useEffect } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import IdentityGate from './components/IdentityGate'
 import Layout from './components/Layout'
 import { EASE, pageVariants } from './lib/motion'
 import { useNavDirection } from './lib/useSwipeNav'
@@ -8,7 +9,7 @@ import CodexPage from './pages/CodexPage'
 import CraftPage from './pages/CraftPage'
 import EntityDetailPage from './pages/EntityDetailPage'
 import EntityEditPage from './pages/EntityEditPage'
-import ItemsPage from './pages/ItemsPage'
+import MePage from './pages/MePage'
 import PartyPage from './pages/PartyPage'
 import SearchPage from './pages/SearchPage'
 
@@ -31,7 +32,8 @@ export default function App() {
     // reducedMotion="user" honours the OS setting: transform and layout
     // animation is dropped, opacity fades stay.
     <MotionConfig reducedMotion="user" transition={{ ease: EASE }}>
-      <Layout>
+      <IdentityGate>
+        <Layout>
         {/*
           `custom` on the AnimatePresence is what makes the exit directional.
           Without it the outgoing page animates with the direction from the
@@ -55,8 +57,10 @@ export default function App() {
             <Routes location={location}>
               <Route path="/" element={<Navigate to="/party" replace />} />
               <Route path="/party" element={<PartyPage />} />
+              <Route path="/me" element={<MePage />} />
               <Route path="/codex" element={<CodexPage />} />
-              <Route path="/items" element={<ItemsPage />} />
+              {/* The Items tab folded into Party and Me; keep old links alive. */}
+              <Route path="/items" element={<Navigate to="/party" replace />} />
               <Route path="/craft" element={<CraftPage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/e/:id" element={<EntityDetailPage />} />
@@ -73,7 +77,8 @@ export default function App() {
             </Routes>
           </motion.div>
         </AnimatePresence>
-      </Layout>
+        </Layout>
+      </IdentityGate>
     </MotionConfig>
   )
 }

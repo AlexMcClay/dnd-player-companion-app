@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import type { PresignResponse } from '@codex/shared'
 import { buildObjectKey, presignPut, publicUrlFor } from '../lib/s3.js'
-import { requireDm } from '../middleware/dmKey.js'
+import { requireDm } from '../middleware/identity.js'
 
 export const uploadsRouter = Router()
 

@@ -1,6 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { STASH } from '@codex/shared'
+import { LuVault } from 'react-icons/lu'
 import { api } from '../api/client'
+import AddItemSheet from '../components/AddItemSheet'
+import DmCreateBar from '../components/DmCreateBar'
+import HoldingRow from '../components/HoldingRow'
 import {
   Empty,
   EntityRow,
@@ -10,75 +14,77 @@ import {
   SectionHead,
   StaggerList,
 } from '../components/bits'
-import DmCreateBar from '../components/DmCreateBar'
-import { PillButton } from '../components/ui'
+import { usePlayerId } from '../lib/identity'
 
-const FILTERS = [
-  { key: 'all', label: 'Everyone' },
-  { key: 'player', label: 'Players' },
-  { key: 'npc', label: 'NPCs' },
-] as const
-
+/** The party: who is in it, and what the party owns collectively. */
 export default function PartyPage() {
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]['key']>('all')
+  const playerId = usePlayerId()
 
   const players = useQuery({
     queryKey: ['entities', { type: 'player' }],
     queryFn: () => api.listEntities({ type: 'player' }),
   })
-  const npcs = useQuery({
-    queryKey: ['entities', { type: 'npc' }],
-    queryFn: () => api.listEntities({ type: 'npc' }),
+
+  const stash = useQuery({
+    queryKey: ['holdings', { owner: STASH }],
+    queryFn: () => api.listHoldings({ owner: STASH }),
   })
 
-  if (players.isLoading || npcs.isLoading) return <Loading />
+  if (players.isLoading) return <Loading />
 
-  const showPlayers = filter !== 'npc'
-  const showNpcs = filter !== 'player'
+  const stacks = stash.data ?? []
+  const total = stacks.reduce((sum, holding) => sum + holding.quantity, 0)
 
   return (
     <>
       <PageHead>
-        <h1 className="type-title m-0">Party &amp; NPCs</h1>
-        <div className="flex flex-wrap gap-1.75">
-          {FILTERS.map(({ key, label }) => (
-            <PillButton
-              key={key}
-              tone={filter === key ? 'solid' : 'neutral'}
-              onClick={() => setFilter(key)}
-            >
-              {label}
-            </PillButton>
-          ))}
-        </div>
+        <h1 className="type-title m-0">The Party</h1>
+        <div className="type-meta">{players.data?.length ?? 0} characters</div>
       </PageHead>
 
       <div className="flex flex-col gap-4">
-        {showPlayers && (
-          <Section className="flex flex-col gap-2">
-            <SectionHead label="The party" note={`${players.data?.length ?? 0} characters`} />
+        <Section className="flex flex-col gap-2">
+          <SectionHead label="Characters" />
+          <StaggerList>
+            {players.data?.map((entity) => (
+              <EntityRow key={entity.id} entity={entity} portraitSize={52} />
+            ))}
+          </StaggerList>
+          {players.data?.length === 0 && <Empty>No characters yet</Empty>}
+        </Section>
+
+        <Section className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-2.5">
+            <span className="type-lab flex items-center gap-1.75">
+              <LuVault aria-hidden />
+              Party stash
+            </span>
+            <span className="type-meta">
+              {stacks.length} entries · {total} items
+            </span>
+          </div>
+
+          {stash.isLoading ? (
+            <Loading />
+          ) : (
             <StaggerList>
-              {players.data?.map((entity) => (
-                <EntityRow key={entity.id} entity={entity} portraitSize={52} />
+              {stacks.map((holding) => (
+                <HoldingRow
+                  key={holding.id}
+                  holding={holding}
+                  // Anyone browsing as a character can pull from the stash.
+                  onMove={playerId ? { label: 'Take it', ownerId: playerId } : undefined}
+                />
               ))}
             </StaggerList>
-            {players.data?.length === 0 && <Empty>No player characters yet</Empty>}
-          </Section>
-        )}
+          )}
 
-        {showNpcs && (
-          <Section className="flex flex-col gap-2">
-            <SectionHead label="People you have met" note={`${npcs.data?.length ?? 0} known`} />
-            <StaggerList>
-              {npcs.data?.map((entity) => (
-                <EntityRow key={entity.id} entity={entity} portraitSize={44} />
-              ))}
-            </StaggerList>
-            {npcs.data?.length === 0 && <Empty>No NPCs recorded yet</Empty>}
-          </Section>
-        )}
+          {!stash.isLoading && stacks.length === 0 && <Empty>The stash is empty</Empty>}
 
-        <DmCreateBar types={['player', 'npc']} />
+          <AddItemSheet ownerId={null} destination="the party stash" />
+        </Section>
+
+        <DmCreateBar path="/party" />
       </div>
     </>
   )

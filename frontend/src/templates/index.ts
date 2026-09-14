@@ -36,8 +36,6 @@ export interface EntityTemplate {
   portraitWord: string
   /** width / height of the hero image on the detail page. */
   heroAspect: string
-  /** Adds owner + quantity controls to the form and ownership to the detail page. */
-  ownable?: boolean
   fields: FieldDef[]
 }
 
@@ -102,7 +100,6 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
     icon: LuPackage,
     portraitWord: 'Item art',
     heroAspect: '3 / 2',
-    ownable: true,
     fields: [
       { key: 'effect', label: 'Effect', kind: 'text', placeholder: '2d6 fire in a 10 ft burst' },
       { key: 'attuned', label: 'Attuned', kind: 'boolean' },
@@ -143,7 +140,13 @@ export function templateFor(type: string): EntityTemplate {
   )
 }
 
-/** Bottom tab bar. Codex folds the lore types into one tab, as in the design. */
+/**
+ * Bottom tab bar. Order here also drives swipe navigation and the direction a
+ * page transition slides, so it is the one place the app's shape is declared.
+ *
+ * `types` is what the DM can create from that tab — DmCreateBar reads it, so
+ * the lists are not repeated on each page.
+ */
 export interface TabDef {
   path: string
   label: string
@@ -152,9 +155,18 @@ export interface TabDef {
 }
 
 export const TABS: TabDef[] = [
-  { path: '/party', label: 'Party', icon: LuUsers, types: ['player', 'npc'] },
-  { path: '/codex', label: 'Codex', icon: LuBookOpen, types: ['faction', 'monster'] },
-  { path: '/items', label: 'Items', icon: LuPackage, types: ['item'] },
+  { path: '/party', label: 'Party', icon: LuUsers, types: ['player'] },
+  { path: '/me', label: 'Me', icon: LuUser, types: [] },
+  // The whole shared pool of knowledge: people, factions, beasts, and the
+  // item repository players draw from.
+  { path: '/codex', label: 'Codex', icon: LuBookOpen, types: ['npc', 'faction', 'monster', 'item'] },
   { path: '/craft', label: 'Craft', icon: LuHammer, types: ['recipe'] },
   { path: '/search', label: 'Search', icon: LuSearch, types: [] },
 ]
+
+/** The Codex groups, in the order its filter row shows them. */
+export const CODEX_TYPES = ['npc', 'faction', 'monster', 'item'] as const
+
+export function tabFor(path: string): TabDef | undefined {
+  return TABS.find((tab) => tab.path === path)
+}

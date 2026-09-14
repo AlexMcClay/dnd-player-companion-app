@@ -9,9 +9,12 @@ datasource db {
 
 /// One table for everything the party knows about.
 ///
-/// `type` is a plain string ('player' | 'npc' | 'monster' | 'item' | 'recipe',
-/// and whatever you add later) so a new kind of entry is a new form template in
-/// the frontend, not a migration.
+/// `type` is a plain string ('player' | 'npc' | 'faction' | 'monster' | 'item' |
+/// 'recipe', and whatever you add later) so a new kind of entry is a new form
+/// template in the frontend, not a migration.
+///
+/// Items here are *definitions* — the repository in the Codex. Who is carrying
+/// how many of one is a Holding.
 ///
 /// `search` is a generated tsvector column. Prisma cannot express generated
 /// columns, so it lives in the migration SQL and is declared Unsupported here.
@@ -26,17 +29,39 @@ model Entity {
   imageKey  String?                  @map("image_key")
   tags      String[]                 @default([])
   knowledge String                   @default("unknown")
-  ownerId   String?                  @map("owner_id") @db.Uuid
-  quantity  Int                      @default(1)
   search    Unsupported("tsvector")?
   createdAt DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  /// Items point at the player carrying them. Null means unowned / party stash.
-  owner Entity?  @relation("Ownership", fields: [ownerId], references: [id], onDelete: SetNull)
-  owned Entity[] @relation("Ownership")
+  /// Stacks of this item that somebody holds. Empty for non-item entities.
+  heldAs Holding[] @relation("HoldingItem")
+  /// Stacks this player is carrying. Empty for non-player entities.
+  holds  Holding[] @relation("HoldingOwner")
 
   @@index([type, knowledge])
-  @@index([ownerId])
   @@map("entities")
+}
+
+/// A stack of one item, held by a player or by nobody.
+///
+/// Splitting this from Entity is what lets the Codex keep a single canonical
+/// entry per item while the same item sits in the stash and in two packs at
+/// once — and lets "who has this?" be a question you can ask.
+model Holding {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  itemId    String   @map("item_id") @db.Uuid
+  /// The player carrying it. Null means the party stash.
+  ownerId   String?  @map("owner_id") @db.Uuid
+  quantity  Int      @default(1)
+  /// Per-stack flavour: "attuned since session 10".
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  item  Entity  @relation("HoldingItem", fields: [itemId], references: [id], onDelete: Cascade)
+  owner Entity? @relation("HoldingOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@index([itemId])
+  @@map("holdings")
 }

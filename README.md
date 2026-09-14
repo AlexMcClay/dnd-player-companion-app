@@ -27,15 +27,32 @@ phones at the `Network:` address it prints.
 The seed loads the sample campaign from the design mockups (The Marrow Coast) so
 nothing is ever empty on first run. `npm run db:reset` wipes and re-migrates.
 
-## DM mode
+## Who you are
+
+On first load the app asks you to pick a character. That choice is kept in the
+browser and sent with every request as `x-player-id`, so the app can show you
+your own pack and, later, your own notes. You can change it from the **Me** tab.
+
+### DM mode
 
 Tap **Locked** in the top right and enter `DM_KEY`. That reveals sealed entries and
 turns on every create/edit/delete control. The key is checked server-side on every
 write — hiding the buttons is a convenience, not the protection.
 
-This is a shared passphrase, not authentication. It is sized for one table of
-people who trust each other. Add real auth before putting this on the public
-internet.
+### What this is not
+
+Neither identity is authentication.
+
+The DM passphrase is a shared secret. Picking a character has **no password at
+all**: anyone can send any character's id and the server will believe them. Both
+are sized for one table of people who trust each other.
+
+This matters for the notes feature that is coming. **A note marked private will
+be private only by convention** — another player could read it by claiming to be
+you. Genuinely private notes would need a per-character PIN checked server-side,
+which is a deliberate future choice, not an oversight.
+
+Add real auth before putting this on the public internet.
 
 ## How it is built
 
@@ -50,23 +67,31 @@ npm workspaces, one repo. Not submodules: hosts like Railway, Render and Fly dep
 from a subdirectory, so `frontend/` and `backend/` can still ship as separate
 services later without losing shared types or atomic commits.
 
-### One table
+### Two tables
 
-Everything lives in `entities`. `type` is a plain string and `data` is JSONB, so
-adding locations, spells or quests later means adding a template in
+Almost everything lives in `entities`. `type` is a plain string and `data` is
+JSONB, so adding locations, spells or quests later means adding a template in
 `frontend/src/templates/index.ts` — no migration, no API change.
 
 ```
-id · type · name · summary · body_md · data(jsonb) · image_key · tags[]
-knowledge · owner_id → entities.id · quantity · search(tsvector) · timestamps
+entities
+  id · type · name · summary · body_md · data(jsonb) · image_key · tags[]
+  knowledge · search(tsvector) · timestamps
+
+holdings
+  id · item_id → entities.id · owner_id → entities.id (null = party stash)
+  quantity · note · timestamps
 ```
 
 - **knowledge** is `unknown` | `rumoured` | `known`. Players see rumoured and known;
-  the DM sees everything. This is enforced in exactly one place —
-  `knowledgeFilter()` in `backend/src/routes/entities.ts` — and every read goes
-  through it.
-- **owner_id** points back at the same table, so "who is carrying this" needs no
-  second concept. Null means the party stash.
+  the DM sees everything. The rule lives in `backend/src/lib/knowledge.ts` in two
+  shapes — a Prisma filter and a SQL fragment, because full-text search cannot use
+  the former — both reading one list from `@codex/shared`. Nothing else in the
+  codebase compares against `knowledge`.
+- **Items are definitions.** An `entities` row of type `item` is the catalogue
+  entry shown in the Codex; a `holdings` row is a stack of it that somebody
+  carries. That split is what lets the same item sit in the stash and in two packs
+  at once, lets a typo be fixed in one place, and makes "who has this?" answerable.
 - **search** is a generated `tsvector`. Prisma cannot express generated columns, so
   it lives in the hand-written migration and is queried with `$queryRaw`.
 
@@ -87,13 +112,19 @@ API returns a ready-to-use `imageUrl`.
 
 | | |
 | --- | --- |
-| `GET /api/entities?type=&q=&tag=&owner=` | List. Knowledge-filtered unless DM. `owner=none` is the stash. |
+| `GET /api/entities?type=&q=&tag=` | List. Knowledge-filtered unless DM. |
 | `GET /api/entities/:id` | 404s for players on sealed entries — a 403 would confirm something is there. |
 | `POST /api/entities` | DM only |
 | `PUT /api/entities/:id` | DM only, partial |
 | `DELETE /api/entities/:id` | DM only |
+| `GET /api/holdings?owner=&item=` | `owner=none` is the party stash. Hidden if the item is sealed. |
+| `POST /api/holdings` | Any player or the DM |
+| `PUT /api/holdings/:id` | Any player or the DM. Moving between stash and pack is an `ownerId` change. |
+| `DELETE /api/holdings/:id` | Any player or the DM |
 | `POST /api/uploads/presign` | DM only |
 | `POST /api/dm/verify` | Checks a passphrase before the UI stores it |
+
+Authoring the catalogue is the DM's. Moving things around in it is everyone's.
 
 ## Deferred on purpose
 

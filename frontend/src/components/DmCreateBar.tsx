@@ -1,15 +1,21 @@
 import { motion } from 'framer-motion'
 import { LuPlus } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
-import { useIsDm } from '../lib/dm'
+import { useIsDm } from '../lib/identity'
 import { SPRING } from '../lib/motion'
-import { templateFor } from '../templates'
+import { tabFor, templateFor } from '../templates'
 import { ctaClass, Divider } from './ui'
 
-/** Create buttons, shown only in DM mode. Writes are enforced server-side. */
-export default function DmCreateBar({ types }: { types: string[] }) {
+/**
+ * Create buttons, shown only in DM mode. What each tab can create is declared
+ * once on its TabDef, so pages do not repeat the list. Writes are enforced
+ * server-side regardless of whether these render.
+ */
+export default function DmCreateBar({ path }: { path: string }) {
   const isDm = useIsDm()
-  if (!isDm) return null
+  const types = tabFor(path)?.types ?? []
+
+  if (!isDm || types.length === 0) return null
 
   return (
     <motion.div

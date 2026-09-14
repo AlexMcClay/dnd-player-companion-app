@@ -14,8 +14,13 @@ type Seed = {
   data?: Prisma.InputJsonValue
   tags?: string[]
   knowledge?: string
+  /**
+   * Items only. The entity itself is just the definition; these two describe
+   * the holding seeded alongside it. Omit both for a definition the party has
+   * catalogued but does not currently own.
+   */
   quantity?: number
-  /** Name of the player who carries this. Resolved to ownerId after insert. */
+  /** Name of the player carrying it. Omit for the party stash. */
   ownerName?: string
 }
 
@@ -263,6 +268,15 @@ const REST: Seed[] = [
     tags: ['attuned', 'magic'],
     ownerName: 'Vessa Dunn',
   },
+  {
+    // Catalogued but not held — shows the repository holding entries the party
+    // knows of but does not own, and keeps the Glasswing Arrow recipe short.
+    type: 'item',
+    name: 'Glass Shard',
+    summary: 'Reagent · scavenged from Lantern glass',
+    knowledge: 'known',
+    tags: ['reagent'],
+  },
 
   // — Recipes —
   {
@@ -344,7 +358,7 @@ const REST: Seed[] = [
   },
 ]
 
-function toCreate(seed: Seed, ownerId: string | null): Prisma.EntityCreateManyInput {
+function toCreate(seed: Seed): Prisma.EntityCreateManyInput {
   return {
     type: seed.type,
     name: seed.name,
@@ -353,25 +367,34 @@ function toCreate(seed: Seed, ownerId: string | null): Prisma.EntityCreateManyIn
     data: seed.data ?? {},
     tags: seed.tags ?? [],
     knowledge: seed.knowledge ?? 'unknown',
-    quantity: seed.quantity ?? 1,
-    ownerId,
   }
 }
 
 async function main() {
+  // Holdings cascade from entities, so this clears both.
   await prisma.entity.deleteMany()
 
-  await prisma.entity.createMany({ data: PLAYERS.map((p) => toCreate(p, null)) })
+  await prisma.entity.createMany({ data: PLAYERS.map(toCreate) })
 
   const players = await prisma.entity.findMany({ where: { type: 'player' } })
-  const byName = new Map(players.map((p) => [p.name, p.id]))
+  const playerByName = new Map(players.map((p) => [p.name, p.id]))
 
-  await prisma.entity.createMany({
-    data: REST.map((s) => toCreate(s, s.ownerName ? (byName.get(s.ownerName) ?? null) : null)),
-  })
+  await prisma.entity.createMany({ data: REST.map(toCreate) })
 
-  const total = await prisma.entity.count()
-  console.log(`seeded ${total} entities`)
+  // Items are definitions; what the party actually carries is a holding.
+  const items = await prisma.entity.findMany({ where: { type: 'item' } })
+  const itemByName = new Map(items.map((i) => [i.name, i.id]))
+
+  const holdings = REST.filter((s) => s.type === 'item' && s.quantity !== undefined).map((s) => ({
+    itemId: itemByName.get(s.name)!,
+    ownerId: s.ownerName ? (playerByName.get(s.ownerName) ?? null) : null,
+    quantity: s.quantity!,
+  }))
+  await prisma.holding.createMany({ data: holdings })
+
+  const entities = await prisma.entity.count()
+  const held = await prisma.holding.count()
+  console.log(`seeded ${entities} entities and ${held} holdings`)
 }
 
 main()

@@ -1,9 +1,11 @@
+import { useQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { LuLock, LuLockOpen } from 'react-icons/lu'
 import { NavLink } from 'react-router-dom'
-import { useIsDm } from '../lib/dm'
+import { api } from '../api/client'
+import { useIsDm, usePlayerId } from '../lib/identity'
 import { SPRING } from '../lib/motion'
 import { useSwipeNav } from '../lib/useSwipeNav'
 import { TABS } from '../templates'
@@ -12,14 +14,24 @@ import { PillButton } from './ui'
 
 export default function Layout({ children }: { children: ReactNode }) {
   const isDm = useIsDm()
+  const playerId = usePlayerId()
   const [unlockOpen, setUnlockOpen] = useState(false)
   const onPanEnd = useSwipeNav()
+
+  const me = useQuery({
+    queryKey: ['entity', playerId],
+    queryFn: () => api.getEntity(playerId!),
+    enabled: playerId !== null,
+  })
 
   return (
     <div className="app-ground flex min-h-full flex-col">
       <header className="sticky top-0 z-20 border-b border-line bg-topbar">
         <div className="mx-auto flex max-w-195 items-center justify-between gap-3 px-4.5 py-3">
-          <span className="type-lab">The Marrow Coast</span>
+          <div className="flex min-w-0 flex-col">
+            <span className="type-lab">The Marrow Coast</span>
+            {me.data && <span className="type-meta truncate">Playing {me.data.name}</span>}
+          </div>
           <PillButton tone={isDm ? 'solid' : 'neutral'} onClick={() => setUnlockOpen(true)}>
             {isDm ? <LuLockOpen aria-hidden /> : <LuLock aria-hidden />}
             {isDm ? 'DM mode' : 'Locked'}
@@ -38,7 +50,11 @@ export default function Layout({ children }: { children: ReactNode }) {
         {children}
       </motion.main>
 
-      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-line bg-tabbar">
+      {/* Columns derived from TABS so adding a tab cannot silently wreck the bar. */}
+      <nav
+        className="safe-bottom fixed inset-x-0 bottom-0 z-20 grid border-t border-line bg-tabbar"
+        style={{ gridTemplateColumns: `repeat(${TABS.length}, minmax(0, 1fr))` }}
+      >
         {TABS.map((tab) => {
           const Icon = tab.icon
           return (

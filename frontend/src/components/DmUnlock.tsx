@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { LuLock, LuLockOpen, LuTriangleAlert } from 'react-icons/lu'
 import { api } from '../api/client'
-import { setDmKey, useIsDm } from '../lib/dm'
+import { setDmKey, useIsDm } from '../lib/identity'
 import { SPRING } from '../lib/motion'
 import { Cta, ctaClass, inputClass, panelClass } from './ui'
 

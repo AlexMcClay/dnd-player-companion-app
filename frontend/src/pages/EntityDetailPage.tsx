@@ -17,7 +17,7 @@ import {
   TagChips,
 } from '../components/bits'
 import { cx, panelClass, Pill, rowClass, Sealed } from '../components/ui'
-import { useIsDm } from '../lib/dm'
+import { useIsDm } from '../lib/identity'
 import { rowVariants, SPRING } from '../lib/motion'
 import { reagentStatus, stockFor } from '../lib/recipes'
 import { templateFor } from '../templates'
@@ -100,7 +100,7 @@ export default function EntityDetailPage() {
 
         {e.type === 'recipe' && <RecipeSheet recipe={e} />}
 
-        {e.type === 'item' && <Ownership entity={e} />}
+        {e.type === 'item' && <Holders itemId={e.id} />}
 
         {e.type === 'player' && <Carrying playerId={e.id} />}
 
@@ -156,15 +156,15 @@ function SpecList({ entity }: { entity: Entity }) {
 
 /** Reagent checklist against what the party actually holds. */
 function RecipeSheet({ recipe }: { recipe: Entity }) {
-  const items = useQuery({
-    queryKey: ['entities', { type: 'item' }],
-    queryFn: () => api.listEntities({ type: 'item' }),
+  const holdings = useQuery({
+    queryKey: ['holdings', {}],
+    queryFn: () => api.listHoldings(),
   })
 
   const ingredients = (recipe.data as RecipeData).ingredients ?? []
   if (ingredients.length === 0) return null
 
-  const status = reagentStatus(ingredients, stockFor(items.data ?? []))
+  const status = reagentStatus(ingredients, stockFor(holdings.data ?? []))
   const ready = status.every((r) => r.enough)
 
   return (
@@ -194,49 +194,83 @@ function RecipeSheet({ recipe }: { recipe: Entity }) {
   )
 }
 
-function Ownership({ entity }: { entity: Entity }) {
-  const owner = useQuery({
-    queryKey: ['entity', entity.ownerId],
-    queryFn: () => api.getEntity(entity.ownerId!),
-    enabled: entity.ownerId !== null,
+/**
+ * Who has this item, and how many. Only answerable now that holdings are their
+ * own thing rather than a column on the item.
+ */
+function Holders({ itemId }: { itemId: string }) {
+  const holdings = useQuery({
+    queryKey: ['holdings', { item: itemId }],
+    queryFn: () => api.listHoldings({ item: itemId }),
   })
 
+  const players = useQuery({
+    queryKey: ['entities', { type: 'player' }],
+    queryFn: () => api.listEntities({ type: 'player' }),
+  })
+
+  if (holdings.isLoading) return null
+
+  const stacks = holdings.data ?? []
+  const nameById = new Map((players.data ?? []).map((p) => [p.id, p.name]))
+  const total = stacks.reduce((sum, h) => sum + h.quantity, 0)
+
+  if (stacks.length === 0) {
+    return (
+      <motion.div
+        className={panelClass('flex items-center justify-between gap-2.5')}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="type-lab">Held by</div>
+        <span className="type-meta">Nobody — catalogued only</span>
+      </motion.div>
+    )
+  }
+
   return (
-    <motion.div
-      className={panelClass('flex items-center justify-between gap-2.5')}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div>
-        <div className="type-lab">Carried by</div>
-        <div className="type-name mt-0.75">
-          {entity.ownerId ? (owner.data?.name ?? '…') : 'Party stash'}
-        </div>
-      </div>
-      <Pill tone="neutral">×{entity.quantity}</Pill>
-    </motion.div>
+    <Section className="flex flex-col gap-2">
+      <SectionHead label="Held by" note={`${total} in total`} />
+      <StaggerList>
+        {stacks.map((holding) => (
+          <motion.div key={holding.id} variants={rowVariants} className={rowClass}>
+            <div className="flex-1">
+              {holding.ownerId ? (
+                <Link to={`/e/${holding.ownerId}`} className="text-gold">
+                  {nameById.get(holding.ownerId) ?? 'A character'}
+                </Link>
+              ) : (
+                'Party stash'
+              )}
+            </div>
+            <Pill tone="neutral">×{holding.quantity}</Pill>
+          </motion.div>
+        ))}
+      </StaggerList>
+    </Section>
   )
 }
 
 function Carrying({ playerId }: { playerId: string }) {
-  const items = useQuery({
-    queryKey: ['entities', { type: 'item', owner: playerId }],
-    queryFn: () => api.listEntities({ type: 'item', owner: playerId }),
+  const holdings = useQuery({
+    queryKey: ['holdings', { owner: playerId }],
+    queryFn: () => api.listHoldings({ owner: playerId }),
   })
 
-  if (!items.data || items.data.length === 0) return null
+  const stacks = holdings.data ?? []
+  if (stacks.length === 0) return null
 
   return (
     <Section className="flex flex-col gap-2">
-      <SectionHead label="Carrying" note={`${items.data.length} items`} />
+      <SectionHead label="Carrying" note={`${stacks.length} entries`} />
       <StaggerList>
-        {items.data.map((item) => (
-          <motion.div key={item.id} variants={rowVariants}>
-            <Link to={`/e/${item.id}`} className={rowClass}>
-              <Portrait entity={item} size={36} />
-              <div className="flex-1">{item.name}</div>
-              <span className="type-meta">×{item.quantity}</span>
+        {stacks.map((holding) => (
+          <motion.div key={holding.id} variants={rowVariants}>
+            <Link to={`/e/${holding.itemId}`} className={rowClass}>
+              <Portrait entity={holding.item} size={36} />
+              <div className="flex-1">{holding.item.name}</div>
+              <span className="type-meta">×{holding.quantity}</span>
             </Link>
           </motion.div>
         ))}

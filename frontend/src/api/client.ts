@@ -1,13 +1,22 @@
-import type { Entity, EntityInput, PresignResponse } from '@codex/shared'
-import { getDmKey } from '../lib/dm'
+import type {
+  Entity,
+  EntityInput,
+  Holding,
+  HoldingInput,
+  PresignResponse,
+} from '@codex/shared'
+import { getDmKey, getPlayerId } from '../lib/identity'
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const dmKey = getDmKey()
+  const playerId = getPlayerId()
+
   const res = await fetch(`/api${path}`, {
     ...init,
     headers: {
       ...(init.body ? { 'Content-Type': 'application/json' } : {}),
       ...(dmKey ? { 'x-dm-key': dmKey } : {}),
+      ...(playerId ? { 'x-player-id': playerId } : {}),
       ...init.headers,
     },
   })
@@ -23,20 +32,29 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T)
 }
 
+function qs(query: object): string {
+  const params = new URLSearchParams()
+  for (const [k, v] of Object.entries(query)) if (typeof v === 'string' && v) params.set(k, v)
+  const s = params.toString()
+  return s ? `?${s}` : ''
+}
+
 export interface EntityQuery {
   type?: string
   q?: string
   tag?: string
-  /** A player id, or 'none' for the party stash. */
+}
+
+export interface HoldingQuery {
+  /** A player id, or STASH for the party stash. Omit for everything. */
   owner?: string
+  /** Narrow to one item definition — powers "who has this?". */
+  item?: string
 }
 
 export const api = {
   listEntities(query: EntityQuery = {}): Promise<Entity[]> {
-    const params = new URLSearchParams()
-    for (const [k, v] of Object.entries(query)) if (v) params.set(k, v)
-    const qs = params.toString()
-    return request<Entity[]>(`/entities${qs ? `?${qs}` : ''}`)
+    return request<Entity[]>(`/entities${qs(query)}`)
   },
 
   getEntity(id: string): Promise<Entity> {
@@ -53,6 +71,22 @@ export const api = {
 
   deleteEntity(id: string): Promise<void> {
     return request<void>(`/entities/${id}`, { method: 'DELETE' })
+  },
+
+  listHoldings(query: HoldingQuery = {}): Promise<Holding[]> {
+    return request<Holding[]>(`/holdings${qs(query)}`)
+  },
+
+  createHolding(input: HoldingInput): Promise<Holding> {
+    return request<Holding>('/holdings', { method: 'POST', body: JSON.stringify(input) })
+  },
+
+  updateHolding(id: string, input: Partial<HoldingInput>): Promise<Holding> {
+    return request<Holding>(`/holdings/${id}`, { method: 'PUT', body: JSON.stringify(input) })
+  },
+
+  deleteHolding(id: string): Promise<void> {
+    return request<void>(`/holdings/${id}`, { method: 'DELETE' })
   },
 
   verifyDmKey(key: string): Promise<boolean> {

@@ -1,25 +1,12 @@
 import { Prisma } from '@prisma/client'
 import { Router } from 'express'
-import {
-  KNOWLEDGE_STATES,
-  PLAYER_VISIBLE_KNOWLEDGE,
-  type EntityInput,
-  type Knowledge,
-} from '@codex/shared'
+import { KNOWLEDGE_STATES, type EntityInput, type Knowledge } from '@codex/shared'
+import { knowledgeFilter, knowledgeSql } from '../lib/knowledge.js'
 import { prisma } from '../lib/prisma.js'
 import { serializeEntity } from '../lib/serialize.js'
-import { requireDm } from '../middleware/dmKey.js'
+import { requireDm } from '../middleware/identity.js'
 
 export const entitiesRouter = Router()
-
-/**
- * The one place knowledge is enforced. Every read goes through it: players see
- * rumoured and known, the DM sees everything. Nothing else in the codebase
- * should compare against `knowledge` when deciding what to return.
- */
-function knowledgeFilter(isDm: boolean): Prisma.EntityWhereInput {
-  return isDm ? {} : { knowledge: { in: PLAYER_VISIBLE_KNOWLEDGE } }
-}
 
 function isKnowledge(value: unknown): value is Knowledge {
   return typeof value === 'string' && (KNOWLEDGE_STATES as readonly string[]).includes(value)
@@ -79,15 +66,6 @@ function parseInput(body: unknown, partial: boolean): EntityInput | string {
     if (!isKnowledge(b.knowledge)) return `knowledge must be one of ${KNOWLEDGE_STATES.join(', ')}`
     out.knowledge = b.knowledge
   }
-  if (b.ownerId !== undefined) {
-    if (b.ownerId !== null && typeof b.ownerId !== 'string') return 'ownerId must be a uuid or null'
-    out.ownerId = b.ownerId as string | null
-  }
-  if (b.quantity !== undefined) {
-    if (!Number.isInteger(b.quantity)) return 'quantity must be an integer'
-    out.quantity = b.quantity as number
-  }
-
   return out as EntityInput
 }
 
@@ -101,24 +79,21 @@ async function searchIds(q: string, isDm: boolean): Promise<string[]> {
     SELECT id
     FROM entities
     WHERE (search @@ plainto_tsquery('english', ${q}) OR name ILIKE ${'%' + q + '%'})
-      AND (${isDm} OR knowledge <> 'unknown')
+      AND ${knowledgeSql(isDm)}
     ORDER BY ts_rank(search, plainto_tsquery('english', ${q})) DESC, name ASC
     LIMIT 200
   `
   return rows.map((r) => r.id)
 }
 
-// GET /api/entities?type=&q=&tag=&owner=
+// GET /api/entities?type=&q=&tag=
 entitiesRouter.get('/', async (req, res, next) => {
   try {
-    const { type, q, tag, owner } = req.query
+    const { type, q, tag } = req.query
     const where: Prisma.EntityWhereInput = { ...knowledgeFilter(req.isDm) }
 
     if (typeof type === 'string' && type) where.type = type
     if (typeof tag === 'string' && tag) where.tags = { has: tag }
-    if (typeof owner === 'string' && owner) {
-      where.ownerId = owner === 'none' ? null : owner
-    }
 
     let rankedIds: string[] | null = null
     if (typeof q === 'string' && q.trim()) {
@@ -180,8 +155,6 @@ entitiesRouter.post('/', requireDm, async (req, res, next) => {
         imageKey: parsed.imageKey ?? null,
         tags: parsed.tags ?? [],
         knowledge: parsed.knowledge ?? 'unknown',
-        ownerId: parsed.ownerId ?? null,
-        quantity: parsed.quantity ?? 1,
       },
     })
     res.status(201).json(serializeEntity(row))

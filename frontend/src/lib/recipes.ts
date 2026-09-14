@@ -1,14 +1,17 @@
-import type { Entity, RecipeIngredient } from '@codex/shared'
+import type { Holding, RecipeIngredient } from '@codex/shared'
 
 /**
+ * What the party can actually lay hands on, summed across every holding —
+ * the stash and every character's pack alike.
+ *
  * Reagents are matched to items by name. That is deliberately loose: a recipe
- * can call for something the party has never picked up, and it still renders.
+ * can call for something nobody has ever picked up, and it still renders.
  */
-export function stockFor(items: Entity[]): Map<string, number> {
+export function stockFor(holdings: Holding[]): Map<string, number> {
   const stock = new Map<string, number>()
-  for (const item of items) {
-    const key = item.name.toLowerCase()
-    stock.set(key, (stock.get(key) ?? 0) + item.quantity)
+  for (const holding of holdings) {
+    const key = holding.item.name.toLowerCase()
+    stock.set(key, (stock.get(key) ?? 0) + holding.quantity)
   }
   return stock
 }

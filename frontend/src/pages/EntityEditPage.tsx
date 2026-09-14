@@ -16,15 +16,14 @@ import ImageUpload from '../components/ImageUpload'
 import IngredientsEditor from '../components/IngredientsEditor'
 import { Empty, Loading, PageHead } from '../components/bits'
 import { Cta, ctaClass, Field, inputClass, textareaClass } from '../components/ui'
-import { useIsDm } from '../lib/dm'
+import { useIsDm } from '../lib/identity'
 import { templateFor } from '../templates'
 
-type Draft = Required<Pick<EntityInput, 'type' | 'name' | 'knowledge' | 'quantity'>> & {
+type Draft = Required<Pick<EntityInput, 'type' | 'name' | 'knowledge'>> & {
   summary: string
   bodyMd: string
   tags: string
   imageKey: string | null
-  ownerId: string | null
   data: EntityData
 }
 
@@ -36,8 +35,6 @@ const BLANK = (type: string): Draft => ({
   tags: '',
   imageKey: null,
   knowledge: 'unknown',
-  ownerId: null,
-  quantity: 1,
   data: {},
 })
 
@@ -63,11 +60,6 @@ export default function EntityEditPage() {
     enabled: Boolean(id),
   })
 
-  const players = useQuery({
-    queryKey: ['entities', { type: 'player' }],
-    queryFn: () => api.listEntities({ type: 'player' }),
-  })
-
   const [draft, setDraft] = useState<Draft>(() => BLANK(params.get('type') ?? 'npc'))
   const [error, setError] = useState<string | null>(null)
 
@@ -82,8 +74,6 @@ export default function EntityEditPage() {
       tags: e.tags.join(', '),
       imageKey: e.imageKey,
       knowledge: e.knowledge,
-      ownerId: e.ownerId,
-      quantity: e.quantity,
       data: e.data,
     })
   }, [existing.data])
@@ -131,8 +121,6 @@ export default function EntityEditPage() {
         .map((t) => t.trim())
         .filter(Boolean),
       knowledge: draft.knowledge,
-      ownerId: draft.ownerId,
-      quantity: draft.quantity,
     })
   }
 
@@ -199,33 +187,11 @@ export default function EntityEditPage() {
           onUploaded={(key) => setDraft((d) => ({ ...d, imageKey: key }))}
         />
 
-        {template.ownable && (
-          <>
-            <Field label={<span className={LABEL}>Carried by</span>}>
-              <select
-                className={inputClass}
-                value={draft.ownerId ?? ''}
-                onChange={(e) => setDraft((d) => ({ ...d, ownerId: e.target.value || null }))}
-              >
-                <option value="">Party stash</option>
-                {players.data?.map((player) => (
-                  <option key={player.id} value={player.id}>
-                    {player.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <Field label={<span className={LABEL}>Quantity</span>}>
-              <input
-                className={inputClass}
-                type="number"
-                min={0}
-                value={draft.quantity}
-                onChange={(e) => setDraft((d) => ({ ...d, quantity: Number(e.target.value) || 0 }))}
-              />
-            </Field>
-          </>
+        {draft.type === 'item' && (
+          <div className="type-meta">
+            This is the catalogue entry. Who carries it, and how many, is set from the Party and Me
+            tabs.
+          </div>
         )}
 
         {template.fields.map((field) =>

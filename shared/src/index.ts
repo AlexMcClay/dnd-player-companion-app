@@ -17,6 +17,10 @@ export const PLAYER_VISIBLE_KNOWLEDGE: Knowledge[] = ['rumoured', 'known']
 
 export type EntityData = Record<string, unknown>
 
+/**
+ * An entry in the shared codex. Items here are *definitions* — who is carrying
+ * how many of one is a Holding.
+ */
 export interface Entity {
   id: string
   type: string
@@ -29,8 +33,6 @@ export interface Entity {
   imageUrl: string | null
   tags: string[]
   knowledge: Knowledge
-  ownerId: string | null
-  quantity: number
   createdAt: string
   updatedAt: string
 }
@@ -44,9 +46,31 @@ export interface EntityInput {
   imageKey?: string | null
   tags?: string[]
   knowledge?: Knowledge
+}
+
+/** A stack of one item, carried by a player or sitting in the party stash. */
+export interface Holding {
+  id: string
+  itemId: string
+  /** The player carrying it. Null means the party stash. */
+  ownerId: string | null
+  quantity: number
+  note: string | null
+  /** The item definition, expanded by the API so lists need one request. */
+  item: Entity
+  createdAt: string
+  updatedAt: string
+}
+
+export interface HoldingInput {
+  itemId: string
   ownerId?: string | null
   quantity?: number
+  note?: string | null
 }
+
+/** `owner=none` means the party stash, as opposed to omitting owner entirely. */
+export const STASH = 'none'
 
 export interface PresignRequest {
   filename: string

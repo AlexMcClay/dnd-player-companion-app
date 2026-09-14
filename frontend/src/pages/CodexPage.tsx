@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { api } from '../api/client'
+import DmCreateBar from '../components/DmCreateBar'
 import {
   Empty,
   EntityRow,
@@ -9,50 +11,69 @@ import {
   SectionHead,
   StaggerList,
 } from '../components/bits'
-import DmCreateBar from '../components/DmCreateBar'
+import { PillButton } from '../components/ui'
+import { CODEX_TYPES, templateFor } from '../templates'
 
-/** Bestiary and factions — the shared pool of what the party knows. */
+type CodexType = (typeof CODEX_TYPES)[number]
+
+const BLURB: Record<CodexType, string> = {
+  npc: 'People the party has met',
+  faction: 'Who holds power, and how they feel about you',
+  monster: 'What you have fought, and what you learned',
+  item: 'The repository — everything the party can lay hands on',
+}
+
+/**
+ * The whole shared pool of knowledge. Four groups is too much to stack on a
+ * phone, so one is shown at a time.
+ */
 export default function CodexPage() {
-  const monsters = useQuery({
-    queryKey: ['entities', { type: 'monster' }],
-    queryFn: () => api.listEntities({ type: 'monster' }),
-  })
-  const factions = useQuery({
-    queryKey: ['entities', { type: 'faction' }],
-    queryFn: () => api.listEntities({ type: 'faction' }),
-  })
+  const [group, setGroup] = useState<CodexType>('npc')
 
-  if (monsters.isLoading || factions.isLoading) return <Loading />
+  const entries = useQuery({
+    queryKey: ['entities', { type: group }],
+    queryFn: () => api.listEntities({ type: group }),
+  })
 
   return (
     <>
       <PageHead>
         <h1 className="type-title m-0">Codex</h1>
-        <div className="type-meta">Everything the party has confirmed in play</div>
+        <div className="flex flex-wrap gap-1.75">
+          {CODEX_TYPES.map((type) => (
+            <PillButton
+              key={type}
+              tone={group === type ? 'solid' : 'neutral'}
+              onClick={() => setGroup(type)}
+            >
+              {templateFor(type).plural}
+            </PillButton>
+          ))}
+        </div>
       </PageHead>
 
       <div className="flex flex-col gap-4">
         <Section className="flex flex-col gap-2">
-          <SectionHead label="Bestiary" note={`${monsters.data?.length ?? 0} entries`} />
-          <StaggerList>
-            {monsters.data?.map((entity) => (
-              <EntityRow key={entity.id} entity={entity} portraitSize={52} />
-            ))}
-          </StaggerList>
-          {monsters.data?.length === 0 && <Empty>Nothing catalogued yet</Empty>}
+          <SectionHead
+            label={templateFor(group).plural}
+            note={entries.data ? `${entries.data.length} entries` : undefined}
+          />
+          <div className="type-meta">{BLURB[group]}</div>
+
+          {entries.isLoading ? (
+            <Loading />
+          ) : (
+            <StaggerList>
+              {entries.data?.map((entity) => (
+                <EntityRow key={entity.id} entity={entity} portraitSize={48} />
+              ))}
+            </StaggerList>
+          )}
+
+          {!entries.isLoading && entries.data?.length === 0 && <Empty>Nothing here yet</Empty>}
         </Section>
 
-        <Section className="flex flex-col gap-2">
-          <SectionHead label="Factions" note={`${factions.data?.length ?? 0} known`} />
-          <StaggerList>
-            {factions.data?.map((entity) => (
-              <EntityRow key={entity.id} entity={entity} portraitSize={44} />
-            ))}
-          </StaggerList>
-          {factions.data?.length === 0 && <Empty>No factions recorded yet</Empty>}
-        </Section>
-
-        <DmCreateBar types={['monster', 'faction']} />
+        <DmCreateBar path="/codex" />
       </div>
     </>
   )

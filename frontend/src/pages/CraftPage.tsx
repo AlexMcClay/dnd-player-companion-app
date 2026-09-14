@@ -20,14 +20,15 @@ export default function CraftPage() {
     queryKey: ['entities', { type: 'recipe' }],
     queryFn: () => api.listEntities({ type: 'recipe' }),
   })
-  const items = useQuery({
-    queryKey: ['entities', { type: 'item' }],
-    queryFn: () => api.listEntities({ type: 'item' }),
+  // Availability is what the party *holds*, everywhere, not what the Codex lists.
+  const holdings = useQuery({
+    queryKey: ['holdings', {}],
+    queryFn: () => api.listHoldings(),
   })
 
-  if (recipes.isLoading || items.isLoading) return <Loading />
+  if (recipes.isLoading || holdings.isLoading) return <Loading />
 
-  const stock = stockFor(items.data ?? [])
+  const stock = stockFor(holdings.data ?? [])
   const all = recipes.data ?? []
 
   const canMake = (recipe: Entity) => {
@@ -77,7 +78,7 @@ export default function CraftPage() {
           {rest.length === 0 && ready.length === 0 && <Empty>No recipes learned yet</Empty>}
         </Section>
 
-        <DmCreateBar types={['recipe']} />
+        <DmCreateBar path="/craft" />
       </div>
     </>
   )
