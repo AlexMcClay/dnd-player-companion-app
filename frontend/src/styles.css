@@ -208,7 +208,40 @@
     margin: 18px 0 6px;
   }
 
-  .md h2:first-child {
+  /*
+   * A note's title, and the only heading above the gold label. Serif, because
+   * that is what every other name in the app is set in.
+   */
+  .md h1 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 1.15;
+    margin: 16px 0 6px;
+    color: var(--color-ink);
+  }
+
+  /* h3 and below are a quieter version of the h2 label, so a deep heading
+     cannot end up looking louder than a shallow one. */
+  .md h3,
+  .md h4,
+  .md h5,
+  .md h6 {
+    font-family: var(--font-sans);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+    margin: 14px 0 5px;
+  }
+
+  .md h1:first-child,
+  .md h2:first-child,
+  .md h3:first-child,
+  .md h4:first-child,
+  .md h5:first-child,
+  .md h6:first-child {
     margin-top: 0;
   }
 
@@ -216,13 +249,110 @@
     margin: 0 0 10px;
   }
 
+  /*
+   * Preflight sets `list-style: none` on every list, so the marker has to be
+   * asked for by name — restoring the indent alone leaves a bulletless list
+   * that reads as a run of stray lines.
+   */
   .md ul {
     margin: 0 0 10px;
     padding-left: 18px;
+    list-style: disc;
+  }
+
+  .md ol {
+    margin: 0 0 10px;
+    padding-left: 20px;
+    list-style: decimal;
   }
 
   .md li {
     margin-bottom: 4px;
+  }
+
+  .md li::marker {
+    color: var(--color-gold-dim);
+  }
+
+  /* A nested list belongs to the line above it, not to the block. */
+  .md li > ul,
+  .md li > ol {
+    margin: 4px 0 0;
+  }
+
+  /* GFM task lists: the checkbox is the marker, so drop the bullet. */
+  .md li:has(> input[type='checkbox']) {
+    list-style: none;
+    margin-left: -14px;
+  }
+
+  .md input[type='checkbox'] {
+    margin-right: 6px;
+    accent-color: var(--color-gold);
+  }
+
+  .md strong {
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .md em {
+    font-style: italic;
+  }
+
+  .md blockquote {
+    margin: 0 0 10px;
+    padding-left: 12px;
+    border-left: 2px solid var(--color-gold-dim);
+    color: var(--color-ink-soft);
+    font-style: italic;
+  }
+
+  .md code {
+    background: var(--color-ink-tint);
+    border: 1px solid var(--color-line-soft);
+    padding: 1px 4px;
+    font-size: 12.5px;
+    color: var(--color-ink);
+  }
+
+  .md pre {
+    background: var(--color-ink-tint);
+    border: 1px solid var(--color-line-soft);
+    padding: 10px 12px;
+    margin: 0 0 10px;
+    overflow-x: auto;
+  }
+
+  /* The block already has the frame; the code inside must not draw a second. */
+  .md pre code {
+    background: none;
+    border: 0;
+    padding: 0;
+  }
+
+  .md hr {
+    margin: 14px 0;
+    border: 0;
+    height: 1px;
+    background: var(--color-line);
+  }
+
+  .md img {
+    max-width: 100%;
+    display: block;
+  }
+
+  .md blockquote p:last-child {
+    margin-bottom: 0;
+  }
+
+  /*
+   * A note card is a flex column with its own gap, so the last block's bottom
+   * margin lands on top of it and the byline drifts away from the text.
+   */
+  .md > *:last-child {
+    margin-bottom: 0;
   }
 
   .md a {
