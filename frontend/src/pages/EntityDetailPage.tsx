@@ -80,31 +80,11 @@ export default function EntityDetailPage() {
           )}
         </div>
 
-        {/*
-          One column on a phone, portrait beside the title from md up. On a wide
-          screen a full-width hero is not a hero: capping its height alone left
-          the box 100% wide, which flattened a 4/5 character into a 3:1 strip and
-          let object-cover crop the face out of it. Bounding the *width* instead
-          lets the aspect ratio hold, and the room left over gives the title a
-          column rather than an empty half-line.
-        */}
-        <div className="flex flex-col gap-2.25 md:flex-row md:items-end md:gap-5">
-          <motion.div
-            className={cx('md:shrink-0', tallHero ? 'md:w-56' : 'md:w-80')}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.32 }}
-          >
-            {/* The height cap is a phone concern; in a fixed column it would
-                letterbox all over again. */}
-            <Portrait
-              entity={e}
-              aspect={template.heroAspect}
-              className="max-h-65 md:max-h-none"
-            />
-          </motion.div>
+        {/* One column on a phone, hero beside the title from md up. */}
+        <div className="flex flex-col gap-2.5 md:flex-row md:items-start md:gap-5">
+          <Hero entity={e} tall={tallHero} />
 
-          <div className="flex min-w-0 flex-col gap-2.25 md:flex-1 md:pb-1">
+          <div className="flex min-w-0 flex-col gap-2.25 md:flex-1">
             <div>
               <h1 className="type-title m-0">{e.name}</h1>
               {e.summary && <div className="type-meta mt-1">{e.summary}</div>}
@@ -190,6 +170,64 @@ export default function EntityDetailPage() {
         )}
       </div>
     </>
+  )
+}
+
+/**
+ * The entry's art, shown whole.
+ *
+ * Everywhere else a portrait fills a fixed box and `object-cover` crops to fit,
+ * which is right for a 46px row thumbnail — but on the entry itself it was
+ * cutting the face off a character and the top off a map. Here the frame sizes
+ * itself to the image instead: bounded, never cropped, never letterboxed.
+ *
+ * Only the bounds differ between phone and desktop, so the rule is the same on
+ * both: whatever its dimensions, you see the whole image.
+ */
+function Hero({ entity, tall }: { entity: Entity; tall: boolean }) {
+  const template = templateFor(entity.type)
+
+  // Nothing to preserve, so the placeholder keeps the template's shape and the
+  // fixed column it used to have.
+  if (!entity.imageUrl) {
+    return (
+      <motion.div
+        className={cx('w-full md:shrink-0', tall ? 'md:w-56' : 'md:w-80')}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32 }}
+      >
+        <Portrait entity={entity} aspect={template.heroAspect} className="max-h-65 md:max-h-none" />
+      </motion.div>
+    )
+  }
+
+  return (
+    <motion.div
+      // self-start keeps the frame hugging the image; stretched by the column
+      // it would grow bars down the sides again. The width cap stops a
+      // panoramic map from squeezing the title into a gutter.
+      // min-h so the frame does not start at zero height and shove the title
+      // down when the image lands — we have no intrinsic size to reserve, since
+      // the API carries a URL and nothing else.
+      className="port-fill self-start max-w-full min-h-25 shrink-0 border border-line md:max-w-[58%]"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.32 }}
+    >
+      <motion.img
+        src={entity.imageUrl}
+        alt={entity.name}
+        // No object-fit: the image is the only child, so it sets the frame's
+        // size rather than being fitted into one. Height bounds it normally;
+        // max-w-full takes over for anything very wide, and because only
+        // max-* are set the other axis follows on its own and the aspect holds.
+        className="block h-auto max-h-70 w-auto max-w-full md:max-h-80"
+        initial={{ opacity: 0, scale: 1.04 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.35 }}
+      />
+    </motion.div>
   )
 }
 
