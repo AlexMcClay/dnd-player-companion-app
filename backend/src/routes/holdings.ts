@@ -8,7 +8,9 @@ import { requireActor } from '../middleware/identity.js'
 
 export const holdingsRouter = Router()
 
-const INCLUDE_ITEM = { item: true } as const
+// The item's rules text is never rendered from a holding row, and the SRD makes
+// it the bulk of the payload.
+const INCLUDE_ITEM = { item: { omit: { bodyMd: true } } } as const
 
 /**
  * A holding is only as visible as the item behind it — otherwise the stash

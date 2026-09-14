@@ -125,6 +125,8 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
       // The first group mirrors a 5e equipment entry, so SRD gear imported by
       // `db:seed:srd` renders with its real stats rather than a bare name.
       { key: 'category', label: 'Category', kind: 'text', placeholder: 'Martial Melee' },
+      { key: 'rarity', label: 'Rarity', kind: 'text', placeholder: 'Uncommon' },
+      { key: 'attunement', label: 'Attunement', kind: 'text', placeholder: 'Requires attunement' },
       { key: 'cost', label: 'Cost', kind: 'text', placeholder: '15 gp' },
       { key: 'weight', label: 'Weight', kind: 'text', placeholder: '3 lb' },
       { key: 'damage', label: 'Damage', kind: 'text', placeholder: '1d8 slashing' },

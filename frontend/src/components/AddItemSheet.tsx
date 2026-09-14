@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { LuPackage, LuPlus, LuSearch } from 'react-icons/lu'
 import { api } from '../api/client'
 import { rowVariants, SPRING } from '../lib/motion'
-import { Empty, Loading, Portrait, StaggerList } from './bits'
+import { Empty, Loading, Portrait } from './bits'
+import VirtualList from './VirtualList'
 import { cx, ctaClass, inputClass, panelClass, rowClass } from './ui'
 
 /**
@@ -54,6 +55,7 @@ function Picker({
   onClose: () => void
 }) {
   const queryClient = useQueryClient()
+  const scrollRef = useRef<HTMLDivElement>(null)
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
 
@@ -119,27 +121,34 @@ function Picker({
           </Empty>
         )}
 
-        <StaggerList className="-mx-1 flex-1 overflow-y-auto px-1">
-          {matches.map((item) => (
-            <motion.button
-              key={item.id}
-              type="button"
-              className={cx(rowClass, 'cursor-pointer')}
-              variants={rowVariants}
-              whileTap={{ scale: 0.985 }}
-              transition={SPRING}
-              disabled={add.isPending}
-              onClick={() => add.mutate(item.id)}
-            >
-              <Portrait entity={item} size={36} />
-              <div className="min-w-0 flex-1">
-                <div className="type-name truncate">{item.name}</div>
-                {item.summary && <div className="type-meta mt-0.5 truncate">{item.summary}</div>}
-              </div>
-              <LuPlus className="size-4 text-gold" aria-hidden />
-            </motion.button>
-          ))}
-        </StaggerList>
+        {/* The repository is hundreds of items, so this list scrolls itself
+            and only renders what is on screen. */}
+        <div ref={scrollRef} className="-mx-1 flex-1 overflow-y-auto px-1">
+          <VirtualList
+            items={matches}
+            scrollRef={scrollRef}
+            estimate={58}
+            getKey={(item) => item.id}
+            renderItem={(item) => (
+              <motion.button
+                type="button"
+                className={cx(rowClass, 'cursor-pointer')}
+                variants={rowVariants}
+                whileTap={{ scale: 0.985 }}
+                transition={SPRING}
+                disabled={add.isPending}
+                onClick={() => add.mutate(item.id)}
+              >
+                <Portrait entity={item} size={36} />
+                <div className="min-w-0 flex-1">
+                  <div className="type-name truncate">{item.name}</div>
+                  {item.summary && <div className="type-meta mt-0.5 truncate">{item.summary}</div>}
+                </div>
+                <LuPlus className="size-4 shrink-0 text-gold" aria-hidden />
+              </motion.button>
+            )}
+          />
+        </div>
 
         {error && <div className="type-meta text-danger">{error}</div>}
 

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import type { Entity } from '@codex/shared'
+import type { EntitySummary } from '@codex/shared'
 import { api } from '../api/client'
 
 /**
@@ -11,7 +11,7 @@ import { api } from '../api/client'
 export function useAllEntities() {
   return useQuery({
     queryKey: ['entities', {}],
-    queryFn: (): Promise<Entity[]> => api.listEntities(),
+    queryFn: (): Promise<EntitySummary[]> => api.listEntities(),
     staleTime: 60_000,
   })
 }

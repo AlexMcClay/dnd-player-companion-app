@@ -3,7 +3,7 @@ import { Router } from 'express'
 import { KNOWLEDGE_STATES, type EntityInput, type Knowledge } from '@codex/shared'
 import { knowledgeFilter, knowledgeSql } from '../lib/knowledge.js'
 import { prisma } from '../lib/prisma.js'
-import { serializeEntity } from '../lib/serialize.js'
+import { serializeEntity, serializeEntitySummary } from '../lib/serialize.js'
 import { requireDm } from '../middleware/identity.js'
 
 export const entitiesRouter = Router()
@@ -76,8 +76,14 @@ function parseInput(body: unknown, partial: boolean): EntityInput | string {
  * The ILIKE arm covers partial words, which tsquery cannot: "harbour" has to
  * find the Harbourmaster, because that is what someone types into a search box.
  * It spans the same three columns the tsvector is built from, so the two arms
- * agree about what "searchable" means. A sequential scan is fine at the size a
- * campaign reaches.
+ * agree about what "searchable" means.
+ *
+ * Tags are searched too, flattened to a string so a partial tag matches the way
+ * a partial word does. They are not in the tsvector — that is a generated column
+ * and changing it means a migration — so a tag-only hit ranks below a text hit
+ * and falls back to alphabetical. That ordering is the right way round anyway.
+ *
+ * A sequential scan is fine at the size a campaign reaches.
  */
 async function searchIds(q: string, isDm: boolean): Promise<string[]> {
   const like = `%${q}%`
@@ -89,6 +95,7 @@ async function searchIds(q: string, isDm: boolean): Promise<string[]> {
         OR name ILIKE ${like}
         OR coalesce(summary, '') ILIKE ${like}
         OR coalesce(body_md, '') ILIKE ${like}
+        OR array_to_string(tags, ' ') ILIKE ${like}
       )
       AND ${knowledgeSql(isDm)}
     ORDER BY ts_rank(search, plainto_tsquery('english', ${q})) DESC, name ASC
@@ -116,8 +123,14 @@ entitiesRouter.get('/', async (req, res, next) => {
       where.id = { in: rankedIds }
     }
 
-    const rows = await prisma.entity.findMany({ where, orderBy: { name: 'asc' } })
-    const entities = rows.map(serializeEntity)
+    // Omitted at the query, not just the serializer, so the body never leaves
+    // the database either.
+    const rows = await prisma.entity.findMany({
+      where,
+      orderBy: { name: 'asc' },
+      omit: { bodyMd: true },
+    })
+    const entities = rows.map(serializeEntitySummary)
 
     if (rankedIds) {
       const order = new Map(rankedIds.map((id, i) => [id, i]))

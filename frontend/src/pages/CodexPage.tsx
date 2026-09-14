@@ -13,6 +13,7 @@ import {
   SectionHead,
   StaggerList,
 } from '../components/bits'
+import VirtualList from '../components/VirtualList'
 import { cx, inputClass, panelClass } from '../components/ui'
 import { rowVariants, SPRING } from '../lib/motion'
 import { useAllEntities } from '../lib/useAllEntities'
@@ -189,11 +190,12 @@ function GroupList({
           {entries.isLoading ? (
             <Loading />
           ) : (
-            <StaggerList>
-              {rows.map((entity) => (
-                <EntityRow key={entity.id} entity={entity} portraitSize={48} />
-              ))}
-            </StaggerList>
+            // The item repository runs to hundreds of rows once the SRD is in.
+            <VirtualList
+              items={rows}
+              getKey={(entity) => entity.id}
+              renderItem={(entity) => <EntityRow entity={entity} portraitSize={48} />}
+            />
           )}
 
           {!entries.isLoading && rows.length === 0 && (

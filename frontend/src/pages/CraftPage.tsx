@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import type { Entity, RecipeData } from '@codex/shared'
+import type { EntitySummary, RecipeData } from '@codex/shared'
 import { LuCheck } from 'react-icons/lu'
 import { api } from '../api/client'
 import {
@@ -31,7 +31,7 @@ export default function CraftPage() {
   const stock = stockFor(holdings.data ?? [])
   const all = recipes.data ?? []
 
-  const canMake = (recipe: Entity) => {
+  const canMake = (recipe: EntitySummary) => {
     const ingredients = (recipe.data as RecipeData).ingredients ?? []
     return ingredients.length > 0 && reagentStatus(ingredients, stock).every((r) => r.enough)
   }

@@ -6,6 +6,7 @@ import type {
 import type {
   Entity,
   EntityData,
+  EntitySummary,
   Holding,
   Knowledge,
   Note,
@@ -17,14 +18,16 @@ import { publicUrlFor } from './s3.js'
 /**
  * `search` is a tsvector and must never leave the API. Everything else is
  * mapped explicitly so adding a column does not silently leak it.
+ *
+ * Note `bodyMd` is absent here, not merely unused: lists must not carry rules
+ * text, which is more than half their weight once the SRD is loaded.
  */
-export function serializeEntity(row: PrismaEntity): Entity {
+export function serializeEntitySummary(row: Omit<PrismaEntity, 'bodyMd'>): EntitySummary {
   return {
     id: row.id,
     type: row.type,
     name: row.name,
     summary: row.summary,
-    bodyMd: row.bodyMd,
     data: (row.data ?? {}) as EntityData,
     imageKey: row.imageKey,
     imageUrl: publicUrlFor(row.imageKey),
@@ -33,6 +36,11 @@ export function serializeEntity(row: PrismaEntity): Entity {
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   }
+}
+
+/** The whole entry, for fetching one. */
+export function serializeEntity(row: PrismaEntity): Entity {
+  return { ...serializeEntitySummary(row), bodyMd: row.bodyMd }
 }
 
 /**
@@ -59,14 +67,16 @@ export function serializeNote(row: PrismaNote & { author: PrismaEntity }): Note 
   }
 }
 
-export function serializeHolding(row: PrismaHolding & { item: PrismaEntity }): Holding {
+export function serializeHolding(
+  row: PrismaHolding & { item: Omit<PrismaEntity, 'bodyMd'> },
+): Holding {
   return {
     id: row.id,
     itemId: row.itemId,
     ownerId: row.ownerId,
     quantity: row.quantity,
     note: row.note,
-    item: serializeEntity(row.item),
+    item: serializeEntitySummary(row.item),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   }

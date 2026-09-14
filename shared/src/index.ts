@@ -26,15 +26,17 @@ export const PLAYER_VISIBLE_KNOWLEDGE: Knowledge[] = ['rumoured', 'known']
 export type EntityData = Record<string, unknown>
 
 /**
- * An entry in the shared codex. Items here are *definitions* — who is carrying
- * how many of one is a Holding.
+ * An entry as it appears in a list.
+ *
+ * Deliberately without `bodyMd`: rules text is over half the weight of a list
+ * response once the SRD is loaded, and no list renders it. Fetch the entry
+ * itself when you need the body.
  */
-export interface Entity {
+export interface EntitySummary {
   id: string
   type: string
   name: string
   summary: string | null
-  bodyMd: string | null
   data: EntityData
   imageKey: string | null
   /** Absolute URL built by the API from imageKey; null when there is no image. */
@@ -43,6 +45,14 @@ export interface Entity {
   knowledge: Knowledge
   createdAt: string
   updatedAt: string
+}
+
+/**
+ * A single entry, body included. Items here are *definitions* — who is carrying
+ * how many of one is a Holding.
+ */
+export interface Entity extends EntitySummary {
+  bodyMd: string | null
 }
 
 export interface EntityInput {
@@ -65,7 +75,7 @@ export interface Holding {
   quantity: number
   note: string | null
   /** The item definition, expanded by the API so lists need one request. */
-  item: Entity
+  item: EntitySummary
   createdAt: string
   updatedAt: string
 }

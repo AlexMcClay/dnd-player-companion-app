@@ -7,7 +7,8 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import AddItemSheet from '../components/AddItemSheet'
 import HoldingRow from '../components/HoldingRow'
-import { Empty, Loading, PageHead, StaggerList } from '../components/bits'
+import { Empty, Loading, PageHead } from '../components/bits'
+import VirtualList from '../components/VirtualList'
 import { cx, inputClass } from '../components/ui'
 import { usePlayerId } from '../lib/identity'
 import { SPRING } from '../lib/motion'
@@ -90,16 +91,18 @@ export default function StashPage() {
         {stash.isLoading ? (
           <Loading />
         ) : (
-          <StaggerList>
-            {shown.map((holding) => (
+          <VirtualList
+            items={shown}
+            getKey={(holding) => holding.id}
+            estimate={92}
+            renderItem={(holding) => (
               <HoldingRow
-                key={holding.id}
                 holding={holding}
                 // Anyone browsing as a character can pull from the stash.
                 onMove={playerId ? { label: 'Take it', ownerId: playerId } : undefined}
               />
-            ))}
-          </StaggerList>
+            )}
+          />
         )}
 
         {!stash.isLoading && stacks.length === 0 && <Empty>The stash is empty</Empty>}

@@ -43,16 +43,23 @@ a record is read, so changing it fixes existing images too — nothing to migrat
 > campaign data, do not run it again — uploaded images stay in MinIO but the
 > entries pointing at them are gone.
 
-### The 5e equipment library
+### The 5e item library
 
 ```bash
 npm run db:seed:srd
 ```
 
-Adds the 237 base items from the D&D 5e SRD — weapons, armour, adventuring gear,
-tools, equipment packs, mounts and vehicles — to the Codex item repository, with
-cost, weight, damage, armour class and properties filled in. Players draw from
-this list when adding to a pack or the stash.
+Adds ~600 items from the D&D 5e SRD to the Codex item repository:
+
+| | | |
+| --- | --- | --- |
+| **237 equipment** | weapons, armour, gear, tools, packs, mounts | seeded **known** |
+| **361 magic items** | with rarity, attunement and full rules text | seeded **sealed** |
+
+Mundane gear is common knowledge — nobody has to discover a backpack. **Magic
+items arrive hidden**, so the repository is not a catalogue for players to shop
+from. Unseal one on its page when the party finds it. Re-running the seed will
+not re-seal anything you have revealed.
 
 Unlike `db:seed`, this **adds without deleting**. It matches on name, skips
 anything already there, and is safe to run against a live campaign. Re-run it any
@@ -172,10 +179,14 @@ notes
   carries. That split is what lets the same item sit in the stash and in two packs
   at once, lets a typo be fixed in one place, and makes "who has this?" answerable.
 - **The Codex** opens on a grid of kinds — NPCs, Factions, Locations, Monsters,
-  Items — and each one is searchable. Search runs server-side over name, summary
-  and body, so partial words work ("harbour" finds the Harbourmaster). The chosen
-  kind and the query both live in the URL, so back works and a search is
-  shareable.
+  Items — and each one is searchable. Search runs server-side over name, summary,
+  body **and tags**, so partial words work ("harbour" finds the Harbourmaster,
+  "martial" finds every martial weapon). The chosen kind and the query both live
+  in the URL, so back works and a search is shareable.
+- **Long lists are virtualised** above 40 rows, and list responses omit `bodyMd` —
+  rules text is more than half the weight of an item list once the SRD is in, and
+  no list renders it. `EntitySummary` is the type without it, so the compiler
+  stops anyone reading a body off a list row.
 - **Locations** hold a country, a city, a district or a single inn. One free-text
   `kind` field rather than a hierarchy, so nobody has to maintain a tree at the
   table.

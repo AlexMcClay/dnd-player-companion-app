@@ -1,6 +1,7 @@
 import type {
   Entity,
   EntityInput,
+  EntitySummary,
   Holding,
   HoldingInput,
   Note,
@@ -64,8 +65,9 @@ export interface NoteQuery {
 }
 
 export const api = {
-  listEntities(query: EntityQuery = {}): Promise<Entity[]> {
-    return request<Entity[]>(`/entities${qs(query)}`)
+  /** Lists carry no `bodyMd` — fetch the entry itself when you need the body. */
+  listEntities(query: EntityQuery = {}): Promise<EntitySummary[]> {
+    return request<EntitySummary[]>(`/entities${qs(query)}`)
   },
 
   getEntity(id: string): Promise<Entity> {

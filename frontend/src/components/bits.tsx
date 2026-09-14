@@ -1,6 +1,6 @@
 import { motion, type Variants } from 'framer-motion'
 import { Children, useMemo, type CSSProperties, type ReactNode } from 'react'
-import type { Entity, Knowledge } from '@codex/shared'
+import type { EntitySummary, Knowledge } from '@codex/shared'
 import { LuEyeOff, LuLoader, LuSparkles, LuTag } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
 import { rowVariants, SPRING } from '../lib/motion'
@@ -17,7 +17,7 @@ export function Portrait({
   style,
   className,
 }: {
-  entity: Pick<Entity, 'imageUrl' | 'name' | 'type'>
+  entity: Pick<EntitySummary, 'imageUrl' | 'name' | 'type'>
   size?: number
   aspect?: string
   style?: CSSProperties
@@ -141,7 +141,7 @@ export function EntityRow({
   portraitSize = 46,
   right,
 }: {
-  entity: Entity
+  entity: EntitySummary
   portraitSize?: number
   right?: ReactNode
 }) {
