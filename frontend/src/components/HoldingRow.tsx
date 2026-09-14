@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Holding } from '@codex/shared'
 import { motion } from 'framer-motion'
+import type { IconType } from 'react-icons'
 import { LuMinus, LuPlus, LuTrash2 } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
@@ -17,8 +18,14 @@ export default function HoldingRow({
   onMove,
 }: {
   holding: Holding
-  /** Label for the move action, e.g. "To stash". Omitted hides the button. */
-  onMove?: { label: string; ownerId: string | null }
+  /**
+   * Where this stack can be sent, if anywhere. Omitted hides the button.
+   *
+   * `label` is the accessible name and the tooltip rather than visible text —
+   * the button is an icon in the row's control cluster, so the words still have
+   * to exist somewhere for anyone not going by the picture.
+   */
+  onMove?: { label: string; icon: IconType; ownerId: string | null }
 }) {
   const queryClient = useQueryClient()
 
@@ -39,8 +46,10 @@ export default function HoldingRow({
 
   const busy = setQuantity.isPending || move.isPending
 
+  const MoveIcon = onMove?.icon
+
   return (
-    <motion.div className={cx(rowClass, 'flex-wrap')} variants={rowVariants}>
+    <motion.div className={rowClass} variants={rowVariants}>
       <Link to={`/e/${holding.itemId}`} className="flex min-w-0 flex-1 items-center gap-3">
         <Portrait entity={holding.item} size={40} />
         <div className="min-w-0 flex-1">
@@ -59,7 +68,25 @@ export default function HoldingRow({
         </div>
       </Link>
 
-      <div className="flex items-center gap-1.5">
+      <div className="flex shrink-0 items-center gap-1.5">
+        {/*
+          The move used to be a full-width bar below the row, which made every
+          stack two lines tall and shouted louder than the item itself. As an
+          icon beside the steppers it reads as one more thing you can do to the
+          stack, and the row stays one line — which is what lets two of them sit
+          side by side on a wide screen.
+        */}
+        {onMove && MoveIcon && (
+          <StepButton
+            label={onMove.label}
+            tone="gold"
+            disabled={busy}
+            onClick={() => move.mutate(onMove.ownerId)}
+          >
+            <MoveIcon aria-hidden />
+          </StepButton>
+        )}
+
         <StepButton
           label={`One fewer ${holding.item.name}`}
           disabled={busy}
@@ -87,18 +114,6 @@ export default function HoldingRow({
         </StepButton>
       </div>
 
-      {onMove && (
-        <motion.button
-          type="button"
-          className="type-meta w-full cursor-pointer border border-gold-dim py-1.5 text-gold"
-          disabled={busy}
-          whileTap={{ scale: 0.97 }}
-          transition={SPRING}
-          onClick={() => move.mutate(onMove.ownerId)}
-        >
-          {onMove.label}
-        </motion.button>
-      )}
     </motion.div>
   )
 }
@@ -108,18 +123,27 @@ function StepButton({
   disabled,
   onClick,
   children,
+  tone = 'plain',
 }: {
   label: string
   disabled: boolean
   onClick: () => void
   children: React.ReactNode
+  /** Gold marks the one button that moves the stack somewhere else. */
+  tone?: 'plain' | 'gold'
 }) {
   return (
     <motion.button
       type="button"
       aria-label={label}
+      // Same words as the accessible name: an icon-only control needs to be
+      // answerable with a hover as well as with a screen reader.
+      title={label}
       disabled={disabled}
-      className="grid size-7 cursor-pointer place-items-center border border-line text-ink-faint disabled:opacity-40 [&>svg]:size-3"
+      className={cx(
+        'grid size-7 cursor-pointer place-items-center border disabled:opacity-40 [&>svg]:size-3',
+        tone === 'gold' ? 'border-gold-dim bg-gold-tint text-gold' : 'border-line text-ink-faint',
+      )}
       whileTap={{ scale: 0.9 }}
       transition={SPRING}
       onClick={onClick}

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { STASH } from '@codex/shared'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { LuChevronLeft, LuSearch, LuVault, LuX } from 'react-icons/lu'
+import { LuChevronLeft, LuGrab, LuSearch, LuVault, LuX } from 'react-icons/lu'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import AddItemSheet from '../components/AddItemSheet'
@@ -11,6 +11,7 @@ import { Empty, Loading, PageHead } from '../components/bits'
 import VirtualList from '../components/VirtualList'
 import { cx, inputClass } from '../components/ui'
 import { usePlayerId } from '../lib/identity'
+import { MD, useMediaQuery } from '../lib/useMediaQuery'
 import { SPRING } from '../lib/motion'
 
 /**
@@ -30,6 +31,11 @@ export default function StashPage() {
 
   const stacks = stash.data ?? []
   const total = stacks.reduce((sum, holding) => sum + holding.quantity, 0)
+
+  // A stash row is a portrait, a name and four small buttons; at 740px that
+  // leaves most of the line empty. The virtualiser has to be told the number
+  // rather than shown a class, since it decides what is in the DOM.
+  const columns = useMediaQuery(MD) ? 2 : 1
 
   // Filtering client-side: the whole stash is already loaded, and a name match
   // is what people mean when they type into a bag.
@@ -94,12 +100,15 @@ export default function StashPage() {
           <VirtualList
             items={shown}
             getKey={(holding) => holding.id}
-            estimate={92}
+            estimate={68}
+            columns={columns}
             renderItem={(holding) => (
               <HoldingRow
                 holding={holding}
                 // Anyone browsing as a character can pull from the stash.
-                onMove={playerId ? { label: 'Take it', ownerId: playerId } : undefined}
+                onMove={
+                  playerId ? { label: 'Take it', icon: LuGrab, ownerId: playerId } : undefined
+                }
               />
             )}
           />

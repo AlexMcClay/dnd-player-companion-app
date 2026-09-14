@@ -53,7 +53,7 @@ export default function DdbPartyPage() {
 
         <h1 className="type-title m-0 flex items-center gap-2">
           <LuLink className="size-5 text-gold" aria-hidden />
-          D&amp;D Beyond
+          D&amp;D Beyond stash
         </h1>
         <div className="type-meta">
           {data

@@ -56,7 +56,12 @@ export default function PartyPage() {
           {players.data?.length === 0 && <Empty>No characters yet</Empty>}
         </Section>
 
-        <Section className="flex flex-col gap-3">
+        {/*
+          Side by side from md up. They are siblings — two inventories the party
+          has — so a row says that more plainly than a stack, and each is only a
+          count and a few names wide.
+        */}
+        <Section className="grid gap-3 md:grid-cols-2">
           <SummaryCard
             to="/party/stash"
             icon={LuVault}
@@ -77,7 +82,7 @@ export default function PartyPage() {
           <SummaryCard
             to="/party/ddb"
             icon={LuLink}
-            label="D&D Beyond"
+            label="D&D Beyond stash"
             summary={
               ddb.isLoading
                 ? 'Checking…'
@@ -135,8 +140,10 @@ function SummaryCard({
   right?: string
 }) {
   return (
-    <motion.div whileTap={{ scale: 0.98 }} transition={SPRING}>
-      <Link to={to} className={panelClass('flex items-center gap-3')}>
+    // h-full both here and on the link, so the two cards match height in the
+    // grid however long their previews are.
+    <motion.div className="h-full" whileTap={{ scale: 0.98 }} transition={SPRING}>
+      <Link to={to} className={panelClass('flex h-full items-center gap-3')}>
         <span className="grid size-10 shrink-0 place-items-center border border-gold-dim bg-gold-tint text-gold">
           <Icon className="size-4.5" aria-hidden />
         </span>

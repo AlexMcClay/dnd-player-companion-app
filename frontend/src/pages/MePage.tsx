@@ -2,7 +2,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Entity } from '@codex/shared'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { LuBackpack, LuLink, LuNotebookPen, LuPencil, LuScrollText, LuUsers } from 'react-icons/lu'
+import {
+  LuBackpack,
+  LuLink,
+  LuNotebookPen,
+  LuPencil,
+  LuScrollText,
+  LuUsers,
+  LuVault,
+} from 'react-icons/lu'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import AddItemSheet from '../components/AddItemSheet'
@@ -104,7 +112,7 @@ function MyCharacter({ playerId }: { playerId: string }) {
                 <HoldingRow
                   key={holding.id}
                   holding={holding}
-                  onMove={{ label: 'Move to party stash', ownerId: null }}
+                  onMove={{ label: 'Move to party stash', icon: LuVault, ownerId: null }}
                 />
               ))}
             </StaggerList>

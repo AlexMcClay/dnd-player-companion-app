@@ -29,16 +29,41 @@ interface Props<T> {
   scrollRef?: RefObject<HTMLElement | null>
   className?: string
   estimate?: number
+  /** Items side by side. Defaults to one, the single-column list. */
+  columns?: number
+}
+
+/**
+ * Groups items into rows of `columns`.
+ *
+ * Laying out multiple columns this way — one virtual row holding N items — keeps
+ * the virtualiser one-dimensional, which is the whole reason it can measure rows
+ * that vary in height. The alternative, lanes, has to guess at a row's height
+ * before it exists.
+ */
+function chunk<T>(items: T[], columns: number): T[][] {
+  if (columns <= 1) return items.map((item) => [item])
+  const rows: T[][] = []
+  for (let i = 0; i < items.length; i += columns) rows.push(items.slice(i, i + columns))
+  return rows
 }
 
 export default function VirtualList<T>(props: Props<T>) {
+  const columns = Math.max(1, props.columns ?? 1)
+
   // Hooks cannot be conditional, so the two scroll modes are two components.
   // The threshold check is safe here because it does not change which hook runs.
   if (props.items.length <= VIRTUALISE_ABOVE) {
     return (
       <StaggerList className={props.className}>
-        {props.items.map((item) => (
-          <div key={props.getKey(item)}>{props.renderItem(item)}</div>
+        {chunk(props.items, columns).map((row) => (
+          <Row
+            key={props.getKey(row[0]!)}
+            row={row}
+            columns={columns}
+            getKey={props.getKey}
+            renderItem={props.renderItem}
+          />
         ))}
       </StaggerList>
     )
@@ -47,10 +72,34 @@ export default function VirtualList<T>(props: Props<T>) {
   return props.scrollRef ? <PanelVirtual {...props} /> : <WindowVirtual {...props} />
 }
 
+/** One virtual row: a single item, or `columns` of them side by side. */
+function Row<T>({
+  row,
+  columns,
+  getKey,
+  renderItem,
+}: Pick<Props<T>, 'getKey' | 'renderItem'> & { row: T[]; columns: number }) {
+  if (columns === 1) return <div>{renderItem(row[0]!)}</div>
+
+  return (
+    // Explicit equal tracks rather than auto-fit, so a final half-full row
+    // leaves a gap instead of stretching one item across the width.
+    <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+      {row.map((item) => (
+        <div key={getKey(item)} className="min-w-0">
+          {renderItem(item)}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 /** Long list on a page: the window is the scroller. */
-function WindowVirtual<T>({ items, getKey, renderItem, className, estimate }: Props<T>) {
+function WindowVirtual<T>({ items, getKey, renderItem, className, estimate, columns }: Props<T>) {
   const parentRef = useRef<HTMLDivElement>(null)
   const [offset, setOffset] = useState(0)
+  const lanes = Math.max(1, columns ?? 1)
+  const rows = chunk(items, lanes)
 
   // The window virtualiser measures from the top of the document, so it needs
   // to know how far down the page this list starts.
@@ -59,7 +108,7 @@ function WindowVirtual<T>({ items, getKey, renderItem, className, estimate }: Pr
   }, [items.length])
 
   const virtualizer = useWindowVirtualizer({
-    count: items.length,
+    count: rows.length,
     estimateSize: () => estimate ?? ESTIMATED_ROW,
     overscan: 8,
     scrollMargin: offset,
@@ -74,23 +123,23 @@ function WindowVirtual<T>({ items, getKey, renderItem, className, estimate }: Pr
       animate="show"
       style={{ position: 'relative', height: virtualizer.getTotalSize() }}
     >
-      {virtualizer.getVirtualItems().map((row) => {
-        const item = items[row.index]
-        if (!item) return null
+      {virtualizer.getVirtualItems().map((virtual) => {
+        const row = rows[virtual.index]
+        if (!row?.[0]) return null
         return (
           <div
-            key={getKey(item)}
-            data-index={row.index}
+            key={getKey(row[0])}
+            data-index={virtual.index}
             ref={virtualizer.measureElement}
             style={{
               position: 'absolute',
               top: 0,
               left: 0,
               width: '100%',
-              transform: `translateY(${row.start - virtualizer.options.scrollMargin}px)`,
+              transform: `translateY(${virtual.start - virtualizer.options.scrollMargin}px)`,
             }}
           >
-            {renderItem(item)}
+            <Row row={row} columns={lanes} getKey={getKey} renderItem={renderItem} />
           </div>
         )
       })}
@@ -99,9 +148,20 @@ function WindowVirtual<T>({ items, getKey, renderItem, className, estimate }: Pr
 }
 
 /** Long list inside a panel: that element is the scroller. */
-function PanelVirtual<T>({ items, getKey, renderItem, scrollRef, className, estimate }: Props<T>) {
+function PanelVirtual<T>({
+  items,
+  getKey,
+  renderItem,
+  scrollRef,
+  className,
+  estimate,
+  columns,
+}: Props<T>) {
+  const lanes = Math.max(1, columns ?? 1)
+  const rows = chunk(items, lanes)
+
   const virtualizer = useVirtualizer({
-    count: items.length,
+    count: rows.length,
     getScrollElement: () => scrollRef?.current ?? null,
     estimateSize: () => estimate ?? ESTIMATED_ROW,
     overscan: 8,
@@ -115,23 +175,23 @@ function PanelVirtual<T>({ items, getKey, renderItem, scrollRef, className, esti
       animate="show"
       style={{ position: 'relative', height: virtualizer.getTotalSize() }}
     >
-      {virtualizer.getVirtualItems().map((row) => {
-        const item = items[row.index]
-        if (!item) return null
+      {virtualizer.getVirtualItems().map((virtual) => {
+        const row = rows[virtual.index]
+        if (!row?.[0]) return null
         return (
           <div
-            key={getKey(item)}
-            data-index={row.index}
+            key={getKey(row[0])}
+            data-index={virtual.index}
             ref={virtualizer.measureElement}
             style={{
               position: 'absolute',
               top: 0,
               left: 0,
               width: '100%',
-              transform: `translateY(${row.start}px)`,
+              transform: `translateY(${virtual.start}px)`,
             }}
           >
-            {renderItem(item)}
+            <Row row={row} columns={lanes} getKey={getKey} renderItem={renderItem} />
           </div>
         )
       })}
