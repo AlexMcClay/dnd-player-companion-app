@@ -1,8 +1,16 @@
 import { Prisma } from '@prisma/client'
 import { Router } from 'express'
-import { describeClasses, DdbError, fetchCharacter, isValidCharacterId, totalLevel } from '../lib/ddb.js'
+import { env } from '../env.js'
+import {
+  describeClasses,
+  DdbError,
+  fetchCharacter,
+  fetchPartyInventory,
+  isValidCharacterId,
+  totalLevel,
+} from '../lib/ddb.js'
 import { prisma } from '../lib/prisma.js'
-import { serializeDdbSnapshot } from '../lib/serialize.js'
+import { serializeDdbParty, serializeDdbSnapshot } from '../lib/serialize.js'
 import { requireActor } from '../middleware/identity.js'
 
 export const ddbRouter = Router()
@@ -25,6 +33,96 @@ async function canSync(
   if (isDm || player.id === actingAs) return 'ok'
   return 'forbidden'
 }
+
+/**
+ * Which campaign the party inventory belongs to.
+ *
+ * A configured id wins; otherwise it is read off whichever character is linked,
+ * since D&D Beyond puts the campaign in every character payload. That keeps the
+ * common case configuration-free.
+ *
+ * The name only comes back when it was derived — D&D Beyond does not put it in
+ * the party response. It is worth having, because it is the visible difference
+ * between a campaign that exists and a mistyped id: see the note on the sync
+ * route about empty results.
+ */
+async function resolveCampaign(): Promise<{ id: string; name: string | null }> {
+  if (isValidCharacterId(env.ddbCampaignId)) return { id: env.ddbCampaignId, name: null }
+
+  const players = await prisma.entity.findMany({
+    where: { type: 'player' },
+    select: { data: true },
+  })
+
+  for (const player of players) {
+    const id = (player.data as { ddbCharacterId?: unknown } | null)?.ddbCharacterId
+    if (!isValidCharacterId(id)) continue
+
+    const character = await fetchCharacter(id)
+    if (character.campaign) return character.campaign
+  }
+
+  throw new DdbError(
+    400,
+    'No campaign to sync. Link a D&D Beyond character to someone first, or set DDB_CAMPAIGN_ID.',
+  )
+}
+
+// GET /api/ddb/party — the shared purse and items, or null if never synced.
+//
+// Registered before /:playerId, or Express matches "party" as a player id and
+// these two routes become unreachable.
+ddbRouter.get('/party', async (_req, res, next) => {
+  try {
+    const row = await prisma.ddbPartySnapshot.findFirst({ orderBy: { syncedAt: 'desc' } })
+    res.json(row ? serializeDdbParty(row) : null)
+  } catch (err) {
+    next(err)
+  }
+})
+
+/**
+ * POST /api/ddb/party/sync — any member of the table, like the app's own stash.
+ *
+ * Note that D&D Beyond answers 200 with `success: true` and an entirely empty
+ * party for a campaign that does not exist, rather than a 404. A mistyped
+ * DDB_CAMPAIGN_ID therefore looks exactly like a party that owns nothing. The
+ * snapshot is keyed by campaign id, so the real one is never overwritten — but
+ * the panel warns when a sync comes back empty, because that is the only signal
+ * there is.
+ */
+ddbRouter.post('/party/sync', requireActor, async (req, res, next) => {
+  try {
+    const campaign = await resolveCampaign()
+    const party = await fetchPartyInventory(campaign.id)
+
+    const existing = await prisma.ddbPartySnapshot.findUnique({
+      where: { campaignId: campaign.id },
+    })
+
+    const fields = {
+      // Keep a name we already knew if this sync could not supply one.
+      campaignName: campaign.name ?? existing?.campaignName ?? null,
+      currencies: party.currencies as unknown as Prisma.InputJsonValue,
+      items: party.items as unknown as Prisma.InputJsonValue,
+      syncedAt: new Date(),
+    }
+
+    const row = await prisma.ddbPartySnapshot.upsert({
+      where: { campaignId: campaign.id },
+      create: { campaignId: campaign.id, ...fields },
+      update: fields,
+    })
+
+    res.json(serializeDdbParty(row))
+  } catch (err) {
+    if (err instanceof DdbError) {
+      res.status(err.status).json({ error: err.message })
+      return
+    }
+    next(err)
+  }
+})
 
 // GET /api/ddb/:playerId — the mirror, or null if never synced.
 ddbRouter.get('/:playerId', async (req, res, next) => {

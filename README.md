@@ -120,6 +120,20 @@ its own name and the panel points out any mismatch.
 Avatars are linked from dndbeyond.com rather than copied. A portrait uploaded in
 the app always wins over the synced avatar.
 
+### The party inventory
+
+D&D Beyond also keeps a shared party purse and item list, synced from its own
+card on the **Party** tab. Any player can sync it, like the app's stash.
+
+The campaign id is worked out from whichever character is linked, so there is
+nothing to configure. `DDB_CAMPAIGN_ID` overrides it if you ever need to.
+
+> D&D Beyond answers a campaign that does not exist with `success: true` and an
+> **empty** party rather than a 404, so a mistyped id looks identical to a party
+> that owns nothing. Snapshots are keyed by campaign id, so a wrong one cannot
+> overwrite the real mirror — and the panel warns when a sync returns no coin and
+> no items at all.
+
 ## Notes
 
 Players write notes in three places. Where a note lives and who may read it are
@@ -257,7 +271,9 @@ API returns a ready-to-use `imageUrl`.
 | `POST /api/notes` | The author is taken from the header, never the body |
 | `PUT /api/notes/:id` | Author only |
 | `DELETE /api/notes/:id` | Author, or the DM |
-| `GET /api/ddb/:playerId` | The D&D Beyond mirror, or null |
+| `GET /api/ddb/party` | The shared party mirror, or null |
+| `POST /api/ddb/party/sync` | Any player, or the DM |
+| `GET /api/ddb/:playerId` | A character's D&D Beyond mirror, or null |
 | `POST /api/ddb/:playerId/sync` | The DM, or the player whose character it is |
 | `POST /api/uploads/presign` | DM only |
 | `POST /api/dm/verify` | Checks a passphrase before the UI stores it |

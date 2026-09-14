@@ -1,4 +1,5 @@
 import type {
+  DdbPartySnapshot as PrismaDdbPartySnapshot,
   DdbSnapshot as PrismaDdbSnapshot,
   Entity as PrismaEntity,
   Holding as PrismaHolding,
@@ -8,6 +9,7 @@ import type {
   DdbClass,
   DdbCurrencies,
   DdbItem,
+  DdbPartySnapshot,
   DdbSnapshot,
   Entity,
   EntityData,
@@ -93,6 +95,16 @@ export function serializeDdbSnapshot(row: PrismaDdbSnapshot): DdbSnapshot {
     race: row.race,
     classes: (row.classes ?? []) as unknown as DdbClass[],
     avatarUrl: row.avatarUrl,
+    currencies: (row.currencies ?? {}) as DdbCurrencies,
+    items: (row.items ?? []) as unknown as DdbItem[],
+    syncedAt: row.syncedAt.toISOString(),
+  }
+}
+
+export function serializeDdbParty(row: PrismaDdbPartySnapshot): DdbPartySnapshot {
+  return {
+    campaignId: row.campaignId,
+    campaignName: row.campaignName,
     currencies: (row.currencies ?? {}) as DdbCurrencies,
     items: (row.items ?? []) as unknown as DdbItem[],
     syncedAt: row.syncedAt.toISOString(),

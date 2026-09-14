@@ -80,7 +80,7 @@ export default function DdbPanel({
           )}
 
           <Purse currencies={data.currencies} />
-          <Inventory items={data.items} />
+          <DdbItemList items={data.items} label="Carried on D&D Beyond" />
         </>
       ) : (
         <Empty>Not synced yet</Empty>
@@ -122,7 +122,12 @@ export default function DdbPanel({
   )
 }
 
-function Purse({ currencies }: { currencies: DdbCurrencies }) {
+/** True when D&D Beyond reported no coin and no items at all. */
+export function isEmptyPurse(currencies: DdbCurrencies, items: DdbItem[]): boolean {
+  return items.length === 0 && COIN_ORDER.every(([key]) => (currencies[key] ?? 0) === 0)
+}
+
+export function Purse({ currencies }: { currencies: DdbCurrencies }) {
   const coins = COIN_ORDER.filter(([key]) => (currencies[key] ?? 0) > 0)
 
   return (
@@ -142,14 +147,14 @@ function Purse({ currencies }: { currencies: DdbCurrencies }) {
   )
 }
 
-function Inventory({ items }: { items: DdbItem[] }) {
-  if (items.length === 0) return <Empty>No items on D&amp;D Beyond</Empty>
+export function DdbItemList({ items, label }: { items: DdbItem[]; label: string }) {
+  if (items.length === 0) return <Empty>Nothing on D&amp;D Beyond</Empty>
 
   const carried = items.reduce((sum, i) => sum + i.quantity, 0)
 
   return (
     <div className="flex flex-col gap-2">
-      <SectionHead label="Carried on D&D Beyond" note={`${items.length} entries · ${carried}`} />
+      <SectionHead label={label} note={`${items.length} entries · ${carried}`} />
       <StaggerList>
         {items.map((item, i) => (
           <motion.div

@@ -6,6 +6,7 @@ import Layout from './components/Layout'
 import { EASE, pageVariants } from './lib/motion'
 import { useNavDirection } from './lib/useSwipeNav'
 import CodexPage from './pages/CodexPage'
+import DdbPartyPage from './pages/DdbPartyPage'
 import CraftPage from './pages/CraftPage'
 import EntityDetailPage from './pages/EntityDetailPage'
 import EntityEditPage from './pages/EntityEditPage'
@@ -58,8 +59,9 @@ export default function App() {
             <Routes location={location}>
               <Route path="/" element={<Navigate to="/party" replace />} />
               <Route path="/party" element={<PartyPage />} />
-              {/* Its own screen so a long stash cannot bury the Party tab. */}
+              {/* Own screens so neither inventory can bury the Party tab. */}
               <Route path="/party/stash" element={<StashPage />} />
+              <Route path="/party/ddb" element={<DdbPartyPage />} />
               <Route path="/me" element={<MePage />} />
               <Route path="/codex" element={<CodexPage />} />
               {/* The Items tab folded into Party and Me; keep old links alive. */}

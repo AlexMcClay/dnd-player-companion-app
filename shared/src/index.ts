@@ -175,6 +175,18 @@ export interface DdbSnapshot {
   syncedAt: string
 }
 
+/**
+ * The campaign's shared purse and items. Separate from every character's own
+ * pocket — and from the app's party stash, which players edit themselves.
+ */
+export interface DdbPartySnapshot {
+  campaignId: string
+  campaignName: string | null
+  currencies: DdbCurrencies
+  items: DdbItem[]
+  syncedAt: string
+}
+
 /** The author is taken from the request, so it is deliberately absent here. */
 export interface NoteInput {
   placement: NotePlacement

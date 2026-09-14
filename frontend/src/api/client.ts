@@ -1,4 +1,5 @@
 import type {
+  DdbPartySnapshot,
   DdbSnapshot,
   Entity,
   EntityInput,
@@ -126,6 +127,15 @@ export const api = {
 
   syncDdb(playerId: string): Promise<DdbSnapshot> {
     return request<DdbSnapshot>(`/ddb/${playerId}/sync`, { method: 'POST' })
+  },
+
+  /** The campaign's shared purse and items, or null if never synced. */
+  getDdbParty(): Promise<DdbPartySnapshot | null> {
+    return request<DdbPartySnapshot | null>('/ddb/party')
+  },
+
+  syncDdbParty(): Promise<DdbPartySnapshot> {
+    return request<DdbPartySnapshot>('/ddb/party/sync', { method: 'POST' })
   },
 
   verifyDmKey(key: string): Promise<boolean> {

@@ -1,20 +1,27 @@
 import type { DdbClass, DdbCurrencies, DdbItem } from '@codex/shared'
 
 /**
- * Reads a character from D&D Beyond's public character service.
+ * Reads characters and the party inventory from D&D Beyond's public character
+ * service.
  *
- * Only the handful of fields the app shows are mapped out; the response is
- * around 260 KB of which we keep a few hundred bytes. Everything here is
- * defensive — this is somebody else's API and it can change shape without
- * warning, so a missing field must degrade rather than throw.
+ * Only the handful of fields the app shows are mapped out; a character response
+ * is around 260 KB of which we keep a few hundred bytes. Everything here is
+ * defensive — this is somebody else's undocumented API and it can change shape
+ * without warning, so a missing field must degrade rather than throw.
  */
 
-const BASE = 'https://character-service.dndbeyond.com/character/v5/character'
+const BASE = 'https://character-service.dndbeyond.com/character/v5'
+
+/**
+ * Verified to change nothing for these characters today — 34 items either way.
+ * Carried as insurance for homebrew items somebody adds later.
+ */
+const QUERY = '?includeCustomItems=true'
 
 /** D&D Beyond can be slow; a player tapping sync should not wait forever. */
 const TIMEOUT_MS = 15_000
 
-/** Digits only, checked before it is ever interpolated into a URL. */
+/** Digits only, checked before either id is ever interpolated into a URL. */
 export function isValidCharacterId(id: unknown): id is string {
   return typeof id === 'string' && /^\d{1,20}$/.test(id)
 }
@@ -33,6 +40,13 @@ export interface DdbCharacter {
   race: string | null
   classes: DdbClass[]
   avatarUrl: string | null
+  currencies: DdbCurrencies
+  items: DdbItem[]
+  /** The campaign this character belongs to, which is how the party is found. */
+  campaign: { id: string; name: string | null } | null
+}
+
+export interface DdbParty {
   currencies: DdbCurrencies
   items: DdbItem[]
 }
@@ -74,14 +88,16 @@ function mapClass(raw: any): DdbClass | null {
   }
 }
 
-export async function fetchCharacter(characterId: string): Promise<DdbCharacter> {
-  if (!isValidCharacterId(characterId)) {
-    throw new DdbError(400, 'That does not look like a D&D Beyond character id')
-  }
-
+/**
+ * One request, one set of failure modes. Both endpoints answer in the same
+ * `{ success, data }` envelope, so the handling belongs in one place.
+ *
+ * `subject` only shapes the error text — "character" or "party inventory".
+ */
+async function fetchDdb(path: string, subject: string): Promise<any> {
   let res: Response
   try {
-    res = await fetch(`${BASE}/${characterId}`, {
+    res = await fetch(`${BASE}${path}${QUERY}`, {
       headers: { accept: 'application/json' },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
@@ -94,10 +110,7 @@ export async function fetchCharacter(characterId: string): Promise<DdbCharacter>
   }
 
   if (res.status === 403 || res.status === 404) {
-    throw new DdbError(
-      404,
-      'D&D Beyond would not return that character. It has to be set to public.',
-    )
+    throw new DdbError(404, `D&D Beyond would not return that ${subject}. It has to be public.`)
   }
   if (!res.ok) {
     throw new DdbError(502, `D&D Beyond returned ${res.status}`)
@@ -105,10 +118,44 @@ export async function fetchCharacter(characterId: string): Promise<DdbCharacter>
 
   const body = (await res.json().catch(() => null)) as any
   if (!body?.success || !body?.data) {
-    throw new DdbError(502, str(body?.message) ?? 'D&D Beyond returned no character data')
+    throw new DdbError(502, str(body?.message) ?? `D&D Beyond returned no ${subject} data`)
   }
 
-  const data = body.data
+  return body.data
+}
+
+function currencies(raw: any): DdbCurrencies {
+  return {
+    cp: num(raw?.cp) ?? 0,
+    sp: num(raw?.sp) ?? 0,
+    ep: num(raw?.ep) ?? 0,
+    gp: num(raw?.gp) ?? 0,
+    pp: num(raw?.pp) ?? 0,
+  }
+}
+
+function items(raw: unknown): DdbItem[] {
+  return (Array.isArray(raw) ? raw : [])
+    .map(mapItem)
+    .filter((i): i is DdbItem => i !== null)
+}
+
+/** The campaign's shared purse and items. Party items share the character shape. */
+export async function fetchPartyInventory(campaignId: string): Promise<DdbParty> {
+  if (!isValidCharacterId(campaignId)) {
+    throw new DdbError(400, 'That does not look like a D&D Beyond campaign id')
+  }
+
+  const data = await fetchDdb(`/party/inventory/${campaignId}`, 'party inventory')
+  return { currencies: currencies(data.currency), items: items(data.partyItems) }
+}
+
+export async function fetchCharacter(characterId: string): Promise<DdbCharacter> {
+  if (!isValidCharacterId(characterId)) {
+    throw new DdbError(400, 'That does not look like a D&D Beyond character id')
+  }
+
+  const data = await fetchDdb(`/character/${characterId}`, 'character')
   const name = str(data.name)
   if (!name) throw new DdbError(502, 'D&D Beyond returned a character with no name')
 
@@ -120,16 +167,14 @@ export async function fetchCharacter(characterId: string): Promise<DdbCharacter>
       .map(mapClass)
       .filter((c: DdbClass | null): c is DdbClass => c !== null),
     avatarUrl: str(data.decorations?.avatarUrl),
-    currencies: {
-      cp: num(data.currencies?.cp) ?? 0,
-      sp: num(data.currencies?.sp) ?? 0,
-      ep: num(data.currencies?.ep) ?? 0,
-      gp: num(data.currencies?.gp) ?? 0,
-      pp: num(data.currencies?.pp) ?? 0,
-    },
-    items: (Array.isArray(data.inventory) ? data.inventory : [])
-      .map(mapItem)
-      .filter((i: DdbItem | null): i is DdbItem => i !== null),
+    currencies: currencies(data.currencies),
+    items: items(data.inventory),
+    // The campaign id lives here, which is how a party sync finds the party
+    // without anything being configured.
+    campaign:
+      data.campaign?.id != null
+        ? { id: String(data.campaign.id), name: str(data.campaign.name) }
+        : null,
   }
 }
 

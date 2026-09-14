@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { STASH } from '@codex/shared'
 import { motion } from 'framer-motion'
-import { LuChevronRight, LuNotebookPen, LuVault } from 'react-icons/lu'
+import type { IconType } from 'react-icons'
+import { LuChevronRight, LuLink, LuNotebookPen, LuVault } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import DmCreateBar from '../components/DmCreateBar'
@@ -30,6 +31,8 @@ export default function PartyPage() {
     queryFn: () => api.listHoldings({ owner: STASH }),
   })
 
+  const ddb = useQuery({ queryKey: ['ddb', 'party'], queryFn: () => api.getDdbParty() })
+
   if (players.isLoading) return <Loading />
 
   const stacks = stash.data ?? []
@@ -53,12 +56,39 @@ export default function PartyPage() {
           {players.data?.length === 0 && <Empty>No characters yet</Empty>}
         </Section>
 
-        <Section>
-          <StashCard
-            loading={stash.isLoading}
-            entries={stacks.length}
-            total={total}
-            preview={stacks.slice(0, 3).map((holding) => holding.item.name)}
+        <Section className="flex flex-col gap-3">
+          <SummaryCard
+            to="/party/stash"
+            icon={LuVault}
+            label="Party stash"
+            summary={
+              stash.isLoading
+                ? 'Counting…'
+                : stacks.length === 0
+                  ? 'Empty — nothing pooled yet'
+                  : previewOf(
+                      stacks.map((holding) => holding.item.name),
+                      stacks.length,
+                    )
+            }
+            right={!stash.isLoading && stacks.length > 0 ? `${total} items` : undefined}
+          />
+
+          <SummaryCard
+            to="/party/ddb"
+            icon={LuLink}
+            label="D&D Beyond"
+            summary={
+              ddb.isLoading
+                ? 'Checking…'
+                : !ddb.data
+                  ? 'Not synced yet'
+                  : previewOf(
+                      ddb.data.items.map((i) => i.name),
+                      ddb.data.items.length,
+                    ) || 'No items'
+            }
+            right={ddb.data ? `${ddb.data.currencies.gp ?? 0} gp` : undefined}
           />
         </Section>
 
@@ -84,50 +114,53 @@ export default function PartyPage() {
 }
 
 /**
- * Stands in for the stash on this page. A count and the first few names are
- * enough to know whether it is worth opening; the full list has its own screen
- * so it cannot bury the board below it.
+ * Stands in for an inventory on this page. A count and the first few names are
+ * enough to know whether it is worth opening; each full list has its own screen
+ * so neither can bury the board below them.
+ *
+ * Shared by the app's stash and the D&D Beyond mirror, which is what keeps the
+ * two reading as siblings — only one of them is editable.
  */
-function StashCard({
-  loading,
-  entries,
-  total,
-  preview,
+function SummaryCard({
+  to,
+  icon: Icon,
+  label,
+  summary,
+  right,
 }: {
-  loading: boolean
-  entries: number
-  total: number
-  preview: string[]
+  to: string
+  icon: IconType
+  label: string
+  summary: string
+  right?: string
 }) {
-  const summary = loading
-    ? 'Counting…'
-    : entries === 0
-      ? 'Empty — nothing pooled yet'
-      : [...preview, entries > preview.length ? `+${entries - preview.length} more` : null]
-          .filter(Boolean)
-          .join(' · ')
-
   return (
     <motion.div whileTap={{ scale: 0.98 }} transition={SPRING}>
-      <Link to="/party/stash" className={panelClass('flex items-center gap-3')}>
+      <Link to={to} className={panelClass('flex items-center gap-3')}>
         <span className="grid size-10 shrink-0 place-items-center border border-gold-dim bg-gold-tint text-gold">
-          <LuVault className="size-4.5" aria-hidden />
+          <Icon className="size-4.5" aria-hidden />
         </span>
 
         <span className="min-w-0 flex-1">
-          <span className="type-lab block">Party stash</span>
-          <span className="type-meta mt-0.75 block truncate normal-case tracking-normal">
+          <span className="type-lab block">{label}</span>
+          <span className="type-meta mt-0.75 block truncate tracking-normal normal-case">
             {summary}
           </span>
         </span>
 
         <span className="flex shrink-0 items-center gap-2">
-          {!loading && entries > 0 && (
-            <span className="type-meta whitespace-nowrap">{total} items</span>
-          )}
+          {right && <span className="type-meta whitespace-nowrap">{right}</span>}
           <LuChevronRight className="size-4 text-ink-faint" aria-hidden />
         </span>
       </Link>
     </motion.div>
   )
+}
+
+/** "Ashgate Firesalt · Emberdraught · +3 more" */
+function previewOf(names: string[], total: number): string {
+  const shown = names.slice(0, 3)
+  return [...shown, total > shown.length ? `+${total - shown.length} more` : null]
+    .filter(Boolean)
+    .join(' · ')
 }

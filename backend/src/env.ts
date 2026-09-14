@@ -43,6 +43,11 @@ export const env = {
   databaseUrl: required('DATABASE_URL'),
   port: Number(process.env.PORT ?? 3001),
   dmKey: required('DM_KEY'),
+  /**
+   * Optional. Left unset, a party sync works the campaign out from whichever
+   * character is linked, so there is nothing to configure for the common case.
+   */
+  ddbCampaignId: optional('DDB_CAMPAIGN_ID'),
   s3: {
     endpoint: s3Endpoint,
     region: optional('S3_REGION') ?? 'us-east-1',

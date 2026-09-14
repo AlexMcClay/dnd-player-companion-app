@@ -134,3 +134,20 @@ model DdbSnapshot {
 
   @@map("ddb_snapshots")
 }
+
+/// The campaign's shared coin and items, as D&D Beyond last reported them.
+///
+/// No relation to Entity — the party is not one. Same rule as DdbSnapshot: a
+/// sync replaces this row whole, and nothing the app owns is ever merged into
+/// it. The unique campaignId is what makes a sync an upsert.
+model DdbPartySnapshot {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaignId   String   @unique @map("campaign_id")
+  campaignName String?  @map("campaign_name")
+  /// { cp, sp, ep, gp, pp } — the shared purse, separate from anyone's pocket.
+  currencies   Json     @default("{}")
+  items        Json     @default("[]")
+  syncedAt     DateTime @map("synced_at") @db.Timestamptz(6)
+
+  @@map("ddb_party_snapshots")
+}
