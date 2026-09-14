@@ -4,6 +4,7 @@ import { env } from './env.js'
 import { attachIdentity } from './middleware/identity.js'
 import { entitiesRouter } from './routes/entities.js'
 import { holdingsRouter } from './routes/holdings.js'
+import { notesRouter } from './routes/notes.js'
 import { uploadsRouter } from './routes/uploads.js'
 
 const app = express()
@@ -23,6 +24,7 @@ app.post('/api/dm/verify', (req, res) => {
 
 app.use('/api/entities', entitiesRouter)
 app.use('/api/holdings', holdingsRouter)
+app.use('/api/notes', notesRouter)
 app.use('/api/uploads', uploadsRouter)
 
 app.use((_req, res) => {

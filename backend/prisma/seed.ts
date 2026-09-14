@@ -392,9 +392,67 @@ async function main() {
   }))
   await prisma.holding.createMany({ data: holdings })
 
+  await seedNotes(playerByName)
+
   const entities = await prisma.entity.count()
   const held = await prisma.holding.count()
-  console.log(`seeded ${entities} entities and ${held} holdings`)
+  const notes = await prisma.note.count()
+  console.log(`seeded ${entities} entities, ${held} holdings and ${notes} notes`)
+}
+
+/** A note of each kind, so none of the three surfaces starts empty. */
+async function seedNotes(playerByName: Map<string, string>) {
+  const byName = new Map(
+    (await prisma.entity.findMany({ select: { id: true, name: true } })).map((e) => [e.name, e.id]),
+  )
+
+  const vessa = playerByName.get('Vessa Dunn')
+  const nyx = playerByName.get('Nyx Caldera')
+  if (!vessa || !nyx) return
+
+  await prisma.note.createMany({
+    data: [
+      {
+        authorId: nyx,
+        subjectId: byName.get('Mira Thrushbane') ?? null,
+        placement: 'entry',
+        visibility: 'shared',
+        bodyMd: 'She flinched when Odric said "Saltbone". Worth a push.',
+      },
+      {
+        authorId: vessa,
+        subjectId: byName.get('Tidewretch') ?? null,
+        placement: 'entry',
+        visibility: 'shared',
+        bodyMd: 'Fire works. Do not let them get a grip near deep water.',
+      },
+      {
+        authorId: vessa,
+        placement: 'vault',
+        visibility: 'private',
+        title: 'On Grym',
+        bodyMd: 'Pays in Lantern coin. Ask where he gets it. Do not mention this to [[Torm Blackwater]].',
+      },
+      {
+        authorId: vessa,
+        placement: 'vault',
+        visibility: 'shared',
+        title: 'The charm',
+        bodyMd: 'Do not let Torm wear the [[Saltbone Charm]] until we know what it does.',
+      },
+      {
+        authorId: nyx,
+        placement: 'party',
+        visibility: 'shared',
+        title: 'Before session 15',
+        bodyMd: [
+          '- Sell the ledger copy to [[Grym the Ledger]], or not?',
+          '- Someone needs to talk to [[Mira Thrushbane]] about her brother.',
+          '- We are low on Tidewretch ichor and it spoils session 16.',
+        ].join('\n'),
+      },
+    ],
+  })
 }
 
 main()

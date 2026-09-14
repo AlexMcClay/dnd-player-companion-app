@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { STASH } from '@codex/shared'
-import { LuVault } from 'react-icons/lu'
+import { LuNotebookPen, LuVault } from 'react-icons/lu'
 import { api } from '../api/client'
 import AddItemSheet from '../components/AddItemSheet'
 import DmCreateBar from '../components/DmCreateBar'
 import HoldingRow from '../components/HoldingRow'
+import NoteList from '../components/NoteList'
 import {
   Empty,
   EntityRow,
@@ -82,6 +83,21 @@ export default function PartyPage() {
           {!stash.isLoading && stacks.length === 0 && <Empty>The stash is empty</Empty>}
 
           <AddItemSheet ownerId={null} destination="the party stash" />
+        </Section>
+
+        <Section className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-2.5">
+            <span className="type-lab flex items-center gap-1.75">
+              <LuNotebookPen aria-hidden />
+              Party board
+            </span>
+            <span className="type-meta">Everyone can read these</span>
+          </div>
+          <NoteList
+            placement="party"
+            emptyLabel="Nothing on the board yet"
+            addLabel="Post to the board"
+          />
         </Section>
 
         <DmCreateBar path="/party" />

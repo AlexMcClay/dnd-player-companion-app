@@ -45,8 +45,16 @@ export default function HoldingRow({
         <Portrait entity={holding.item} size={40} />
         <div className="min-w-0 flex-1">
           <div className="type-name truncate">{holding.item.name}</div>
-          {holding.item.summary && (
-            <div className="type-meta mt-0.5 truncate">{holding.item.summary}</div>
+          {/*
+            The stack's own note wins over the item's generic summary: it is why
+            this stack is separate from an otherwise identical one.
+          */}
+          {holding.note ? (
+            <div className="type-meta mt-0.5 truncate text-gold">{holding.note}</div>
+          ) : (
+            holding.item.summary && (
+              <div className="type-meta mt-0.5 truncate">{holding.item.summary}</div>
+            )
           )}
         </div>
       </Link>

@@ -38,6 +38,11 @@ model Entity {
   /// Stacks this player is carrying. Empty for non-player entities.
   holds  Holding[] @relation("HoldingOwner")
 
+  /// Notes this player wrote. Empty for non-player entities.
+  notesWritten Note[] @relation("NoteAuthor")
+  /// Notes other people pinned to this entry.
+  notesAbout   Note[] @relation("NoteSubject")
+
   @@index([type, knowledge])
   @@map("entities")
 }
@@ -64,4 +69,36 @@ model Holding {
   @@index([ownerId])
   @@index([itemId])
   @@map("holdings")
+}
+
+/// Something a player wrote, in one of three places.
+///
+/// `placement` says where it lives; `visibility` says who may read it. They are
+/// independent: a vault note can be shared, and an entry note can be private.
+///
+/// Two CHECK constraints live in the migration, because Prisma cannot express
+/// them: placement='entry' exactly when subjectId is set, and a party-board note
+/// is always shared.
+model Note {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// The player who wrote it. Taken from the request, never from the body.
+  authorId   String   @map("author_id") @db.Uuid
+  /// The codex entry it is pinned to. Null for vault and party notes.
+  subjectId  String?  @map("subject_id") @db.Uuid
+  /// 'entry' | 'vault' | 'party'
+  placement  String
+  /// 'private' | 'shared'
+  visibility String   @default("shared")
+  title      String?
+  bodyMd     String   @map("body_md")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  author  Entity  @relation("NoteAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  subject Entity? @relation("NoteSubject", fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@index([subjectId])
+  @@index([authorId])
+  @@index([placement, visibility])
+  @@map("notes")
 }

@@ -5,6 +5,8 @@ import { LuCheck, LuChevronLeft, LuPencil, LuX } from 'react-icons/lu'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import Markdown from '../components/Markdown'
+import NoteCard from '../components/NoteCard'
+import NoteList from '../components/NoteList'
 import {
   Empty,
   KnowledgePill,
@@ -114,6 +116,30 @@ export default function EntityDetailPage() {
           </motion.div>
         )}
 
+        <Section className="flex flex-col gap-2">
+          <SectionHead label={`Notes about ${e.name}`} />
+          <NoteList
+            placement="entry"
+            subjectId={e.id}
+            emptyLabel="Nobody has written anything here yet"
+            addLabel="Add a note"
+          />
+        </Section>
+
+        {/*
+          A character's own shared vault notes, published to whoever opens their
+          page. Labelled distinctly so two note blocks do not read as a bug.
+        */}
+        {e.type === 'player' && (
+          <Section className="flex flex-col gap-2">
+            <SectionHead
+              label={`${e.name.split(' ')[0] ?? e.name}'s public notes`}
+              note="From their vault"
+            />
+            <PublicVault playerId={e.id} />
+          </Section>
+        )}
+
         {e.tags.length > 0 && (
           <div className="flex flex-col gap-2">
             <SectionHead label="Tags" />
@@ -191,6 +217,30 @@ function RecipeSheet({ recipe }: { recipe: Entity }) {
         ))}
       </StaggerList>
     </Section>
+  )
+}
+
+/**
+ * Read-only view of a character's vault notes. The API already filters to what
+ * the viewer may see, so a player's private notes never arrive here — except
+ * for the DM, and on your own page.
+ */
+function PublicVault({ playerId }: { playerId: string }) {
+  const notes = useQuery({
+    queryKey: ['notes', { placement: 'vault', author: playerId }],
+    queryFn: () => api.listNotes({ placement: 'vault', author: playerId }),
+  })
+
+  const rows = notes.data ?? []
+  if (notes.isLoading) return <Loading />
+  if (rows.length === 0) return <Empty>Nothing shared from their vault</Empty>
+
+  return (
+    <StaggerList>
+      {rows.map((note) => (
+        <NoteCard key={note.id} note={note} />
+      ))}
+    </StaggerList>
   )
 }
 

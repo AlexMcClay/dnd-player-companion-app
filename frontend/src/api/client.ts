@@ -3,6 +3,9 @@ import type {
   EntityInput,
   Holding,
   HoldingInput,
+  Note,
+  NoteInput,
+  NotePlacement,
   PresignResponse,
 } from '@codex/shared'
 import { getDmKey, getPlayerId } from '../lib/identity'
@@ -52,6 +55,14 @@ export interface HoldingQuery {
   item?: string
 }
 
+export interface NoteQuery {
+  /** Notes pinned to this codex entry. */
+  subject?: string
+  placement?: NotePlacement
+  /** A player id, or 'me' to let the server resolve it from the header. */
+  author?: string
+}
+
 export const api = {
   listEntities(query: EntityQuery = {}): Promise<Entity[]> {
     return request<Entity[]>(`/entities${qs(query)}`)
@@ -87,6 +98,22 @@ export const api = {
 
   deleteHolding(id: string): Promise<void> {
     return request<void>(`/holdings/${id}`, { method: 'DELETE' })
+  },
+
+  listNotes(query: NoteQuery = {}): Promise<Note[]> {
+    return request<Note[]>(`/notes${qs(query)}`)
+  },
+
+  createNote(input: NoteInput): Promise<Note> {
+    return request<Note>('/notes', { method: 'POST', body: JSON.stringify(input) })
+  },
+
+  updateNote(id: string, input: Partial<NoteInput>): Promise<Note> {
+    return request<Note>(`/notes/${id}`, { method: 'PUT', body: JSON.stringify(input) })
+  },
+
+  deleteNote(id: string): Promise<void> {
+    return request<void>(`/notes/${id}`, { method: 'DELETE' })
   },
 
   verifyDmKey(key: string): Promise<boolean> {

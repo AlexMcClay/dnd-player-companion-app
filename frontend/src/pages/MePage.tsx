@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { LuBackpack, LuUsers } from 'react-icons/lu'
+import { LuBackpack, LuNotebookPen, LuUsers } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import AddItemSheet from '../components/AddItemSheet'
 import { CharacterPicker, CharacterSwitcherPortal } from '../components/CharacterPicker'
 import HoldingRow from '../components/HoldingRow'
+import NoteList from '../components/NoteList'
 import { Empty, Loading, PageHead, Portrait, Section, StaggerList } from '../components/bits'
 import { ctaClass, panelClass } from '../components/ui'
 import { usePlayerId } from '../lib/identity'
@@ -85,6 +86,22 @@ function MyCharacter({ playerId }: { playerId: string }) {
           {!carried.isLoading && stacks.length === 0 && <Empty>Carrying nothing</Empty>}
 
           <AddItemSheet ownerId={playerId} destination={character.name} />
+        </Section>
+
+        <Section className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-2.5">
+            <span className="type-lab flex items-center gap-1.75">
+              <LuNotebookPen aria-hidden />
+              My vault
+            </span>
+            <span className="type-meta">Private unless you share it</span>
+          </div>
+          <NoteList
+            placement="vault"
+            author="me"
+            emptyLabel="Your notebook is empty"
+            addLabel="Write a note"
+          />
         </Section>
 
         <SwitchCharacter />

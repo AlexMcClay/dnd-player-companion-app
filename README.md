@@ -42,6 +42,31 @@ Tap **Locked** in the top right and enter `DM_KEY`. That reveals sealed entries 
 turns on every create/edit/delete control. The key is checked server-side on every
 write — hiding the buttons is a convenience, not the protection.
 
+## Notes
+
+Players write notes in three places. Where a note lives and who may read it are
+separate things.
+
+| | |
+| --- | --- |
+| **On a codex entry** | Pinned to an NPC, monster, item or anything else, with the author's name and face on it. |
+| **Your vault** | Your own notebook, on the **Me** tab. |
+| **The party board** | The group's shared scratchpad, under the item stash on the **Party** tab. Always shared. |
+
+Vault and entry notes can be **private** or **shared**. A shared vault note also
+appears on your character's page, so it is how you publish something to the table
+without posting it to the board.
+
+Notes take markdown and `[[Their Name]]` links, same as DM-authored entries.
+
+You edit your own notes. The DM can delete any note, but cannot rewrite one — a
+byline you cannot trust would be worse than a note nobody can tidy.
+
+> **The DM can read private notes.** This is deliberate for this app, but your
+> players will not assume it. Tell them, or change `noteVisibility()` in
+> `backend/src/lib/notes.ts` — it is a two-line change and the one place the rule
+> lives.
+
 ### What this is not
 
 Neither identity is authentication.
@@ -70,7 +95,7 @@ npm workspaces, one repo. Not submodules: hosts like Railway, Render and Fly dep
 from a subdirectory, so `frontend/` and `backend/` can still ship as separate
 services later without losing shared types or atomic commits.
 
-### Two tables
+### Three tables
 
 Almost everything lives in `entities`. `type` is a plain string and `data` is
 JSONB, so adding locations, spells or quests later means adding a template in
@@ -84,6 +109,11 @@ entities
 holdings
   id · item_id → entities.id · owner_id → entities.id (null = party stash)
   quantity · note · timestamps
+
+notes
+  id · author_id → entities.id · subject_id → entities.id (null unless pinned)
+  placement ('entry' | 'vault' | 'party') · visibility ('private' | 'shared')
+  title · body_md · timestamps
 ```
 
 - **knowledge** is `unknown` | `rumoured` | `known`. Players see rumoured and known;
@@ -95,6 +125,11 @@ holdings
   entry shown in the Codex; a `holdings` row is a stack of it that somebody
   carries. That split is what lets the same item sit in the stash and in two packs
   at once, lets a typo be fixed in one place, and makes "who has this?" answerable.
+- **Notes** are one table for all three placements. Two CHECK constraints keep the
+  shape honest: `placement='entry'` exactly when a subject is set, and a board
+  note is always shared. Who may read one is decided in
+  `backend/src/lib/notes.ts`, which also refuses to show a note whose subject the
+  viewer cannot see — otherwise a note would announce that a sealed NPC exists.
 - **search** is a generated `tsvector`. Prisma cannot express generated columns, so
   it lives in the hand-written migration and is queried with `$queryRaw`.
 
@@ -124,6 +159,10 @@ API returns a ready-to-use `imageUrl`.
 | `POST /api/holdings` | Any player or the DM |
 | `PUT /api/holdings/:id` | Any player or the DM. Moving between stash and pack is an `ownerId` change. |
 | `DELETE /api/holdings/:id` | Any player or the DM |
+| `GET /api/notes?subject=&placement=&author=` | `author=me` resolves from the header. Filtered by `noteVisibility`. |
+| `POST /api/notes` | The author is taken from the header, never the body |
+| `PUT /api/notes/:id` | Author only |
+| `DELETE /api/notes/:id` | Author, or the DM |
 | `POST /api/uploads/presign` | DM only |
 | `POST /api/dm/verify` | Checks a passphrase before the UI stores it |
 

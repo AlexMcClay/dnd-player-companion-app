@@ -72,6 +72,52 @@ export interface HoldingInput {
 /** `owner=none` means the party stash, as opposed to omitting owner entirely. */
 export const STASH = 'none'
 
+/**
+ * Where a note lives. Independent of who may read it.
+ *  - entry: pinned to a codex entry
+ *  - vault: the author's personal notebook
+ *  - party: the shared board
+ */
+export const NOTE_PLACEMENTS = ['entry', 'vault', 'party'] as const
+export type NotePlacement = (typeof NOTE_PLACEMENTS)[number]
+
+export const NOTE_VISIBILITIES = ['private', 'shared'] as const
+export type NoteVisibility = (typeof NOTE_VISIBILITIES)[number]
+
+/**
+ * Just enough of the author to put a face and a name on a note. Deliberately
+ * not a whole Entity: a board of thirty notes would otherwise carry thirty
+ * copies of a character sheet.
+ */
+export interface NoteAuthor {
+  id: string
+  name: string
+  imageUrl: string | null
+}
+
+export interface Note {
+  id: string
+  authorId: string
+  author: NoteAuthor
+  /** The codex entry this is pinned to. Null for vault and party notes. */
+  subjectId: string | null
+  placement: NotePlacement
+  visibility: NoteVisibility
+  title: string | null
+  bodyMd: string
+  createdAt: string
+  updatedAt: string
+}
+
+/** The author is taken from the request, so it is deliberately absent here. */
+export interface NoteInput {
+  placement: NotePlacement
+  subjectId?: string | null
+  visibility?: NoteVisibility
+  title?: string | null
+  bodyMd: string
+}
+
 export interface PresignRequest {
   filename: string
   contentType: string
