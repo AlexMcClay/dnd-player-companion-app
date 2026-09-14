@@ -26,15 +26,27 @@
   --color-line: rgba(236, 230, 220, 0.12);
   --color-line-soft: rgba(236, 230, 220, 0.07);
 
-  --color-ground: #151220;
-  --color-topbar: #171322;
-  --color-tabbar: #110e18;
-  --color-panel-top: #221d2d;
-  --color-panel-bottom: #1b1726;
-  --color-port-top: #2e2739;
-  --color-port-bottom: #1a1724;
-  --color-scrim: rgba(10, 8, 16, 0.78);
-  --color-on-gold: #1a1522;
+  /*
+   * Neutral greys, not the canvas's purple-blacks.
+   *
+   * Each one is the grey with the same relative luminance as the purple it
+   * replaced — matched to within 0.0004, so every contrast ratio in the app is
+   * where it was and the surfaces keep their order: tabbar darkest, then
+   * ground, topbar, panel, portrait. Only the hue is gone.
+   *
+   * The ink is still warm (#ece6dc) and so is the gold, which is what keeps a
+   * neutral ground from reading cold.
+   */
+  --color-ground: #141414;
+  --color-topbar: #151515;
+  --color-tabbar: #101010;
+  --color-panel-top: #202020;
+  --color-panel-bottom: #191919;
+  --color-port-top: #2a2a2a;
+  /* A hair under panel-bottom, as before, so a portrait still sits recessed. */
+  --color-port-bottom: #181818;
+  --color-scrim: rgba(8, 8, 8, 0.78);
+  --color-on-gold: #171717;
 
   --color-danger: #d89494;
   --color-danger-line: rgba(200, 110, 110, 0.5);
@@ -126,7 +138,7 @@
 
 /** Warm ink ground behind the whole app. */
 @utility app-ground {
-  background: radial-gradient(130% 55% at 50% 0%, #221d2c 0%, #151220 65%);
+  background: radial-gradient(130% 55% at 50% 0%, #1f1f1f 0%, var(--color-ground) 65%);
   background-attachment: fixed;
 }
 
