@@ -43,6 +43,9 @@ model Entity {
   /// Notes other people pinned to this entry.
   notesAbout   Note[] @relation("NoteSubject")
 
+  /// The D&D Beyond mirror, for players who have linked a character.
+  ddb DdbSnapshot?
+
   @@index([type, knowledge])
   @@map("entities")
 }
@@ -101,4 +104,33 @@ model Note {
   @@index([authorId])
   @@index([placement, visibility])
   @@map("notes")
+}
+
+/// A character as D&D Beyond last reported it.
+///
+/// Deliberately walled off from Holding. A sync replaces this row whole — no
+/// diffing, no merging — so the two inventories cannot drift into disagreeing.
+/// One row per character, which the unique playerId enforces.
+///
+/// `items`, `classes` and `currencies` are JSON because nothing queries inside
+/// them: they are a read-only mirror, rendered together and replaced together.
+model DdbSnapshot {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  playerId       String   @unique @map("player_id") @db.Uuid
+  ddbCharacterId String   @map("ddb_character_id")
+  /// Stored to compare against the entity's name. Never written back to it —
+  /// a rename there would break every [[wiki-link]] pointing at the character.
+  name           String
+  race           String?
+  /// [{ name, level, subclass }]
+  classes        Json     @default("[]")
+  avatarUrl      String?  @map("avatar_url")
+  /// { cp, sp, ep, gp, pp }
+  currencies     Json     @default("{}")
+  items          Json     @default("[]")
+  syncedAt       DateTime @map("synced_at") @db.Timestamptz(6)
+
+  player Entity @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@map("ddb_snapshots")
 }

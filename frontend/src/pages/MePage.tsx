@@ -2,11 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Entity } from '@codex/shared'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { LuBackpack, LuNotebookPen, LuPencil, LuScrollText, LuUsers } from 'react-icons/lu'
+import { LuBackpack, LuLink, LuNotebookPen, LuPencil, LuScrollText, LuUsers } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import AddItemSheet from '../components/AddItemSheet'
 import { CharacterPicker, CharacterSwitcherPortal } from '../components/CharacterPicker'
+import DdbPanel from '../components/DdbPanel'
 import HoldingRow from '../components/HoldingRow'
 import Markdown from '../components/Markdown'
 import NoteComposer from '../components/NoteComposer'
@@ -71,6 +72,17 @@ function MyCharacter({ playerId }: { playerId: string }) {
             <span className="type-meta">Yours to write</span>
           </div>
           <CharacterBody character={character} />
+        </Section>
+
+        <Section className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-2.5">
+            <span className="type-lab flex items-center gap-1.75">
+              <LuLink aria-hidden />
+              D&amp;D Beyond
+            </span>
+            <span className="type-meta">Mirror — kept apart from the app's items</span>
+          </div>
+          <DdbPanel playerId={character.id} characterName={character.name} />
         </Section>
 
         <Section className="flex flex-col gap-2">

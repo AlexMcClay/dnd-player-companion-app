@@ -1,4 +1,5 @@
 import type {
+  DdbSnapshot,
   Entity,
   EntityInput,
   EntitySummary,
@@ -116,6 +117,15 @@ export const api = {
 
   deleteNote(id: string): Promise<void> {
     return request<void>(`/notes/${id}`, { method: 'DELETE' })
+  },
+
+  /** The D&D Beyond mirror for a character, or null if never synced. */
+  getDdb(playerId: string): Promise<DdbSnapshot | null> {
+    return request<DdbSnapshot | null>(`/ddb/${playerId}`)
+  },
+
+  syncDdb(playerId: string): Promise<DdbSnapshot> {
+    return request<DdbSnapshot>(`/ddb/${playerId}/sync`, { method: 'POST' })
   },
 
   verifyDmKey(key: string): Promise<boolean> {

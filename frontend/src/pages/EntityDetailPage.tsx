@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { LuCheck, LuChevronLeft, LuPencil, LuX } from 'react-icons/lu'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api/client'
+import DdbPanel from '../components/DdbPanel'
 import Markdown from '../components/Markdown'
 import NoteCard from '../components/NoteCard'
 import NoteList from '../components/NoteList'
@@ -104,6 +105,13 @@ export default function EntityDetailPage() {
         {e.type === 'recipe' && <RecipeSheet recipe={e} />}
 
         {e.type === 'item' && <Holders itemId={e.id} />}
+
+        {e.type === 'player' && (
+          <Section className="flex flex-col gap-2">
+            <SectionHead label="D&D Beyond" note="Their sheet, mirrored" />
+            <DdbPanel playerId={e.id} characterName={e.name} />
+          </Section>
+        )}
 
         {e.type === 'player' && <Carrying playerId={e.id} />}
 

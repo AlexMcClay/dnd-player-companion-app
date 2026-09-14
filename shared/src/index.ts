@@ -127,6 +127,54 @@ export interface Note {
   updatedAt: string
 }
 
+/**
+ * A character as D&D Beyond last reported it.
+ *
+ * Separate from Holding on purpose: this is a mirror, replaced whole on each
+ * sync, and nothing in the app writes to it.
+ */
+export interface DdbItem {
+  name: string
+  quantity: number
+  /** D&D Beyond's own type string: "Longbow", "Light Armor", "Gear"… */
+  type: string | null
+  rarity: string | null
+  magic: boolean
+  equipped: boolean
+  attuned: boolean
+  /** Pounds, per unit. */
+  weight: number | null
+  /** Gold pieces, per unit. */
+  cost: number | null
+}
+
+export interface DdbClass {
+  name: string
+  level: number
+  subclass: string | null
+}
+
+export interface DdbCurrencies {
+  cp?: number
+  sp?: number
+  ep?: number
+  gp?: number
+  pp?: number
+}
+
+export interface DdbSnapshot {
+  playerId: string
+  ddbCharacterId: string
+  /** Their name on D&D Beyond. The app's entity is never renamed to match. */
+  name: string
+  race: string | null
+  classes: DdbClass[]
+  avatarUrl: string | null
+  currencies: DdbCurrencies
+  items: DdbItem[]
+  syncedAt: string
+}
+
 /** The author is taken from the request, so it is deliberately absent here. */
 export interface NoteInput {
   placement: NotePlacement

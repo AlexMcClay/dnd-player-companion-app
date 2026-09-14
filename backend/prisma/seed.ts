@@ -53,6 +53,7 @@ const PLAYERS: Seed[] = [
       subclass: 'Oath of the Ancients',
       player: 'Gabe',
       handle: 'britto09',
+      ddbCharacterId: '166021024',
     },
   },
   {
@@ -68,6 +69,7 @@ const PLAYERS: Seed[] = [
       subclass: 'The Fiend',
       player: 'Tabitha',
       handle: 'tabithabw2004',
+      ddbCharacterId: '165578255',
     },
   },
   {
@@ -83,6 +85,7 @@ const PLAYERS: Seed[] = [
       subclass: 'Gloom Stalker',
       // Real name not recorded anywhere yet — fill it in on the character page.
       handle: 'Dunkitay',
+      ddbCharacterId: '56152460',
     },
   },
   {
@@ -98,6 +101,7 @@ const PLAYERS: Seed[] = [
       subclass: 'Draconic Bloodline',
       player: 'Mahan',
       handle: 'someburner19',
+      ddbCharacterId: '165578345',
     },
   },
 ]

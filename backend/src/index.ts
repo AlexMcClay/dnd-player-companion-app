@@ -2,6 +2,7 @@ import cors from 'cors'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import { env } from './env.js'
 import { attachIdentity } from './middleware/identity.js'
+import { ddbRouter } from './routes/ddb.js'
 import { entitiesRouter } from './routes/entities.js'
 import { holdingsRouter } from './routes/holdings.js'
 import { notesRouter } from './routes/notes.js'
@@ -25,6 +26,7 @@ app.post('/api/dm/verify', (req, res) => {
 app.use('/api/entities', entitiesRouter)
 app.use('/api/holdings', holdingsRouter)
 app.use('/api/notes', notesRouter)
+app.use('/api/ddb', ddbRouter)
 app.use('/api/uploads', uploadsRouter)
 
 app.use((_req, res) => {

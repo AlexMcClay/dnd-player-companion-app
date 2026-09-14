@@ -1,9 +1,14 @@
 import type {
+  DdbSnapshot as PrismaDdbSnapshot,
   Entity as PrismaEntity,
   Holding as PrismaHolding,
   Note as PrismaNote,
 } from '@prisma/client'
 import type {
+  DdbClass,
+  DdbCurrencies,
+  DdbItem,
+  DdbSnapshot,
   Entity,
   EntityData,
   EntitySummary,
@@ -22,6 +27,18 @@ import { publicUrlFor } from './s3.js'
  * Note `bodyMd` is absent here, not merely unused: lists must not carry rules
  * text, which is more than half their weight once the SRD is loaded.
  */
+/**
+ * A synced D&D Beyond avatar, used when nobody has uploaded a portrait.
+ *
+ * Doing the fallback here means every surface that renders `imageUrl` — rows,
+ * the Codex, the character picker, the header — picks up avatars with no
+ * frontend change at all.
+ */
+function avatarFrom(data: unknown): string | null {
+  const url = (data as { avatarUrl?: unknown } | null)?.avatarUrl
+  return typeof url === 'string' && url ? url : null
+}
+
 export function serializeEntitySummary(row: Omit<PrismaEntity, 'bodyMd'>): EntitySummary {
   return {
     id: row.id,
@@ -30,7 +47,8 @@ export function serializeEntitySummary(row: Omit<PrismaEntity, 'bodyMd'>): Entit
     summary: row.summary,
     data: (row.data ?? {}) as EntityData,
     imageKey: row.imageKey,
-    imageUrl: publicUrlFor(row.imageKey),
+    // An uploaded portrait always wins over the synced avatar.
+    imageUrl: publicUrlFor(row.imageKey) ?? avatarFrom(row.data),
     tags: row.tags,
     knowledge: row.knowledge as Knowledge,
     createdAt: row.createdAt.toISOString(),
@@ -64,6 +82,20 @@ export function serializeNote(row: PrismaNote & { author: PrismaEntity }): Note 
     bodyMd: row.bodyMd,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+  }
+}
+
+export function serializeDdbSnapshot(row: PrismaDdbSnapshot): DdbSnapshot {
+  return {
+    playerId: row.playerId,
+    ddbCharacterId: row.ddbCharacterId,
+    name: row.name,
+    race: row.race,
+    classes: (row.classes ?? []) as unknown as DdbClass[],
+    avatarUrl: row.avatarUrl,
+    currencies: (row.currencies ?? {}) as DdbCurrencies,
+    items: (row.items ?? []) as unknown as DdbItem[],
+    syncedAt: row.syncedAt.toISOString(),
   }
 }
 

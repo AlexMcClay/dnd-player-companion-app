@@ -98,6 +98,28 @@ Tap **Locked** in the top right and enter `DM_KEY`. That reveals sealed entries 
 turns on every create/edit/delete control. The key is checked server-side on every
 write — hiding the buttons is a convenience, not the protection.
 
+## D&D Beyond
+
+A character with a `ddbCharacterId` set — the number in its D&D Beyond URL — can
+be pulled across from the **Me** tab. Players sync their own; the DM can sync
+anyone. The character has to be public on D&D Beyond; no login is involved.
+
+A sync writes **race, class, subclass, level and the avatar** onto the character
+sheet, so editing those in the app is pointless — the next sync wins. Everything
+else lands in a separate mirror.
+
+> **The D&D Beyond inventory is deliberately separate from the app's items.**
+> It lives in its own table and a sync replaces it whole, with no diffing or
+> merging. Two inventories that never meet cannot drift out of step. The party
+> stash and what a character carries in-app are untouched by syncing.
+
+The character is **never renamed** to match D&D Beyond. A rename there would
+silently turn every `[[link]]` to that character into dead text, so the app keeps
+its own name and the panel points out any mismatch.
+
+Avatars are linked from dndbeyond.com rather than copied. A portrait uploaded in
+the app always wins over the synced avatar.
+
 ## Notes
 
 Players write notes in three places. Where a note lives and who may read it are
@@ -235,6 +257,8 @@ API returns a ready-to-use `imageUrl`.
 | `POST /api/notes` | The author is taken from the header, never the body |
 | `PUT /api/notes/:id` | Author only |
 | `DELETE /api/notes/:id` | Author, or the DM |
+| `GET /api/ddb/:playerId` | The D&D Beyond mirror, or null |
+| `POST /api/ddb/:playerId/sync` | The DM, or the player whose character it is |
 | `POST /api/uploads/presign` | DM only |
 | `POST /api/dm/verify` | Checks a passphrase before the UI stores it |
 

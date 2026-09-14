@@ -57,6 +57,14 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
       // because a name is what you say out loud and a handle is what you type.
       { key: 'player', label: 'Played by', kind: 'text', placeholder: 'Gabe' },
       { key: 'handle', label: 'D&D Beyond', kind: 'text', placeholder: 'britto09' },
+      // The number in the character's D&D Beyond URL. Set this and the sheet
+      // can be synced from the Me tab.
+      {
+        key: 'ddbCharacterId',
+        label: 'D&D Beyond character id',
+        kind: 'text',
+        placeholder: '166021024',
+      },
     ],
   },
   npc: {
