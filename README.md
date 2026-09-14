@@ -24,6 +24,25 @@ npm run dev
 `npm run dev` binds the Vite server to your LAN, so players can reach it from their
 phones at the `Network:` address it prints.
 
+### Images on other devices
+
+Image URLs have to name an address the *viewer's* device can reach. `localhost`
+would point every phone at itself, so `S3_PUBLIC_HOST=auto` (the default) makes
+the API hand out this machine's LAN address instead. It prints what it picked on
+startup:
+
+```
+images served from http://192.168.20.39:9000/assets (auto-detected; set S3_PUBLIC_HOST to pin it)
+```
+
+If that line says `localhost`, or names a Docker/WSL interface that phones cannot
+route to, set `S3_PUBLIC_HOST` in `.env` to the right address. URLs are built when
+a record is read, so changing it fixes existing images too — nothing to migrate.
+
+> `npm run db:seed` **wipes the database first.** Once you have entered real
+> campaign data, do not run it again — uploaded images stay in MinIO but the
+> entries pointing at them are gone.
+
 The seed loads the sample campaign from the design mockups (The Marrow Coast) so
 nothing is ever empty on first run. `npm run db:reset` wipes and re-migrates.
 

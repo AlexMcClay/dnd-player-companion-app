@@ -38,4 +38,10 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 
 app.listen(env.port, () => {
   console.log(`api listening on http://localhost:${env.port}`)
+  // Worth printing: if this says localhost, images will break on every device
+  // except this one.
+  console.log(
+    `images served from ${env.s3.publicUrl}` +
+      (env.s3.hostAutoDetected ? ' (auto-detected; set S3_PUBLIC_HOST to pin it)' : ''),
+  )
 })
