@@ -11,6 +11,7 @@ import {
   LuFlag,
   LuFlaskConical,
   LuHammer,
+  LuMapPin,
   LuPackage,
   LuSearch,
   LuSkull,
@@ -48,9 +49,12 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
     portraitWord: 'Portrait',
     heroAspect: '4 / 5',
     fields: [
-      { key: 'role', label: 'Class / role', kind: 'text', placeholder: 'Scout' },
       { key: 'level', label: 'Level', kind: 'number' },
-      { key: 'pronouns', label: 'Pronouns', kind: 'text', placeholder: 'she/her' },
+      { key: 'race', label: 'Race', kind: 'text', placeholder: 'Dragonborn' },
+      { key: 'className', label: 'Class', kind: 'text', placeholder: 'Paladin' },
+      { key: 'subclass', label: 'Subclass', kind: 'text', placeholder: 'Oath of the Ancients' },
+      /** The person at the table, as opposed to the character. */
+      { key: 'player', label: 'Played by', kind: 'text', placeholder: 'britto09' },
     ],
   },
   npc: {
@@ -78,6 +82,21 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
       { key: 'kind', label: 'Kind', kind: 'text', placeholder: 'Militant order' },
       { key: 'reach', label: 'Reach', kind: 'text', placeholder: 'Coastwide' },
       { key: 'stance', label: 'Stance', kind: 'text', placeholder: 'Hostile' },
+    ],
+  },
+  location: {
+    type: 'location',
+    label: 'Location',
+    plural: 'Locations',
+    icon: LuMapPin,
+    portraitWord: 'View',
+    heroAspect: '3 / 2',
+    fields: [
+      // Deliberately one free-text field rather than a fixed hierarchy: a
+      // country, a city and a single inn all live here.
+      { key: 'kind', label: 'Kind', kind: 'text', placeholder: 'City · Inn · Region' },
+      { key: 'within', label: 'Part of', kind: 'text', placeholder: 'The Marrow Coast' },
+      { key: 'ruledBy', label: 'Run by', kind: 'text', placeholder: 'The harbourmaster' },
     ],
   },
   monster: {
@@ -159,13 +178,18 @@ export const TABS: TabDef[] = [
   { path: '/me', label: 'Me', icon: LuUser, types: [] },
   // The whole shared pool of knowledge: people, factions, beasts, and the
   // item repository players draw from.
-  { path: '/codex', label: 'Codex', icon: LuBookOpen, types: ['npc', 'faction', 'monster', 'item'] },
+  {
+    path: '/codex',
+    label: 'Codex',
+    icon: LuBookOpen,
+    types: ['npc', 'faction', 'location', 'monster', 'item'],
+  },
   { path: '/craft', label: 'Craft', icon: LuHammer, types: ['recipe'] },
   { path: '/search', label: 'Search', icon: LuSearch, types: [] },
 ]
 
-/** The Codex groups, in the order its filter row shows them. */
-export const CODEX_TYPES = ['npc', 'faction', 'monster', 'item'] as const
+/** The Codex groups, in the order the chooser grid shows them. */
+export const CODEX_TYPES = ['npc', 'faction', 'location', 'monster', 'item'] as const
 
 export function tabFor(path: string): TabDef | undefined {
   return TABS.find((tab) => tab.path === path)

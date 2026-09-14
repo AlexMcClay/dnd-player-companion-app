@@ -11,9 +11,17 @@ import { ctaClass, Divider } from './ui'
  * once on its TabDef, so pages do not repeat the list. Writes are enforced
  * server-side regardless of whether these render.
  */
-export default function DmCreateBar({ path }: { path: string }) {
+export default function DmCreateBar({
+  path,
+  /** Narrows the tab's list — the Codex uses it to offer only the kind on screen. */
+  only,
+}: {
+  path: string
+  only?: string[]
+}) {
   const isDm = useIsDm()
-  const types = tabFor(path)?.types ?? []
+  const fromTab = tabFor(path)?.types ?? []
+  const types = only ? fromTab.filter((type) => only.includes(type)) : fromTab
 
   if (!isDm || types.length === 0) return null
 

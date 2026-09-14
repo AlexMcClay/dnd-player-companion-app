@@ -125,6 +125,14 @@ notes
   entry shown in the Codex; a `holdings` row is a stack of it that somebody
   carries. That split is what lets the same item sit in the stash and in two packs
   at once, lets a typo be fixed in one place, and makes "who has this?" answerable.
+- **The Codex** opens on a grid of kinds — NPCs, Factions, Locations, Monsters,
+  Items — and each one is searchable. Search runs server-side over name, summary
+  and body, so partial words work ("harbour" finds the Harbourmaster). The chosen
+  kind and the query both live in the URL, so back works and a search is
+  shareable.
+- **Locations** hold a country, a city, a district or a single inn. One free-text
+  `kind` field rather than a hierarchy, so nobody has to maintain a tree at the
+  table.
 - **Notes** are one table for all three placements. Two CHECK constraints keep the
   shape honest: `placement='entry'` exactly when a subject is set, and a board
   note is always shared. Who may read one is decided in

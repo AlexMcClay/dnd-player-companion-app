@@ -6,7 +6,15 @@
  * template in the frontend, not a migration.
  */
 
-export const ENTITY_TYPES = ['player', 'npc', 'faction', 'monster', 'item', 'recipe'] as const
+export const ENTITY_TYPES = [
+  'player',
+  'npc',
+  'faction',
+  'location',
+  'monster',
+  'item',
+  'recipe',
+] as const
 export type EntityType = (typeof ENTITY_TYPES)[number]
 
 export const KNOWLEDGE_STATES = ['unknown', 'rumoured', 'known'] as const

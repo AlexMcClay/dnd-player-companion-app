@@ -72,13 +72,24 @@ function parseInput(body: unknown, partial: boolean): EntityInput | string {
 /**
  * Full-text search. `search` is a generated tsvector so Prisma cannot touch it;
  * this returns ranked ids that the caller folds into a normal findMany.
- * The ILIKE arm keeps partial words ("thrush") working, which tsquery alone does not.
+ *
+ * The ILIKE arm covers partial words, which tsquery cannot: "harbour" has to
+ * find the Harbourmaster, because that is what someone types into a search box.
+ * It spans the same three columns the tsvector is built from, so the two arms
+ * agree about what "searchable" means. A sequential scan is fine at the size a
+ * campaign reaches.
  */
 async function searchIds(q: string, isDm: boolean): Promise<string[]> {
+  const like = `%${q}%`
   const rows = await prisma.$queryRaw<Array<{ id: string }>>`
     SELECT id
     FROM entities
-    WHERE (search @@ plainto_tsquery('english', ${q}) OR name ILIKE ${'%' + q + '%'})
+    WHERE (
+        search @@ plainto_tsquery('english', ${q})
+        OR name ILIKE ${like}
+        OR coalesce(summary, '') ILIKE ${like}
+        OR coalesce(body_md, '') ILIKE ${like}
+      )
       AND ${knowledgeSql(isDm)}
     ORDER BY ts_rank(search, plainto_tsquery('english', ${q})) DESC, name ASC
     LIMIT 200

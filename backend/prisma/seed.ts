@@ -27,37 +27,62 @@ type Seed = {
 const PLAYERS: Seed[] = [
   {
     type: 'player',
-    name: 'Vessa Dunn',
-    summary: 'Scout · Level 5 · she/her',
+    name: 'Rook',
+    summary: 'Lvl 4 | Dragonborn | Paladin / Oath of the Ancients',
     knowledge: 'known',
     tags: ['party'],
-    bodyMd: 'Grew up running cargo manifests on the Ashgate quay, which is how she knows [[Mira Thrushbane]].',
-    data: { role: 'Scout', level: 5, pronouns: 'she/her' },
+    data: {
+      level: 4,
+      race: 'Dragonborn',
+      className: 'Paladin',
+      subclass: 'Oath of the Ancients',
+      player: 'britto09',
+    },
   },
   {
     type: 'player',
-    name: 'Brother Hale',
-    summary: 'Warden · Level 5 · he/him',
-    knowledge: 'known',
-    tags: ['party'],
-    data: { role: 'Warden', level: 5, pronouns: 'he/him' },
-  },
-  {
-    type: 'player',
-    name: 'Nyx Caldera',
-    summary: 'Arcanist · Level 5 · they/them',
+    name: 'Salva',
+    summary: 'Lvl 4 | Tiefling | Warlock / The Fiend',
     knowledge: 'known',
     tags: ['party'],
     bodyMd: 'Convinced the lamps of [[The Pale Lantern]] are bound elementals. Nobody has tested it.',
-    data: { role: 'Arcanist', level: 5, pronouns: 'they/them' },
+    data: {
+      level: 4,
+      race: 'Tiefling',
+      className: 'Warlock',
+      subclass: 'The Fiend',
+      player: 'tabithabw2004',
+    },
   },
   {
     type: 'player',
-    name: 'Torm Blackwater',
-    summary: 'Vanguard · Level 5 · he/him',
+    name: 'Talion',
+    summary: 'Lvl 4 | Elf | Ranger / Gloom Stalker',
     knowledge: 'known',
     tags: ['party'],
-    data: { role: 'Vanguard', level: 5, pronouns: 'he/him' },
+    bodyMd:
+      'Ran cargo manifests on the [[Ashgate]] quay before all this, which is how he knows [[Mira Thrushbane]].',
+    data: {
+      level: 4,
+      race: 'Elf',
+      className: 'Ranger',
+      subclass: 'Gloom Stalker',
+      player: 'Dunkitay',
+    },
+  },
+  {
+    type: 'player',
+    name: 'Ted Bundy',
+    summary: 'Lvl 4 | Human | Sorcerer / Draconic Bloodline',
+    knowledge: 'known',
+    tags: ['party'],
+    data: {
+      level: 4,
+      race: 'Human',
+      className: 'Sorcerer',
+      subclass: 'Draconic Bloodline',
+      player: 'someburner19',
+    },
   },
 ]
 
@@ -80,7 +105,7 @@ const REST: Seed[] = [
       '## What she wants',
       'Her brother\'s ship back. She has not said from whom.',
       '',
-      'Nyx noted she flinched when Odric said "Saltbone".',
+      'Salva noted she flinched when Odric said "Saltbone".',
     ].join('\n'),
   },
   {
@@ -145,6 +170,61 @@ const REST: Seed[] = [
     bodyMd: 'Two hulls and a warehouse, run by [[Mira Thrushbane]] since her brother stopped coming back.',
   },
 
+  // — Locations —
+  // One free-text `kind` covers a whole region, a city and a single taproom,
+  // rather than a fixed hierarchy nobody wants to maintain at the table.
+  {
+    type: 'location',
+    name: 'The Marrow Coast',
+    summary: 'Region · the whole campaign',
+    knowledge: 'known',
+    tags: ['region'],
+    data: { kind: 'Region', within: 'The western reach', ruledBy: 'Nominally the Lantern' },
+    bodyMd:
+      'Cold water, bad harbours and a tide that takes more than it gives. Everything from [[Ashgate]] south belongs to it.',
+  },
+  {
+    type: 'location',
+    name: 'Ashgate',
+    summary: 'City · the party\'s base',
+    knowledge: 'known',
+    tags: ['ashgate'],
+    data: { kind: 'Port city', within: 'The Marrow Coast', ruledBy: '[[Mira Thrushbane]] on the quay' },
+    bodyMd: [
+      '## What you know',
+      'Stone piers, a grain exchange, and more Lantern lamps every month. The party made landfall here in session 9.',
+      '',
+      'The [[Drowned Quarter]] is technically part of it, though nobody official says so.',
+    ].join('\n'),
+  },
+  {
+    type: 'location',
+    name: 'The Drowned Quarter',
+    summary: 'District · below the tide line',
+    knowledge: 'known',
+    tags: ['ashgate', 'drowned-quarter'],
+    data: { kind: 'District', within: 'Ashgate', ruledBy: 'Whoever [[Grym the Ledger]] answers to' },
+    bodyMd: 'Floods twice a day and is rebuilt twice a week. Where you go to sell something that should not exist.',
+  },
+  {
+    type: 'location',
+    name: 'The Gutted Lamp',
+    summary: 'Inn · Drowned Quarter',
+    knowledge: 'known',
+    tags: ['drowned-quarter', 'inn'],
+    data: { kind: 'Inn', within: 'The Drowned Quarter', ruledBy: 'A woman called Pell' },
+    bodyMd: 'Four rooms, no windows, and a Lantern helm nailed above the bar with its glass prised out. Ask Pell about that and she changes the subject.',
+  },
+  {
+    type: 'location',
+    name: 'The Saltbone Reach',
+    summary: 'Unknown',
+    knowledge: 'rumoured',
+    tags: ['marrow-coast'],
+    data: { kind: 'Unknown', within: 'The Marrow Coast' },
+    bodyMd: 'A name off the quay ledger. Somewhere south, past where the charts stop being useful.',
+  },
+
   // — Monsters —
   {
     type: 'monster',
@@ -155,7 +235,7 @@ const REST: Seed[] = [
     data: { kind: 'Aberration', habitat: 'Marrow shallows', groupSize: 'Pack of 3–6' },
     bodyMd: [
       '## What you have seen',
-      'Comes up the tide-line at dusk. Grapples, then drags toward deep water. Hale\'s light did not slow them.',
+      'Comes up the tide-line at dusk. Grapples, then drags toward deep water. Rook\'s light did not slow them.',
       '',
       '## Confirmed in play',
       '- Fire hurts them badly — session 11',
@@ -191,7 +271,7 @@ const REST: Seed[] = [
     knowledge: 'known',
     quantity: 1,
     tags: ['attuned', 'magic'],
-    ownerName: 'Nyx Caldera',
+    ownerName: 'Salva',
     data: { attuned: true, charges: '1 of 3' },
     bodyMd: 'Prised out of a Lantern helm. Shows what the lamp saw last.',
   },
@@ -247,7 +327,7 @@ const REST: Seed[] = [
     knowledge: 'known',
     quantity: 1,
     tags: ['attuned', 'weapon'],
-    ownerName: 'Vessa Dunn',
+    ownerName: 'Talion',
     data: { attuned: true },
   },
   {
@@ -257,7 +337,7 @@ const REST: Seed[] = [
     knowledge: 'known',
     quantity: 6,
     tags: ['crafted', 'ammunition'],
-    ownerName: 'Vessa Dunn',
+    ownerName: 'Talion',
   },
   {
     type: 'item',
@@ -266,7 +346,7 @@ const REST: Seed[] = [
     knowledge: 'known',
     quantity: 1,
     tags: ['attuned', 'magic'],
-    ownerName: 'Vessa Dunn',
+    ownerName: 'Talion',
   },
   {
     // Catalogued but not held — shows the repository holding entries the party
@@ -406,42 +486,42 @@ async function seedNotes(playerByName: Map<string, string>) {
     (await prisma.entity.findMany({ select: { id: true, name: true } })).map((e) => [e.name, e.id]),
   )
 
-  const vessa = playerByName.get('Vessa Dunn')
-  const nyx = playerByName.get('Nyx Caldera')
-  if (!vessa || !nyx) return
+  const talion = playerByName.get('Talion')
+  const salva = playerByName.get('Salva')
+  if (!talion || !salva) return
 
   await prisma.note.createMany({
     data: [
       {
-        authorId: nyx,
+        authorId: salva,
         subjectId: byName.get('Mira Thrushbane') ?? null,
         placement: 'entry',
         visibility: 'shared',
         bodyMd: 'She flinched when Odric said "Saltbone". Worth a push.',
       },
       {
-        authorId: vessa,
+        authorId: talion,
         subjectId: byName.get('Tidewretch') ?? null,
         placement: 'entry',
         visibility: 'shared',
         bodyMd: 'Fire works. Do not let them get a grip near deep water.',
       },
       {
-        authorId: vessa,
+        authorId: talion,
         placement: 'vault',
         visibility: 'private',
         title: 'On Grym',
-        bodyMd: 'Pays in Lantern coin. Ask where he gets it. Do not mention this to [[Torm Blackwater]].',
+        bodyMd: 'Pays in Lantern coin. Ask where he gets it. Do not mention this to [[Ted Bundy]].',
       },
       {
-        authorId: vessa,
+        authorId: talion,
         placement: 'vault',
         visibility: 'shared',
         title: 'The charm',
-        bodyMd: 'Do not let Torm wear the [[Saltbone Charm]] until we know what it does.',
+        bodyMd: 'Do not let Ted wear the [[Saltbone Charm]] until we know what it does.',
       },
       {
-        authorId: nyx,
+        authorId: salva,
         placement: 'party',
         visibility: 'shared',
         title: 'Before session 15',
