@@ -51,7 +51,8 @@ const PLAYERS: Seed[] = [
       race: 'Dragonborn',
       className: 'Paladin',
       subclass: 'Oath of the Ancients',
-      player: 'britto09',
+      player: 'Gabe',
+      handle: 'britto09',
     },
   },
   {
@@ -65,7 +66,8 @@ const PLAYERS: Seed[] = [
       race: 'Tiefling',
       className: 'Warlock',
       subclass: 'The Fiend',
-      player: 'tabithabw2004',
+      player: 'Tabitha',
+      handle: 'tabithabw2004',
     },
   },
   {
@@ -79,7 +81,8 @@ const PLAYERS: Seed[] = [
       race: 'Elf',
       className: 'Ranger',
       subclass: 'Gloom Stalker',
-      player: 'Dunkitay',
+      // Real name not recorded anywhere yet — fill it in on the character page.
+      handle: 'Dunkitay',
     },
   },
   {
@@ -93,7 +96,8 @@ const PLAYERS: Seed[] = [
       race: 'Human',
       className: 'Sorcerer',
       subclass: 'Draconic Bloodline',
-      player: 'someburner19',
+      player: 'Mahan',
+      handle: 'someburner19',
     },
   },
 ]
@@ -265,6 +269,16 @@ const REST: Seed[] = [
       '',
       'Blonde, blue eyes. Talked the room rate down from 20 gp to 12 gp a night for [[Salva]].',
     ].join('\n'),
+  },
+  {
+    type: 'npc',
+    name: 'The Drow Priestess',
+    summary: 'Carried the second sealed letter',
+    knowledge: 'known',
+    tags: ['drow', 'lead'],
+    data: { role: 'Priestess', location: '[[The Gallery]]', stance: 'Hostile', firstMet: 'Session 3' },
+    bodyMd:
+      'Seen at the dig. She was carrying a [[Sealed Drow Dispatch]] — and the party noted it looked **different from the other one**.',
   },
   {
     type: 'npc',
@@ -498,6 +512,16 @@ const REST: Seed[] = [
     data: { kind: 'Inn', within: '[[Triboar]]', ruledBy: '[[Abigail]]' },
     bodyMd:
       'The fancier Triboar inn, catering mostly to Waterdhavian nobles. The party is staying here — 12 gp a night, talked down from 20.',
+  },
+  {
+    type: 'location',
+    name: 'The Six Windows',
+    summary: 'Inn · Triboar · the cheaper option',
+    knowledge: 'known',
+    tags: ['triboar', 'inn'],
+    data: { kind: 'Inn', within: '[[Triboar]]' },
+    bodyMd:
+      'The other lodging offered in [[Triboar]]. Something small for the room, against 12 gp a night at [[The Everwyvern House]]. The party went with the expensive one.',
   },
   {
     type: 'location',
@@ -793,8 +817,8 @@ const REST: Seed[] = [
     name: 'Silvered Crossbow Bolts',
     summary: 'Ammunition · silvered',
     knowledge: 'known',
-    quantity: 10,
-    holdingNote: 'Taken off drow bodies',
+    // Three, per the players' own count.
+    quantity: 3,
     tags: ['ammunition'],
     data: { category: 'Ammunition' },
   },
@@ -808,6 +832,56 @@ const REST: Seed[] = [
     tags: ['consumable', 'drow'],
     data: { category: 'Poison', source: 'Drow bodies' },
     bodyMd: 'Taken off drow bodies. Two doses left.',
+  },
+
+  // Harvested parts, from the players' own inventory list. These are exactly
+  // what a crafting recipe consumes, and reagents match on item name — so
+  // having them here is what will make a future recipe resolve.
+  {
+    type: 'item',
+    name: 'Phase Spider Fang',
+    summary: 'Harvested part · reagent',
+    knowledge: 'known',
+    quantity: 4,
+    tags: ['reagent', 'harvested'],
+    data: { category: 'Crafting material', source: '[[Phase Spider]]' },
+  },
+  {
+    type: 'item',
+    name: 'Phase Spider Eye',
+    summary: 'Harvested part · reagent',
+    knowledge: 'known',
+    quantity: 4,
+    tags: ['reagent', 'harvested'],
+    data: { category: 'Crafting material', source: '[[Phase Spider]]' },
+  },
+  {
+    type: 'item',
+    name: 'Vial of Phase Spider Poison',
+    summary: 'Poison · harvested',
+    knowledge: 'known',
+    quantity: 1,
+    tags: ['consumable', 'harvested'],
+    data: { category: 'Poison', source: '[[Phase Spider]]' },
+  },
+  {
+    type: 'item',
+    name: 'Umber Hulk Chitin',
+    summary: 'Harvested part · sold and used by the pound',
+    knowledge: 'known',
+    quantity: 20,
+    holdingNote: '20 pounds',
+    tags: ['reagent', 'harvested'],
+    data: { category: 'Crafting material', source: '[[Umber Hulk]]', weight: '1 lb each' },
+  },
+  {
+    type: 'item',
+    name: 'Umber Hulk Mandible',
+    summary: 'Harvested part · reagent',
+    knowledge: 'known',
+    quantity: 2,
+    tags: ['reagent', 'harvested'],
+    data: { category: 'Crafting material', source: '[[Umber Hulk]]' },
   },
 
   // ── Recipes ─────────────────────────────────────────────────────────────
@@ -891,25 +965,125 @@ async function main() {
   console.log('run `npm run db:seed:srd` to put the SRD item library back')
 }
 
-/** One board note: where the party actually is, and what is open. */
+/**
+ * The party's own running log, from the players' notes.
+ *
+ * Attributed to Talion: the log introduces the other three by name ("Mahan:
+ * Ted, Tabitha: Salva, Gabe: Rook") and a note-taker does not introduce
+ * themselves. Reassign on any note if that turns out to be wrong.
+ *
+ * Names are corrected to the codex spelling — the log had Cryptguard, Crag,
+ * Doornwood, tribor — so every mention is a working link.
+ */
 async function seedNotes(playerByName: Map<string, string>) {
-  const author = playerByName.get('Talion') ?? [...playerByName.values()][0]
-  if (!author) return
+  const authorId = playerByName.get('Talion') ?? [...playerByName.values()][0]
+  if (!authorId) return
 
-  await prisma.note.create({
-    data: {
-      authorId: author,
-      placement: 'party',
-      visibility: 'shared',
-      title: 'Where we are — Triboar, session 4',
-      bodyMd: [
-        '- [[Krag Bronzebeard]] is translating the [[Sealed Drow Dispatch]]. Needs time with his notes.',
-        '- He is offering **1,000 gold** for the [[Large Winged Creature]] hitting caravans north of [[Triboar]]. Possibly a dragon.',
-        '- Still no idea what the drow are digging for at [[The Gallery]], or what the [[Carved Obsidian Token]] actually does.',
-        '- The main column of captives is still down there, sealed behind the collapse.',
-        '- [[Pendrel Dornwood]] is owed a favour and has not called it in yet.',
-      ].join('\n'),
-    },
+  const board = (title: string, lines: string[]) => ({
+    authorId,
+    placement: 'party',
+    visibility: 'shared',
+    title,
+    bodyMd: lines.join('\n'),
+  })
+
+  await prisma.note.createMany({
+    data: [
+      board('Session 1 — the festival', [
+        'Staying at [[The Blackbutter Inn]]. The town\'s founding festival is starting.',
+        '',
+        '[[Luckbringer Bress]] tells us someone can give us more info — a man with a special interest in rare curiosities, [[Pendrel Dornwood]].',
+        '',
+        'Picked up 3 silver-tipped crossbow bolts.',
+        '',
+        'The drow seem to have come from [[Kryptgarden Forest]]. An ancient green dragon lives near the forest — probably not related. Two and a half days northwest of [[Red Larch]].',
+        '',
+        'Guard captain [[Captain Harbek Ironwood]] tells us roughly **50 citizens** have gone missing. When we come back we should be rewarded fairly. The mayor is in [[Goldenfields]].',
+        '',
+        'The town has provided 4 riding horses.',
+      ]),
+
+      board('Session 2 — the tower and the outcrop', [
+        'Encountered a dilapidated tower near the forest entrance — [[The Ruined Watchtower]].',
+        '',
+        'Found a piece of parchment on one of the bodies with a rough outline of a map. A tower marked, and a trail leading to a cavern. Heavy traffic slightly westward from our location.',
+        '',
+        'The drow had [[Silver Spider Brooch|silver spider brooches]].',
+        '',
+        'Then a rocky outcrop on the side of a hill, with an entrance going inside. Sounds of iron shackles coming from it. The drow seem to be sending the prisoners into the tunnels for "work".',
+      ]),
+
+      board('Session 3 — under the forest', [
+        'Saved a dozen citizens, then went through a deep tunnel. Found a cavern with bioluminescent fungi — possibly the Underdark.',
+        '',
+        'Fought an [[Umber Hulk]], then found a group of 4 dead drow carrying [[The Drow Tunnel Map]] and a note we cannot read.',
+        '',
+        '## The first marked location',
+        'A small camp. 6–8 drow stayed here. Columns with iron rings and shackles for keeping humanoid slaves. Each column has tally marks — **one of them has a lot more than the rest**.',
+        '',
+        'Found an old man, [[Ondrel Kest]], who said the drow wanted to use the slaves to *dig*. Sent him back.',
+        '',
+        '## The ledge and the gallery',
+        'Confronted some drow on a ledge. Saw someone observing us, and then they disappeared.',
+        '',
+        'Followed the path forward and the cave opened up into a drow settlement — roughly **40 slaves** digging for something. Not ore; they are digging into the dirt. Storing stone slabs in a heap.',
+        '',
+        '[[The Drow Priestess]] has a sealed letter, different from the other one.',
+        '',
+        'They were late for the timeline to find whatever they are digging for. The slaves say **someone was waiting for it**.',
+        '',
+        'The structure is [[Netheril]].',
+      ]),
+
+      board('Session 4 — Triboar', [
+        'Went to [[Triboar]] to get info on the stuff, with [[Pendrel Dornwood]] helping us gather it.',
+        '',
+        'Went to a tavern called [[The Laughing Hollow]]. Pendrel introduces us to [[Krag Bronzebeard]], a dwarf who runs the place. He will decipher the letters, but he has a job for us while we wait.',
+        '',
+        '## The job',
+        'Caravans have been attacked in the north by a [[Large Winged Creature]] — a young dragon? Two conflicting stories on the colour: **black, or green**. One account said it picked a whole caravan up by itself.',
+        '',
+        '**1,000 gold** if we do it.',
+        '',
+        '## Lodging',
+        'We can stay at [[The Six Windows]] for something small, or spend more at [[The Everwyvern House]], which mainly caters to nobles.',
+      ]),
+    ],
+  })
+
+  // Observations pinned to the entry they are actually about, so they are found
+  // where someone would look for them rather than three taps away in a log.
+  const byName = new Map(
+    (await prisma.entity.findMany({ select: { id: true, name: true } })).map((e) => [e.name, e.id]),
+  )
+
+  const pinned: Array<[string, string]> = [
+    [
+      'Large Winged Creature',
+      'Two conflicting stories on the colour — black, or green. One account said it picked a whole caravan up by itself.',
+    ],
+    [
+      'The Drow Tunnel Map',
+      'The first marked location was a small camp, 6–8 drow. Columns with iron rings and shackles, and tally marks on each one. **One column has a lot more than the rest.**',
+    ],
+    [
+      'Phase Spider',
+      'Took 4 fangs, 4 eyes and a vial of poison off them. See [[Phase Spider Fang]].',
+    ],
+    ['Umber Hulk', 'Harvested 20 pounds of chitin and 2 mandibles.'],
+    ['The Laughing Hollow', '[[Krag Bronzebeard]] runs the place.'],
+    [
+      'Sealed Drow Dispatch',
+      'The second one came off [[The Drow Priestess]] at the dig, and it is **different from the other one**.',
+    ],
+  ]
+
+  await prisma.note.createMany({
+    data: pinned.flatMap(([subject, bodyMd]) => {
+      const subjectId = byName.get(subject)
+      if (!subjectId) return []
+      return [{ authorId, subjectId, placement: 'entry', visibility: 'shared', bodyMd }]
+    }),
   })
 }
 

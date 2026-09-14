@@ -53,8 +53,10 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
       { key: 'race', label: 'Race', kind: 'text', placeholder: 'Dragonborn' },
       { key: 'className', label: 'Class', kind: 'text', placeholder: 'Paladin' },
       { key: 'subclass', label: 'Subclass', kind: 'text', placeholder: 'Oath of the Ancients' },
-      /** The person at the table, as opposed to the character. */
-      { key: 'player', label: 'Played by', kind: 'text', placeholder: 'britto09' },
+      // The person at the table, as opposed to the character. Two fields
+      // because a name is what you say out loud and a handle is what you type.
+      { key: 'player', label: 'Played by', kind: 'text', placeholder: 'Gabe' },
+      { key: 'handle', label: 'D&D Beyond', kind: 'text', placeholder: 'britto09' },
     ],
   },
   npc: {
