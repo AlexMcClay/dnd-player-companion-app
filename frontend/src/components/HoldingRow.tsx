@@ -1,13 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Holding } from "@codex/shared";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import type { IconType } from "react-icons";
-import { LuMinus, LuPlus, LuTrash2 } from "react-icons/lu";
+import { LuCheck, LuMinus, LuPencil, LuPlus, LuTrash2, LuX } from "react-icons/lu";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { rowVariants, SPRING } from "../lib/motion";
 import { Portrait } from "./bits";
-import { cx, rowClass } from "./ui";
+import { cx, inputClass, rowClass } from "./ui";
 
 /**
  * One stack, with the controls to change it. Quantity edits are optimistic-free
@@ -28,6 +29,8 @@ export default function HoldingRow({
   onMove?: { label: string; icon: IconType; ownerId: string | null };
 }) {
   const queryClient = useQueryClient();
+  const [editingNote, setEditingNote] = useState(false);
+  const [draft, setDraft] = useState(holding.note ?? "");
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["holdings"] });
@@ -46,36 +49,82 @@ export default function HoldingRow({
     onSuccess: invalidate,
   });
 
-  const busy = setQuantity.isPending || move.isPending;
+  const setNote = useMutation({
+    mutationFn: (note: string | null) =>
+      api.updateHolding(holding.id, { note }),
+    onSuccess: async () => {
+      await invalidate();
+      setEditingNote(false);
+    },
+  });
+
+  const busy = setQuantity.isPending || move.isPending || setNote.isPending;
 
   const MoveIcon = onMove?.icon;
 
+  function openEditor() {
+    setDraft(holding.note ?? "");
+    setEditingNote(true);
+  }
+
+  function save() {
+    // Blank clears the note rather than storing "", which would leave the stack
+    // permanently unmergeable for no visible reason — the API treats a note as
+    // the thing that keeps two otherwise identical stacks apart.
+    const trimmed = draft.trim();
+    setNote.mutate(trimmed === "" ? null : trimmed);
+  }
+
   return (
-    <motion.div className={rowClass} variants={rowVariants}>
-      <Link
-        to={`/e/${holding.itemId}`}
-        className="flex min-w-0 flex-1 items-center gap-3"
-      >
-        <Portrait entity={holding.item} size={40} />
+    <motion.div
+      // Only while editing: the editor takes a line of its own, and a row that
+      // can wrap the rest of the time is what made stacks two lines tall.
+      className={cx(rowClass, editingNote && "flex-wrap")}
+      variants={rowVariants}
+    >
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <Link to={`/e/${holding.itemId}`} className="shrink-0">
+          <Portrait entity={holding.item} size={40} />
+        </Link>
+
         <div className="min-w-0 flex-1">
-          <div className="type-name truncate">{holding.item.name}</div>
+          <Link
+            to={`/e/${holding.itemId}`}
+            className="type-name block truncate"
+          >
+            {holding.item.name}
+          </Link>
+
           {/*
+            The second line is the note, and it is also how you edit it — the
+            control sits on the thing it changes rather than adding a sixth
+            icon to a cluster that already has five.
+
             The stack's own note wins over the item's generic summary: it is why
             this stack is separate from an otherwise identical one.
           */}
-          {holding.note ? (
-            <div className="type-meta mt-0.5 truncate text-gold">
-              {holding.note}
-            </div>
-          ) : (
-            holding.item.summary && (
-              <div className="type-meta mt-0.5 truncate">
-                {holding.item.summary}
-              </div>
-            )
-          )}
+          <button
+            type="button"
+            title={
+              holding.note
+                ? "Edit this stack's note"
+                : "Add a note about this stack"
+            }
+            className={cx(
+              "type-meta mt-0.5 block w-full cursor-pointer truncate text-left",
+              holding.note && "text-gold",
+            )}
+            onClick={openEditor}
+          >
+            {holding.note ?? holding.item.summary ?? (
+              <span className="inline-flex items-center gap-1 text-ink-muted">
+                <LuPencil aria-hidden />
+                Add a note
+              </span>
+            )}
+          </button>
         </div>
-      </Link>
+      </div>
 
       <div className="flex shrink-0 items-center gap-0.5">
         {/*
@@ -124,6 +173,45 @@ export default function HoldingRow({
           <LuTrash2 aria-hidden />
         </StepButton>
       </div>
+
+      {editingNote && (
+        <form
+          className="flex w-full items-center gap-1.5 pt-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            save();
+          }}
+        >
+          <input
+            className={cx(inputClass, "min-h-8 py-1.5")}
+            value={draft}
+            autoFocus
+            placeholder="Why this stack is separate…"
+            aria-label={`Note on ${holding.item.name}`}
+            disabled={setNote.isPending}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setEditingNote(false);
+            }}
+          />
+          <StepButton
+            label="Save the note"
+            tone="gold"
+            disabled={setNote.isPending}
+            onClick={save}
+            type="submit"
+          >
+            <LuCheck aria-hidden />
+          </StepButton>
+          <StepButton
+            label="Cancel"
+            disabled={setNote.isPending}
+            onClick={() => setEditingNote(false)}
+          >
+            <LuX aria-hidden />
+          </StepButton>
+        </form>
+      )}
     </motion.div>
   );
 }
@@ -134,6 +222,7 @@ function StepButton({
   onClick,
   children,
   tone = "plain",
+  type = "button",
 }: {
   label: string;
   disabled: boolean;
@@ -141,17 +230,18 @@ function StepButton({
   children: React.ReactNode;
   /** Gold marks the one button that moves the stack somewhere else. */
   tone?: "plain" | "gold";
+  type?: "button" | "submit";
 }) {
   return (
     <motion.button
-      type="button"
+      type={type}
       aria-label={label}
       // Same words as the accessible name: an icon-only control needs to be
       // answerable with a hover as well as with a screen reader.
       title={label}
       disabled={disabled}
       className={cx(
-        "grid size-7 cursor-pointer place-items-center border disabled:opacity-40 [&>svg]:size-3",
+        "grid size-7 shrink-0 cursor-pointer place-items-center border disabled:opacity-40 [&>svg]:size-3",
         tone === "gold"
           ? "border-gold-dim bg-gold-tint text-gold"
           : "border-line text-ink-faint",
