@@ -70,7 +70,7 @@ separate things.
 | --- | --- |
 | **On a codex entry** | Pinned to an NPC, monster, item or anything else, with the author's name and face on it. |
 | **Your vault** | Your own notebook, on the **Me** tab. |
-| **The party board** | The group's shared scratchpad, under the item stash on the **Party** tab. Always shared. |
+| **The party board** | The group's shared scratchpad on the **Party** tab. Always shared. |
 
 Vault and entry notes can be **private** or **shared**. A shared vault note also
 appears on your character's page, so it is how you publish something to the table
@@ -140,6 +140,10 @@ notes
   shapes — a Prisma filter and a SQL fragment, because full-text search cannot use
   the former — both reading one list from `@codex/shared`. Nothing else in the
   codebase compares against `knowledge`.
+- **The party stash** has its own screen at `/party/stash`, reached from a summary
+  card on the Party tab. A real campaign's stash is long enough to bury
+  everything under it, and a separate screen also keeps the "add an item" sheet
+  from opening on top of another overlay.
 - **Items are definitions.** An `entities` row of type `item` is the catalogue
   entry shown in the Codex; a `holdings` row is a stack of it that somebody
   carries. That split is what lets the same item sit in the stash and in two packs

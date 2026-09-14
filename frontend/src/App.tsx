@@ -12,6 +12,7 @@ import EntityEditPage from './pages/EntityEditPage'
 import MePage from './pages/MePage'
 import PartyPage from './pages/PartyPage'
 import SearchPage from './pages/SearchPage'
+import StashPage from './pages/StashPage'
 
 /**
  * Mounts with the incoming page. Resetting scroll on the location change
@@ -57,6 +58,8 @@ export default function App() {
             <Routes location={location}>
               <Route path="/" element={<Navigate to="/party" replace />} />
               <Route path="/party" element={<PartyPage />} />
+              {/* Its own screen so a long stash cannot bury the Party tab. */}
+              <Route path="/party/stash" element={<StashPage />} />
               <Route path="/me" element={<MePage />} />
               <Route path="/codex" element={<CodexPage />} />
               {/* The Items tab folded into Party and Me; keep old links alive. */}
