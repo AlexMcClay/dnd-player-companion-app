@@ -3,10 +3,9 @@ import { marked } from 'marked'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useNameIndex } from '../lib/useNameIndex'
+import { resolveWikiName, WIKI_LINK } from '../lib/wikiLinks'
 
 marked.setOptions({ gfm: true, breaks: true })
-
-const WIKI_LINK = /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g
 
 function escapeHtml(value: string): string {
   return value.replace(
@@ -29,7 +28,7 @@ export default function Markdown({ source }: { source: string }) {
     const withLinks = source.replace(WIKI_LINK, (_match, rawName: string, rawLabel?: string) => {
       const name = rawName.trim()
       const label = escapeHtml((rawLabel ?? name).trim())
-      const id = index.get(name.toLowerCase())
+      const id = resolveWikiName(name, index)
       return id
         ? `<a class="wikilink" href="/e/${id}">${label}</a>`
         : `<span class="wikilink-dead">${label}</span>`

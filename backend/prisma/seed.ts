@@ -194,7 +194,7 @@ const REST: Seed[] = [
       '## What you know',
       'Stone piers, a grain exchange, and more Lantern lamps every month. The party made landfall here in session 9.',
       '',
-      'The [[Drowned Quarter]] is technically part of it, though nobody official says so.',
+      '[[The Drowned Quarter]] is technically part of it, though nobody official says so.',
     ].join('\n'),
   },
   {

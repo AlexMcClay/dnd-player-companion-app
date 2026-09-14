@@ -95,8 +95,10 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
       // Deliberately one free-text field rather than a fixed hierarchy: a
       // country, a city and a single inn all live here.
       { key: 'kind', label: 'Kind', kind: 'text', placeholder: 'City · Inn · Region' },
-      { key: 'within', label: 'Part of', kind: 'text', placeholder: 'The Marrow Coast' },
-      { key: 'ruledBy', label: 'Run by', kind: 'text', placeholder: 'The harbourmaster' },
+      // The placeholders double as a lesson: these fields resolve [[links]],
+      // which is not obvious anywhere else in the DM form.
+      { key: 'within', label: 'Part of', kind: 'text', placeholder: '[[The Marrow Coast]]' },
+      { key: 'ruledBy', label: 'Run by', kind: 'text', placeholder: '[[Mira Thrushbane]]' },
     ],
   },
   monster: {

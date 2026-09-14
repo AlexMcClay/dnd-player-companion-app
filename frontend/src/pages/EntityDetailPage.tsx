@@ -7,6 +7,7 @@ import { api } from '../api/client'
 import Markdown from '../components/Markdown'
 import NoteCard from '../components/NoteCard'
 import NoteList from '../components/NoteList'
+import WikiText from '../components/WikiText'
 import {
   Empty,
   KnowledgePill,
@@ -172,7 +173,17 @@ function SpecList({ entity }: { entity: Entity }) {
         <div key={field.key} className="contents">
           <dt className="type-meta self-center">{field.label}</dt>
           <dd className="m-0">
-            {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}
+            {typeof value === 'boolean' ? (
+              value ? (
+                'Yes'
+              ) : (
+                'No'
+              )
+            ) : (
+              // Template fields are plain text, but people still write
+              // [[links]] in them — a location's "Run by", for instance.
+              <WikiText text={String(value)} />
+            )}
           </dd>
         </div>
       ))}

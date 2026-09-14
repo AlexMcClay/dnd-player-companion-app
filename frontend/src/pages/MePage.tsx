@@ -8,6 +8,7 @@ import AddItemSheet from '../components/AddItemSheet'
 import { CharacterPicker, CharacterSwitcherPortal } from '../components/CharacterPicker'
 import HoldingRow from '../components/HoldingRow'
 import NoteList from '../components/NoteList'
+import WikiText from '../components/WikiText'
 import { Empty, Loading, PageHead, Portrait, Section, StaggerList } from '../components/bits'
 import { ctaClass, panelClass } from '../components/ui'
 import { usePlayerId } from '../lib/identity'
@@ -128,7 +129,9 @@ function SpecPanel({
       {rows.map(({ field, value }) => (
         <div key={field.key}>
           <div className="type-meta">{field.label}</div>
-          <div className="mt-0.75 text-[15px]">{String(value)}</div>
+          <div className="mt-0.75 text-[15px]">
+            <WikiText text={String(value)} />
+          </div>
         </div>
       ))}
     </div>
