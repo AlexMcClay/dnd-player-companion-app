@@ -43,6 +43,29 @@ a record is read, so changing it fixes existing images too — nothing to migrat
 > campaign data, do not run it again — uploaded images stay in MinIO but the
 > entries pointing at them are gone.
 
+### The 5e equipment library
+
+```bash
+npm run db:seed:srd
+```
+
+Adds the 237 base items from the D&D 5e SRD — weapons, armour, adventuring gear,
+tools, equipment packs, mounts and vehicles — to the Codex item repository, with
+cost, weight, damage, armour class and properties filled in. Players draw from
+this list when adding to a pack or the stash.
+
+Unlike `db:seed`, this **adds without deleting**. It matches on name, skips
+anything already there, and is safe to run against a live campaign. Re-run it any
+time; pass `-- --replace` to overwrite existing entries from the data file.
+
+Every imported item is tagged `srd`, so your own items stay distinguishable —
+`/codex?group=item&q=` searches both, and the tag chip filters to one.
+
+The data is SRD 5.1, used under CC-BY-4.0. The required attribution lives in
+[backend/prisma/data/SRD-ATTRIBUTION.md](backend/prisma/data/SRD-ATTRIBUTION.md)
+and must stay with the data. It covers the SRD only — published monsters,
+settings and magic items outside it are not licensed for redistribution.
+
 The seed loads the sample campaign from the design mockups (The Marrow Coast) so
 nothing is ever empty on first run. `npm run db:reset` wipes and re-migrates.
 

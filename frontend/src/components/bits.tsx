@@ -1,9 +1,9 @@
-import { motion } from 'framer-motion'
-import type { CSSProperties, ReactNode } from 'react'
+import { motion, type Variants } from 'framer-motion'
+import { Children, useMemo, type CSSProperties, type ReactNode } from 'react'
 import type { Entity, Knowledge } from '@codex/shared'
 import { LuEyeOff, LuLoader, LuSparkles, LuTag } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
-import { listVariants, rowVariants, SPRING } from '../lib/motion'
+import { rowVariants, SPRING } from '../lib/motion'
 import { templateFor } from '../templates'
 import { cx, pillClass, rowClass } from './ui'
 
@@ -96,10 +96,40 @@ export function TagChips({ tags }: { tags: string[] }) {
   )
 }
 
-/** Wraps a run of EntityRows so they fade in one after another. */
-export function StaggerList({ children }: { children: ReactNode }) {
+/** Longest the whole cascade may take, however many rows there are. */
+const STAGGER_BUDGET = 0.4
+
+/**
+ * Wraps a run of EntityRows so they fade in one after another.
+ *
+ * The per-row delay shrinks to fit a fixed budget, because the delay is applied
+ * per index: at a flat 35ms the SRD item list — 247 rows — would still be
+ * animating in eight seconds later.
+ */
+export function StaggerList({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) {
+  const count = Children.count(children)
+
+  const variants: Variants = useMemo(
+    () => ({
+      hidden: {},
+      show: {
+        transition: {
+          delayChildren: 0.02,
+          staggerChildren: count > 1 ? Math.min(0.035, STAGGER_BUDGET / count) : 0,
+        },
+      },
+    }),
+    [count],
+  )
+
   return (
-    <motion.div variants={listVariants} initial="hidden" animate="show">
+    <motion.div className={className} variants={variants} initial="hidden" animate="show">
       {children}
     </motion.div>
   )

@@ -3,8 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useState } from 'react'
 import { LuPackage, LuPlus, LuSearch } from 'react-icons/lu'
 import { api } from '../api/client'
-import { listVariants, rowVariants, SPRING } from '../lib/motion'
-import { Empty, Loading, Portrait } from './bits'
+import { rowVariants, SPRING } from '../lib/motion'
+import { Empty, Loading, Portrait, StaggerList } from './bits'
 import { cx, ctaClass, inputClass, panelClass, rowClass } from './ui'
 
 /**
@@ -119,12 +119,7 @@ function Picker({
           </Empty>
         )}
 
-        <motion.div
-          className="-mx-1 flex-1 overflow-y-auto px-1"
-          variants={listVariants}
-          initial="hidden"
-          animate="show"
-        >
+        <StaggerList className="-mx-1 flex-1 overflow-y-auto px-1">
           {matches.map((item) => (
             <motion.button
               key={item.id}
@@ -144,7 +139,7 @@ function Picker({
               <LuPlus className="size-4 text-gold" aria-hidden />
             </motion.button>
           ))}
-        </motion.div>
+        </StaggerList>
 
         {error && <div className="type-meta text-danger">{error}</div>}
 

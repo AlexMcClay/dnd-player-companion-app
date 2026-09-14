@@ -16,6 +16,7 @@
     "typecheck": "npm -w @codex/backend run typecheck && npm -w @codex/frontend run typecheck",
     "db:migrate": "npm -w @codex/backend run db:migrate",
     "db:seed": "npm -w @codex/backend run db:seed",
+    "db:seed:srd": "npm -w @codex/backend run db:seed:srd",
     "db:reset": "npm -w @codex/backend run db:reset",
     "db:studio": "npm -w @codex/backend run db:studio",
     "infra:up": "docker compose up -d",

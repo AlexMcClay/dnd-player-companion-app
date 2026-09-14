@@ -122,6 +122,15 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
     portraitWord: 'Item art',
     heroAspect: '3 / 2',
     fields: [
+      // The first group mirrors a 5e equipment entry, so SRD gear imported by
+      // `db:seed:srd` renders with its real stats rather than a bare name.
+      { key: 'category', label: 'Category', kind: 'text', placeholder: 'Martial Melee' },
+      { key: 'cost', label: 'Cost', kind: 'text', placeholder: '15 gp' },
+      { key: 'weight', label: 'Weight', kind: 'text', placeholder: '3 lb' },
+      { key: 'damage', label: 'Damage', kind: 'text', placeholder: '1d8 slashing' },
+      { key: 'armorClass', label: 'Armour class', kind: 'text', placeholder: '11 + Dex' },
+      { key: 'properties', label: 'Properties', kind: 'text', placeholder: 'Finesse, Light' },
+      // The second group is campaign flavour rather than book stats.
       { key: 'effect', label: 'Effect', kind: 'text', placeholder: '2d6 fire in a 10 ft burst' },
       { key: 'attuned', label: 'Attuned', kind: 'boolean' },
       { key: 'charges', label: 'Charges', kind: 'text', placeholder: '1 of 3' },

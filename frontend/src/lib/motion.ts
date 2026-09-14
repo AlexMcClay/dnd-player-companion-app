@@ -37,11 +37,11 @@ export const SPRING: Transition = { type: 'spring', stiffness: 420, damping: 34 
  * which strips transform and layout animation while leaving opacity alone — so
  * these variants need no manual guard.
  */
-export const listVariants: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.035, delayChildren: 0.02 } },
-}
-
+/**
+ * Deliberately not exported as a flat list variant any more: the per-child delay
+ * has to shrink as a list grows, or a long one is still animating seconds later.
+ * <StaggerList> owns that calculation — use it rather than rolling your own.
+ */
 export const rowVariants: Variants = {
   hidden: { opacity: 0, y: 10 },
   show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: EASE } },

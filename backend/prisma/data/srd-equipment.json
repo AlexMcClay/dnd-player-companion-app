@@ -1,0 +1,3438 @@
+[
+  {
+    "name": "Abacus",
+    "summary": "Standard Gear · 2 gp · 2 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 gp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Acid (vial)",
+    "summary": "Standard Gear · 25 gp · 1 lb",
+    "bodyMd": "As an action, you can splash the contents of this vial onto a creature within 5 feet of you or throw the vial up to 20 feet, shattering it on impact. In either case, make a ranged attack against a creature or object, treating the acid as an improvised weapon.\n\nOn a hit, the target takes 2d6 acid damage.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "25 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Alchemist's fire (flask)",
+    "summary": "Standard Gear · 50 gp · 1 lb",
+    "bodyMd": "This sticky, adhesive fluid ignites when exposed to air.\n\nAs an action, you can throw this flask up to 20 feet, shattering it on impact. Make a ranged attack against a creature or object, treating the alchemist's fire as an improvised weapon.\n\nOn a hit, the target takes 1d4 fire damage at the start of each of its turns. A creature can end this damage by using its action to make a DC 10 Dexterity check to extinguish the flames.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "50 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Alchemist's Supplies",
+    "summary": "Tools · 50 gp · 8 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "50 gp",
+      "weight": "8 lb"
+    }
+  },
+  {
+    "name": "Alms box",
+    "summary": "Standard Gear · 0 cp",
+    "bodyMd": "A small box for alms, typically found in a priest's pack.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "0 cp"
+    }
+  },
+  {
+    "name": "Amulet",
+    "summary": "Holy Symbols · 5 gp · 1 lb",
+    "bodyMd": "A holy symbol is a representation of a god or pantheon. It might be an amulet depicting a symbol representing a deity, the same symbol carefully engraved or inlaid as an emblem on a shield, or a tiny box holding a fragment of a sacred relic.\n\nAppendix B lists the symbols commonly associated with many gods in the multiverse. A cleric or paladin can use a holy symbol as a spellcasting focus. To use the symbol in this way, the caster must hold it in hand, wear it visibly, or bear it on a shield.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Holy Symbols",
+      "cost": "5 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Animal Feed (1 day)",
+    "summary": "Mounts and Vehicles · 5 cp · 10 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "5 cp",
+      "weight": "10 lb"
+    }
+  },
+  {
+    "name": "Antitoxin (vial)",
+    "summary": "Standard Gear · 50 gp",
+    "bodyMd": "A creature that drinks this vial of liquid gains advantage on saving throws against poison for 1 hour. It confers no benefit to undead or constructs.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "50 gp"
+    }
+  },
+  {
+    "name": "Arrow",
+    "summary": "Ammunition · 1 gp · 1 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Ammunition",
+      "cost": "1 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Backpack",
+    "summary": "Standard Gear · 2 gp · 5 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 gp",
+      "weight": "5 lb"
+    }
+  },
+  {
+    "name": "Bagpipes",
+    "summary": "Tools · 30 gp · 6 lb",
+    "bodyMd": "Several of the most common types of musical instruments are shown on the table as examples. If you have proficiency with a given musical instrument, you can add your proficiency bonus to any ability checks you make to play music with the instrument. A bard can use a musical instrument as a spellcasting focus. Each type of musical instrument requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "30 gp",
+      "weight": "6 lb"
+    }
+  },
+  {
+    "name": "Ball bearings (bag of 1,000)",
+    "summary": "Standard Gear · 1 gp · 2 lb",
+    "bodyMd": "As an action, you can spill these tiny metal balls from their pouch to cover a level, square area that is 10 feet on a side.\n\nA creature moving across the covered area must succeed on a DC 10 Dexterity saving throw or fall prone.\n\nA creature moving through the area at half speed doesn't need to make the save.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 gp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Barding: Breastplate",
+    "summary": "Mounts and Vehicles · 1600 gp · 40 lb",
+    "bodyMd": "Barding is armor designed to protect an animal's head, neck, chest, and body. Any type of armor shown on the Armor table can be purchased as barding. The cost is four times the equivalent armor made for humanoids, and it weighs twice as much.",
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "1600 gp",
+      "weight": "40 lb"
+    }
+  },
+  {
+    "name": "Barding: Chain mail",
+    "summary": "Mounts and Vehicles · 300 gp · 110 lb",
+    "bodyMd": "Barding is armor designed to protect an animal's head, neck, chest, and body. Any type of armor shown on the Armor table can be purchased as barding. The cost is four times the equivalent armor made for humanoids, and it weighs twice as much.",
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "300 gp",
+      "weight": "110 lb"
+    }
+  },
+  {
+    "name": "Barding: Chain shirt",
+    "summary": "Mounts and Vehicles · 200 gp · 40 lb",
+    "bodyMd": "Barding is armor designed to protect an animal's head, neck, chest, and body. Any type of armor shown on the Armor table can be purchased as barding. The cost is four times the equivalent armor made for humanoids, and it weighs twice as much.",
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "200 gp",
+      "weight": "40 lb"
+    }
+  },
+  {
+    "name": "Barding: Half plate",
+    "summary": "Mounts and Vehicles · 3000 gp · 80 lb",
+    "bodyMd": "Barding is armor designed to protect an animal's head, neck, chest, and body. Any type of armor shown on the Armor table can be purchased as barding. The cost is four times the equivalent armor made for humanoids, and it weighs twice as much.",
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "3000 gp",
+      "weight": "80 lb"
+    }
+  },
+  {
+    "name": "Barding: Hide",
+    "summary": "Mounts and Vehicles · 40 gp · 24 lb",
+    "bodyMd": "Barding is armor designed to protect an animal's head, neck, chest, and body. Any type of armor shown on the Armor table can be purchased as barding. The cost is four times the equivalent armor made for humanoids, and it weighs twice as much.",
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "40 gp",
+      "weight": "24 lb"
+    }
+  },
+  {
+    "name": "Barding: Leather",
+    "summary": "Mounts and Vehicles · 40 gp · 20 lb",
+    "bodyMd": "Barding is armor designed to protect an animal's head, neck, chest, and body. Any type of armor shown on the Armor table can be purchased as barding. The cost is four times the equivalent armor made for humanoids, and it weighs twice as much.",
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "40 gp",
+      "weight": "20 lb"
+    }
+  },
+  {
+    "name": "Barding: Padded",
+    "summary": "Mounts and Vehicles · 20 gp · 16 lb",
+    "bodyMd": "Barding is armor designed to protect an animal's head, neck, chest, and body. Any type of armor shown on the Armor table can be purchased as barding. The cost is four times the equivalent armor made for humanoids, and it weighs twice as much.",
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "20 gp",
+      "weight": "16 lb"
+    }
+  },
+  {
+    "name": "Barding: Plate",
+    "summary": "Mounts and Vehicles · 6000 gp · 130 lb",
+    "bodyMd": "Barding is armor designed to protect an animal's head, neck, chest, and body. Any type of armor shown on the Armor table can be purchased as barding. The cost is four times the equivalent armor made for humanoids, and it weighs twice as much.",
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "6000 gp",
+      "weight": "130 lb"
+    }
+  },
+  {
+    "name": "Barding: Ring mail",
+    "summary": "Mounts and Vehicles · 12 gp · 80 lb",
+    "bodyMd": "Barding is armor designed to protect an animal's head, neck, chest, and body. Any type of armor shown on the Armor table can be purchased as barding. The cost is four times the equivalent armor made for humanoids, and it weighs twice as much.",
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "12 gp",
+      "weight": "80 lb"
+    }
+  },
+  {
+    "name": "Barding: Scale mail",
+    "summary": "Mounts and Vehicles · 200 gp · 90 lb",
+    "bodyMd": "Barding is armor designed to protect an animal's head, neck, chest, and body. Any type of armor shown on the Armor table can be purchased as barding. The cost is four times the equivalent armor made for humanoids, and it weighs twice as much.",
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "200 gp",
+      "weight": "90 lb"
+    }
+  },
+  {
+    "name": "Barding: Splint",
+    "summary": "Mounts and Vehicles · 800 gp · 120 lb",
+    "bodyMd": "Barding is armor designed to protect an animal's head, neck, chest, and body. Any type of armor shown on the Armor table can be purchased as barding. The cost is four times the equivalent armor made for humanoids, and it weighs twice as much.",
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "800 gp",
+      "weight": "120 lb"
+    }
+  },
+  {
+    "name": "Barding: Studded Leather",
+    "summary": "Mounts and Vehicles · 180 gp · 26 lb",
+    "bodyMd": "Barding is armor designed to protect an animal's head, neck, chest, and body. Any type of armor shown on the Armor table can be purchased as barding. The cost is four times the equivalent armor made for humanoids, and it weighs twice as much.",
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "180 gp",
+      "weight": "26 lb"
+    }
+  },
+  {
+    "name": "Barrel",
+    "summary": "Standard Gear · 2 gp · 70 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 gp",
+      "weight": "70 lb"
+    }
+  },
+  {
+    "name": "Basket",
+    "summary": "Standard Gear · 4 sp · 2 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "4 sp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Battleaxe",
+    "summary": "Martial Melee · 1d8 slashing (1d10 slashing two-handed) · 10 gp · 4 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "10 gp",
+      "weight": "4 lb",
+      "damage": "1d8 slashing (1d10 slashing two-handed)",
+      "properties": "Versatile"
+    }
+  },
+  {
+    "name": "Bedroll",
+    "summary": "Standard Gear · 1 gp · 7 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 gp",
+      "weight": "7 lb"
+    }
+  },
+  {
+    "name": "Bell",
+    "summary": "Standard Gear · 1 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 gp"
+    }
+  },
+  {
+    "name": "Bit and bridle",
+    "summary": "Mounts and Vehicles · 2 gp · 1 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "2 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Blanket",
+    "summary": "Standard Gear · 5 sp · 3 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 sp",
+      "weight": "3 lb"
+    }
+  },
+  {
+    "name": "Block and tackle",
+    "summary": "Standard Gear · 1 gp · 5 lb",
+    "bodyMd": "A set of pulleys with a cable threaded through them and a hook to attach to objects, a block and tackle allows you to hoist up to four times the weight you can normally lift.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 gp",
+      "weight": "5 lb"
+    }
+  },
+  {
+    "name": "Block of incense",
+    "summary": "Standard Gear · 0 cp",
+    "bodyMd": "A block of incense, typically found in a priest's pack.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "0 cp"
+    }
+  },
+  {
+    "name": "Blowgun",
+    "summary": "Martial Ranged · 1 piercing · 10 gp · 1 lb",
+    "bodyMd": "Range 25/100 ft.",
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "ranged"
+    ],
+    "data": {
+      "category": "Martial Ranged",
+      "cost": "10 gp",
+      "weight": "1 lb",
+      "damage": "1 piercing",
+      "properties": "Ammunition, Loading"
+    }
+  },
+  {
+    "name": "Blowgun needle",
+    "summary": "Ammunition · 1 gp · 1 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Ammunition",
+      "cost": "1 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Book",
+    "summary": "Standard Gear · 25 gp · 5 lb",
+    "bodyMd": "A book might contain poetry, historical accounts, information pertaining to a particular field of lore, diagrams and notes on gnomish contraptions, or just about anything else that can be represented using text or pictures. A book of spells is a spellbook (described later in this section).",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "25 gp",
+      "weight": "5 lb"
+    }
+  },
+  {
+    "name": "Bottle, glass",
+    "summary": "Standard Gear · 2 gp · 2 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 gp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Breastplate",
+    "summary": "Medium · AC 14 + Dex (max 2) · 400 gp · 20 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "armor",
+      "medium"
+    ],
+    "data": {
+      "category": "Medium",
+      "cost": "400 gp",
+      "weight": "20 lb",
+      "armorClass": "14 + Dex (max 2)"
+    }
+  },
+  {
+    "name": "Brewer's Supplies",
+    "summary": "Tools · 20 gp · 9 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "20 gp",
+      "weight": "9 lb"
+    }
+  },
+  {
+    "name": "Bucket",
+    "summary": "Standard Gear · 5 cp · 2 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 cp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Burglar's Pack",
+    "summary": "Equipment Packs · 16 gp",
+    "bodyMd": "**Contains**\n- Backpack ×1\n- Ball bearings (bag of 1,000) ×1\n- String (10 feet) ×1\n- Bell ×1\n- Candle ×5\n- Crowbar ×1\n- Hammer ×1\n- Piton ×10\n- Lantern, hooded ×1\n- Oil (flask) ×2\n- Rations (1 day) ×5\n- Tinderbox ×1\n- Waterskin ×1\n- Rope, hempen (50 feet) ×1",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Equipment Packs",
+      "cost": "16 gp"
+    }
+  },
+  {
+    "name": "Calligrapher's Supplies",
+    "summary": "Tools · 10 gp · 5 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "10 gp",
+      "weight": "5 lb"
+    }
+  },
+  {
+    "name": "Caltrops",
+    "summary": "Standard Gear · 5 cp · 2 lb",
+    "bodyMd": "As an action, you can spread a bag of caltrops to cover a square area that is 5 feet on a side.\n\nAny creature that enters the area must succeed on a DC 15 Dexterity saving throw or stop moving this turn and take 1 piercing damage.\n\nTaking this damage reduces the creature's walking speed by 10 feet until the creature regains at least 1 hit point.\n\nA creature moving through the area at half speed doesn't need to make the save.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 cp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Camel",
+    "summary": "Mounts and Vehicles · 50 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "50 gp"
+    }
+  },
+  {
+    "name": "Candle",
+    "summary": "Standard Gear · 1 cp",
+    "bodyMd": "For 1 hour, a candle sheds bright light in a 5-foot radius and dim light for an additional 5 feet.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 cp"
+    }
+  },
+  {
+    "name": "Carpenter's Tools",
+    "summary": "Tools · 8 gp · 6 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "8 gp",
+      "weight": "6 lb"
+    }
+  },
+  {
+    "name": "Carriage",
+    "summary": "Mounts and Vehicles · 100 gp · 600 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "100 gp",
+      "weight": "600 lb"
+    }
+  },
+  {
+    "name": "Cart",
+    "summary": "Mounts and Vehicles · 15 gp · 200 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "15 gp",
+      "weight": "200 lb"
+    }
+  },
+  {
+    "name": "Cartographer's Tools",
+    "summary": "Tools · 15 gp · 6 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "15 gp",
+      "weight": "6 lb"
+    }
+  },
+  {
+    "name": "Case, crossbow bolt",
+    "summary": "Standard Gear · 1 gp · 1 lb",
+    "bodyMd": "This wooden case can hold up to twenty crossbow bolts.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Case, map or scroll",
+    "summary": "Standard Gear · 1 gp · 1 lb",
+    "bodyMd": "This cylindrical leather case can hold up to ten rolled-up sheets of paper or five rolled-up sheets of parchment.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Censer",
+    "summary": "Standard Gear · 0 cp",
+    "bodyMd": "A censer, typically found in a priest's pack.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "0 cp"
+    }
+  },
+  {
+    "name": "Chain (10 feet)",
+    "summary": "Standard Gear · 5 gp · 10 lb",
+    "bodyMd": "A chain has 10 hit points. It can be burst with a successful DC 20 Strength check.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 gp",
+      "weight": "10 lb"
+    }
+  },
+  {
+    "name": "Chain Mail",
+    "summary": "Heavy · AC 16 · 75 gp · 55 lb",
+    "bodyMd": "Disadvantage on Stealth checks.\n\nRequires Strength 13.",
+    "tags": [
+      "srd",
+      "armor",
+      "heavy"
+    ],
+    "data": {
+      "category": "Heavy",
+      "cost": "75 gp",
+      "weight": "55 lb",
+      "armorClass": "16"
+    }
+  },
+  {
+    "name": "Chain Shirt",
+    "summary": "Medium · AC 13 + Dex (max 2) · 50 gp · 20 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "armor",
+      "medium"
+    ],
+    "data": {
+      "category": "Medium",
+      "cost": "50 gp",
+      "weight": "20 lb",
+      "armorClass": "13 + Dex (max 2)"
+    }
+  },
+  {
+    "name": "Chalk (1 piece)",
+    "summary": "Standard Gear · 1 cp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 cp"
+    }
+  },
+  {
+    "name": "Chariot",
+    "summary": "Mounts and Vehicles · 250 gp · 100 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "250 gp",
+      "weight": "100 lb"
+    }
+  },
+  {
+    "name": "Chest",
+    "summary": "Standard Gear · 5 gp · 25 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 gp",
+      "weight": "25 lb"
+    }
+  },
+  {
+    "name": "Climber's Kit",
+    "summary": "Kits · 25 gp · 12 lb",
+    "bodyMd": "A climber's kit includes special pitons, boot tips, gloves, and a harness. You can use the climber's kit as an action to anchor yourself; when you do, you can't fall more than 25 feet from the point where you anchored yourself, and you can't climb more than 25 feet away from that point without undoing the anchor.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Kits",
+      "cost": "25 gp",
+      "weight": "12 lb"
+    }
+  },
+  {
+    "name": "Clothes, common",
+    "summary": "Standard Gear · 5 sp · 3 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 sp",
+      "weight": "3 lb"
+    }
+  },
+  {
+    "name": "Clothes, costume",
+    "summary": "Standard Gear · 5 gp · 4 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 gp",
+      "weight": "4 lb"
+    }
+  },
+  {
+    "name": "Clothes, fine",
+    "summary": "Standard Gear · 15 gp · 6 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "15 gp",
+      "weight": "6 lb"
+    }
+  },
+  {
+    "name": "Clothes, traveler's",
+    "summary": "Standard Gear · 2 gp · 4 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 gp",
+      "weight": "4 lb"
+    }
+  },
+  {
+    "name": "Club",
+    "summary": "Simple Melee · 1d4 bludgeoning · 1 sp · 2 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "simple",
+      "melee"
+    ],
+    "data": {
+      "category": "Simple Melee",
+      "cost": "1 sp",
+      "weight": "2 lb",
+      "damage": "1d4 bludgeoning",
+      "properties": "Light, Monk"
+    }
+  },
+  {
+    "name": "Cobbler's Tools",
+    "summary": "Tools · 5 gp · 5 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "5 gp",
+      "weight": "5 lb"
+    }
+  },
+  {
+    "name": "Component pouch",
+    "summary": "Standard Gear · 25 gp · 2 lb",
+    "bodyMd": "A component pouch is a small, watertight leather belt pouch that has compartments to hold all the material components and other special items you need to cast your spells, except for those components that have a specific cost (as indicated in a spell's description).",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "25 gp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Cook's utensils",
+    "summary": "Tools · 1 gp · 8 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "1 gp",
+      "weight": "8 lb"
+    }
+  },
+  {
+    "name": "Crossbow bolt",
+    "summary": "Ammunition · 1 gp · 1.5 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Ammunition",
+      "cost": "1 gp",
+      "weight": "1.5 lb"
+    }
+  },
+  {
+    "name": "Crossbow, hand",
+    "summary": "Martial Ranged · 1d6 piercing · 75 gp · 3 lb",
+    "bodyMd": "Range 30/120 ft.",
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "ranged"
+    ],
+    "data": {
+      "category": "Martial Ranged",
+      "cost": "75 gp",
+      "weight": "3 lb",
+      "damage": "1d6 piercing",
+      "properties": "Ammunition, Light, Loading"
+    }
+  },
+  {
+    "name": "Crossbow, heavy",
+    "summary": "Martial Ranged · 1d10 piercing · 50 gp · 18 lb",
+    "bodyMd": "Range 100/400 ft.",
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "ranged"
+    ],
+    "data": {
+      "category": "Martial Ranged",
+      "cost": "50 gp",
+      "weight": "18 lb",
+      "damage": "1d10 piercing",
+      "properties": "Ammunition, Heavy, Loading, Two-Handed"
+    }
+  },
+  {
+    "name": "Crossbow, light",
+    "summary": "Simple Ranged · 1d8 piercing · 25 gp · 5 lb",
+    "bodyMd": "Range 80/320 ft.",
+    "tags": [
+      "srd",
+      "weapon",
+      "simple",
+      "ranged"
+    ],
+    "data": {
+      "category": "Simple Ranged",
+      "cost": "25 gp",
+      "weight": "5 lb",
+      "damage": "1d8 piercing",
+      "properties": "Ammunition, Loading, Two-Handed"
+    }
+  },
+  {
+    "name": "Crowbar",
+    "summary": "Standard Gear · 2 gp · 5 lb",
+    "bodyMd": "Using a crowbar grants advantage to Strength checks where the crowbar's leverage can be applied.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 gp",
+      "weight": "5 lb"
+    }
+  },
+  {
+    "name": "Crystal",
+    "summary": "Arcane Foci · 10 gp · 1 lb",
+    "bodyMd": "An arcane focus is a special item--an orb, a crystal, a rod, a specially constructed staff, a wand-like length of wood, or some similar item--designed to channel the power of arcane spells. A sorcerer, warlock, or wizard can use such an item as a spellcasting focus.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Arcane Foci",
+      "cost": "10 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Dagger",
+    "summary": "Simple Melee · 1d4 piercing · 2 gp · 1 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "simple",
+      "melee"
+    ],
+    "data": {
+      "category": "Simple Melee",
+      "cost": "2 gp",
+      "weight": "1 lb",
+      "damage": "1d4 piercing",
+      "properties": "Finesse, Light, Thrown, Monk"
+    }
+  },
+  {
+    "name": "Dart",
+    "summary": "Simple Ranged · 1d4 piercing · 5 cp · 0.25 lb",
+    "bodyMd": "Range 20/60 ft.",
+    "tags": [
+      "srd",
+      "weapon",
+      "simple",
+      "ranged"
+    ],
+    "data": {
+      "category": "Simple Ranged",
+      "cost": "5 cp",
+      "weight": "0.25 lb",
+      "damage": "1d4 piercing",
+      "properties": "Finesse, Thrown"
+    }
+  },
+  {
+    "name": "Dice Set",
+    "summary": "Tools · 1 sp",
+    "bodyMd": "This item encompasses a wide range of game pieces, including dice and decks of cards (for games such as Three-Dragon Ante). A few common examples appear on the Tools table, but other kinds of gaming sets exist. If you are proficient with a gaming set, you can add your proficiency bonus to ability checks you make to play a game with that set. Each type of gaming set requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "1 sp"
+    }
+  },
+  {
+    "name": "Diplomat's Pack",
+    "summary": "Equipment Packs · 39 gp",
+    "bodyMd": "**Contains**\n- Chest ×1\n- Case, map or scroll ×2\n- Clothes, fine ×1\n- Ink (1 ounce bottle) ×1\n- Ink pen ×1\n- Lamp ×1\n- Oil (flask) ×2\n- Paper (one sheet) ×5\n- Perfume (vial) ×1\n- Sealing wax ×1\n- Soap ×1",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Equipment Packs",
+      "cost": "39 gp"
+    }
+  },
+  {
+    "name": "Disguise Kit",
+    "summary": "Kits · 25 gp · 3 lb",
+    "bodyMd": "This pouch of cosmetics, hair dye, and small props lets you create disguises that change your physical appearance. Proficiency with this kit lets you add your proficiency bonus to any ability checks you make to create a visual disguise.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Kits",
+      "cost": "25 gp",
+      "weight": "3 lb"
+    }
+  },
+  {
+    "name": "Donkey",
+    "summary": "Mounts and Vehicles · 8 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "8 gp"
+    }
+  },
+  {
+    "name": "Drum",
+    "summary": "Tools · 6 gp · 3 lb",
+    "bodyMd": "Several of the most common types of musical instruments are shown on the table as examples. If you have proficiency with a given musical instrument, you can add your proficiency bonus to any ability checks you make to play music with the instrument. A bard can use a musical instrument as a spellcasting focus. Each type of musical instrument requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "6 gp",
+      "weight": "3 lb"
+    }
+  },
+  {
+    "name": "Dulcimer",
+    "summary": "Tools · 25 gp · 10 lb",
+    "bodyMd": "Several of the most common types of musical instruments are shown on the table as examples. If you have proficiency with a given musical instrument, you can add your proficiency bonus to any ability checks you make to play music with the instrument. A bard can use a musical instrument as a spellcasting focus. Each type of musical instrument requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "25 gp",
+      "weight": "10 lb"
+    }
+  },
+  {
+    "name": "Dungeoneer's Pack",
+    "summary": "Equipment Packs · 12 gp",
+    "bodyMd": "**Contains**\n- Backpack ×1\n- Crowbar ×1\n- Hammer ×1\n- Piton ×10\n- Torch ×10\n- Tinderbox ×1\n- Rations (1 day) ×10\n- Waterskin ×1\n- Rope, hempen (50 feet) ×1",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Equipment Packs",
+      "cost": "12 gp"
+    }
+  },
+  {
+    "name": "Elephant",
+    "summary": "Mounts and Vehicles · 200 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "200 gp"
+    }
+  },
+  {
+    "name": "Emblem",
+    "summary": "Holy Symbols · 5 gp",
+    "bodyMd": "A holy symbol is a representation of a god or pantheon. It might be an amulet depicting a symbol representing a deity, the same symbol carefully engraved or inlaid as an emblem on a shield, or a tiny box holding a fragment of a sacred relic.\n\nAppendix B lists the symbols commonly associated with many gods in the multiverse. A cleric or paladin can use a holy symbol as a spellcasting focus. To use the symbol in this way, the caster must hold it in hand, wear it visibly, or bear it on a shield.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Holy Symbols",
+      "cost": "5 gp"
+    }
+  },
+  {
+    "name": "Entertainer's Pack",
+    "summary": "Equipment Packs · 40 gp",
+    "bodyMd": "**Contains**\n- Backpack ×1\n- Bedroll ×1\n- Clothes, costume ×2\n- Candle ×5\n- Rations (1 day) ×5\n- Waterskin ×1\n- Disguise Kit ×1",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Equipment Packs",
+      "cost": "40 gp"
+    }
+  },
+  {
+    "name": "Explorer's Pack",
+    "summary": "Equipment Packs · 10 gp",
+    "bodyMd": "**Contains**\n- Backpack ×1\n- Bedroll ×1\n- Mess Kit ×1\n- Tinderbox ×1\n- Torch ×10\n- Rations (1 day) ×10\n- Waterskin ×1\n- Rope, hempen (50 feet) ×1",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Equipment Packs",
+      "cost": "10 gp"
+    }
+  },
+  {
+    "name": "Fishing tackle",
+    "summary": "Standard Gear · 1 gp · 4 lb",
+    "bodyMd": "This kit includes a wooden rod, silken line, corkwood bobbers, steel hooks, lead sinkers, velvet lures, and narrow netting.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 gp",
+      "weight": "4 lb"
+    }
+  },
+  {
+    "name": "Flail",
+    "summary": "Martial Melee · 1d8 bludgeoning · 10 gp · 2 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "10 gp",
+      "weight": "2 lb",
+      "damage": "1d8 bludgeoning"
+    }
+  },
+  {
+    "name": "Flask or tankard",
+    "summary": "Standard Gear · 2 cp · 1 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 cp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Flute",
+    "summary": "Tools · 2 gp · 1 lb",
+    "bodyMd": "Several of the most common types of musical instruments are shown on the table as examples. If you have proficiency with a given musical instrument, you can add your proficiency bonus to any ability checks you make to play music with the instrument. A bard can use a musical instrument as a spellcasting focus. Each type of musical instrument requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "2 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Forgery Kit",
+    "summary": "Kits · 15 gp · 5 lb",
+    "bodyMd": "This small box contains a variety of papers and parchments, pens and inks, seals and sealing wax, gold and silver leaf, and other supplies necessary to create convincing forgeries of physical documents. Proficiency with this kit lets you add your proficiency bonus to any ability checks you make to create a physical forgery of a document.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Kits",
+      "cost": "15 gp",
+      "weight": "5 lb"
+    }
+  },
+  {
+    "name": "Galley",
+    "summary": "Mounts and Vehicles · 30000 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "30000 gp"
+    }
+  },
+  {
+    "name": "Glaive",
+    "summary": "Martial Melee · 1d10 slashing · 20 gp · 6 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "20 gp",
+      "weight": "6 lb",
+      "damage": "1d10 slashing",
+      "properties": "Heavy, Reach, Two-Handed"
+    }
+  },
+  {
+    "name": "Glassblower's Tools",
+    "summary": "Tools · 30 gp · 5 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "30 gp",
+      "weight": "5 lb"
+    }
+  },
+  {
+    "name": "Grappling hook",
+    "summary": "Standard Gear · 2 gp · 4 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 gp",
+      "weight": "4 lb"
+    }
+  },
+  {
+    "name": "Greataxe",
+    "summary": "Martial Melee · 1d12 slashing · 30 gp · 7 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "30 gp",
+      "weight": "7 lb",
+      "damage": "1d12 slashing",
+      "properties": "Heavy, Two-Handed"
+    }
+  },
+  {
+    "name": "Greatclub",
+    "summary": "Simple Melee · 1d8 bludgeoning · 2 sp · 10 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "simple",
+      "melee"
+    ],
+    "data": {
+      "category": "Simple Melee",
+      "cost": "2 sp",
+      "weight": "10 lb",
+      "damage": "1d8 bludgeoning",
+      "properties": "Two-Handed"
+    }
+  },
+  {
+    "name": "Greatsword",
+    "summary": "Martial Melee · 2d6 slashing · 50 gp · 6 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "50 gp",
+      "weight": "6 lb",
+      "damage": "2d6 slashing",
+      "properties": "Heavy, Two-Handed"
+    }
+  },
+  {
+    "name": "Halberd",
+    "summary": "Martial Melee · 1d10 slashing · 20 gp · 6 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "20 gp",
+      "weight": "6 lb",
+      "damage": "1d10 slashing",
+      "properties": "Heavy, Reach, Two-Handed"
+    }
+  },
+  {
+    "name": "Half Plate Armor",
+    "summary": "Medium · AC 15 + Dex (max 2) · 750 gp · 40 lb",
+    "bodyMd": "Disadvantage on Stealth checks.",
+    "tags": [
+      "srd",
+      "armor",
+      "medium"
+    ],
+    "data": {
+      "category": "Medium",
+      "cost": "750 gp",
+      "weight": "40 lb",
+      "armorClass": "15 + Dex (max 2)"
+    }
+  },
+  {
+    "name": "Hammer",
+    "summary": "Standard Gear · 1 gp · 3 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 gp",
+      "weight": "3 lb"
+    }
+  },
+  {
+    "name": "Hammer, sledge",
+    "summary": "Standard Gear · 2 gp · 10 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 gp",
+      "weight": "10 lb"
+    }
+  },
+  {
+    "name": "Handaxe",
+    "summary": "Simple Melee · 1d6 slashing · 5 gp · 2 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "simple",
+      "melee"
+    ],
+    "data": {
+      "category": "Simple Melee",
+      "cost": "5 gp",
+      "weight": "2 lb",
+      "damage": "1d6 slashing",
+      "properties": "Light, Thrown, Monk"
+    }
+  },
+  {
+    "name": "Healer's Kit",
+    "summary": "Kits · 5 gp · 3 lb",
+    "bodyMd": "This kit is a leather pouch containing bandages, salves, and splints. The kit has ten uses. As an action, you can expend one use of the kit to stabilize a creature that has 0 hit points, without needing to make a Wisdom (Medicine) check.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Kits",
+      "cost": "5 gp",
+      "weight": "3 lb"
+    }
+  },
+  {
+    "name": "Herbalism Kit",
+    "summary": "Kits · 5 gp · 3 lb",
+    "bodyMd": "This kit contains a variety of instruments such as clippers, mortar and pestle, and pouches and vials used by herbalists to create remedies and potions. Proficiency with this kit lets you add your proficiency bonus to any ability checks you make to identify or apply herbs. Also, proficiency with this kit is required to create antitoxin and potions of healing.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Kits",
+      "cost": "5 gp",
+      "weight": "3 lb"
+    }
+  },
+  {
+    "name": "Hide Armor",
+    "summary": "Medium · AC 12 + Dex (max 2) · 10 gp · 12 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "armor",
+      "medium"
+    ],
+    "data": {
+      "category": "Medium",
+      "cost": "10 gp",
+      "weight": "12 lb",
+      "armorClass": "12 + Dex (max 2)"
+    }
+  },
+  {
+    "name": "Holy water (flask)",
+    "summary": "Standard Gear · 25 gp · 1 lb",
+    "bodyMd": "As an action, you can splash the contents of this flask onto a creature within 5 feet of you or throw it up to 20 feet, shattering it on impact. In either case, make a ranged attack against a target creature, treating the holy water as an improvised weapon.\n\nIf the target is a fiend or undead, it takes 2d6 radiant damage.\n\nA cleric or paladin may create holy water by performing a special ritual.\n\nThe ritual takes 1 hour to perform, uses 25 gp worth of powdered silver, and requires the caster to expend a 1st-level spell slot.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "25 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Horn",
+    "summary": "Tools · 3 gp · 2 lb",
+    "bodyMd": "Several of the most common types of musical instruments are shown on the table as examples. If you have proficiency with a given musical instrument, you can add your proficiency bonus to any ability checks you make to play music with the instrument. A bard can use a musical instrument as a spellcasting focus. Each type of musical instrument requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "3 gp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Horse, draft",
+    "summary": "Mounts and Vehicles · 50 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "50 gp"
+    }
+  },
+  {
+    "name": "Horse, riding",
+    "summary": "Mounts and Vehicles · 75 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "75 gp"
+    }
+  },
+  {
+    "name": "Hourglass",
+    "summary": "Standard Gear · 25 gp · 1 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "25 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Hunting trap",
+    "summary": "Standard Gear · 5 gp · 25 lb",
+    "bodyMd": "When you use your action to set it, this trap forms a saw-toothed steel ring that snaps shut when a creature steps on a pressure plate in the center. The trap is affixed by a heavy chain to an immobile object, such as a tree or a spike driven into the ground.\n\nA creature that steps on the plate must succeed on a DC 13 Dexterity saving throw or take 1d4 piercing damage and stop moving. Thereafter, until the creature breaks free of the trap, its movement is limited by the length of the chain (typically 3 feet long).\n\nA creature can use its action to make a DC 13 Strength check, freeing itself or another creature within its reach on a success. Each failed check deals 1 piercing damage to the trapped creature.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 gp",
+      "weight": "25 lb"
+    }
+  },
+  {
+    "name": "Ink (1 ounce bottle)",
+    "summary": "Standard Gear · 10 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "10 gp"
+    }
+  },
+  {
+    "name": "Ink pen",
+    "summary": "Standard Gear · 2 cp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 cp"
+    }
+  },
+  {
+    "name": "Javelin",
+    "summary": "Simple Melee · 1d6 piercing · 5 sp · 2 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "simple",
+      "melee"
+    ],
+    "data": {
+      "category": "Simple Melee",
+      "cost": "5 sp",
+      "weight": "2 lb",
+      "damage": "1d6 piercing",
+      "properties": "Thrown, Monk"
+    }
+  },
+  {
+    "name": "Jeweler's Tools",
+    "summary": "Tools · 25 gp · 2 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "25 gp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Jug or pitcher",
+    "summary": "Standard Gear · 2 cp · 4 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 cp",
+      "weight": "4 lb"
+    }
+  },
+  {
+    "name": "Keelboat",
+    "summary": "Mounts and Vehicles · 3000 gp",
+    "bodyMd": "Keelboats and rowboats are used on lakes and rivers. If going downstream, add the speed of the current (typically 3 miles per hour) to the speed of the vehicle. These vehicles can't be rowed against any significant current, but they can be pulled upstream by draft animals on the shores. A rowboat weighs 100 pounds, in case adventurers carry it over land.",
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "3000 gp"
+    }
+  },
+  {
+    "name": "Ladder (10-foot)",
+    "summary": "Standard Gear · 1 sp · 25 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 sp",
+      "weight": "25 lb"
+    }
+  },
+  {
+    "name": "Lamp",
+    "summary": "Standard Gear · 5 sp · 1 lb",
+    "bodyMd": "A lamp casts bright light in a 15-foot radius and dim light for an additional 30 feet. Once lit, it burns for 6 hours on a flask (1 pint) of oil.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 sp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Lance",
+    "summary": "Martial Melee · 1d12 piercing · 10 gp · 6 lb",
+    "bodyMd": "You have disadvantage when you use a lance to attack a target within 5 feet of you. Also, a lance requires two hands to wield when you aren't mounted.",
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "10 gp",
+      "weight": "6 lb",
+      "damage": "1d12 piercing",
+      "properties": "Reach, Special"
+    }
+  },
+  {
+    "name": "Lantern, bullseye",
+    "summary": "Standard Gear · 10 gp · 2 lb",
+    "bodyMd": "A bullseye lantern casts bright light in a 60-foot cone and dim light for an additional 60 feet. Once lit, it burns for 6 hours on a flask (1 pint) of oil.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "10 gp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Lantern, hooded",
+    "summary": "Standard Gear · 5 gp · 2 lb",
+    "bodyMd": "A hooded lantern casts bright light in a 30-foot radius and dim light for an additional 30 feet. Once lit, it burns for 6 hours on a flask (1 pint) of oil. As an action, you can lower the hood, reducing the light to dim light in a 5-foot radius.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 gp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Leather Armor",
+    "summary": "Light · AC 11 + Dex · 10 gp · 10 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "armor",
+      "light"
+    ],
+    "data": {
+      "category": "Light",
+      "cost": "10 gp",
+      "weight": "10 lb",
+      "armorClass": "11 + Dex"
+    }
+  },
+  {
+    "name": "Leatherworker's Tools",
+    "summary": "Tools · 5 gp · 5 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "5 gp",
+      "weight": "5 lb"
+    }
+  },
+  {
+    "name": "Light hammer",
+    "summary": "Simple Melee · 1d4 bludgeoning · 2 gp · 2 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "simple",
+      "melee"
+    ],
+    "data": {
+      "category": "Simple Melee",
+      "cost": "2 gp",
+      "weight": "2 lb",
+      "damage": "1d4 bludgeoning",
+      "properties": "Light, Thrown, Monk"
+    }
+  },
+  {
+    "name": "Little bag of sand",
+    "summary": "Standard Gear · 0 cp",
+    "bodyMd": "A small bag of sand, typically found in a scholar's pack.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "0 cp"
+    }
+  },
+  {
+    "name": "Lock",
+    "summary": "Standard Gear · 10 gp · 1 lb",
+    "bodyMd": "A key is provided with the lock. Without the key, a creature proficient with thieves' tools can pick this lock with a successful DC 15 Dexterity check. Your GM may decide that better locks are available for higher prices.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "10 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Longbow",
+    "summary": "Martial Ranged · 1d8 piercing · 50 gp · 2 lb",
+    "bodyMd": "Range 150/600 ft.",
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "ranged"
+    ],
+    "data": {
+      "category": "Martial Ranged",
+      "cost": "50 gp",
+      "weight": "2 lb",
+      "damage": "1d8 piercing",
+      "properties": "Ammunition, Heavy, Two-Handed"
+    }
+  },
+  {
+    "name": "Longship",
+    "summary": "Mounts and Vehicles · 10000 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "10000 gp"
+    }
+  },
+  {
+    "name": "Longsword",
+    "summary": "Martial Melee · 1d8 slashing (1d10 slashing two-handed) · 15 gp · 3 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "15 gp",
+      "weight": "3 lb",
+      "damage": "1d8 slashing (1d10 slashing two-handed)",
+      "properties": "Versatile"
+    }
+  },
+  {
+    "name": "Lute",
+    "summary": "Tools · 35 gp · 2 lb",
+    "bodyMd": "Several of the most common types of musical instruments are shown on the table as examples. If you have proficiency with a given musical instrument, you can add your proficiency bonus to any ability checks you make to play music with the instrument. A bard can use a musical instrument as a spellcasting focus. Each type of musical instrument requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "35 gp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Lyre",
+    "summary": "Tools · 30 gp · 2 lb",
+    "bodyMd": "Several of the most common types of musical instruments are shown on the table as examples. If you have proficiency with a given musical instrument, you can add your proficiency bonus to any ability checks you make to play music with the instrument. A bard can use a musical instrument as a spellcasting focus. Each type of musical instrument requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "30 gp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Mace",
+    "summary": "Simple Melee · 1d6 bludgeoning · 5 gp · 4 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "simple",
+      "melee"
+    ],
+    "data": {
+      "category": "Simple Melee",
+      "cost": "5 gp",
+      "weight": "4 lb",
+      "damage": "1d6 bludgeoning",
+      "properties": "Monk"
+    }
+  },
+  {
+    "name": "Magnifying glass",
+    "summary": "Standard Gear · 100 gp",
+    "bodyMd": "This lens allows a closer look at small objects. It is also useful as a substitute for flint and steel when starting fires. Lighting a fire with a magnifying glass requires light as bright as sunlight to focus, tinder to ignite, and about 5 minutes for the fire to ignite.\n\nA magnifying glass grants advantage on any ability check made to appraise or inspect an item that is small or highly detailed.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "100 gp"
+    }
+  },
+  {
+    "name": "Manacles",
+    "summary": "Standard Gear · 2 gp · 6 lb",
+    "bodyMd": "These metal restraints can bind a Small or Medium creature. Escaping the manacles requires a successful DC 20 Dexterity check. Breaking them requires a successful DC 20 Strength check.\n\nEach set of manacles comes with one key. Without the key, a creature proficient with thieves' tools can pick the manacles' lock with a successful DC 15 Dexterity check. Manacles have 15 hit points.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 gp",
+      "weight": "6 lb"
+    }
+  },
+  {
+    "name": "Mason's Tools",
+    "summary": "Tools · 10 gp · 8 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "10 gp",
+      "weight": "8 lb"
+    }
+  },
+  {
+    "name": "Mastiff",
+    "summary": "Mounts and Vehicles · 25 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "25 gp"
+    }
+  },
+  {
+    "name": "Maul",
+    "summary": "Martial Melee · 2d6 bludgeoning · 10 gp · 10 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "10 gp",
+      "weight": "10 lb",
+      "damage": "2d6 bludgeoning",
+      "properties": "Heavy, Two-Handed"
+    }
+  },
+  {
+    "name": "Mess Kit",
+    "summary": "Kits · 2 sp · 1 lb",
+    "bodyMd": "This tin box contains a cup and simple cutlery. The box clamps together, and one side can be used as a cooking pan and the other as a plate or shallow bowl.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Kits",
+      "cost": "2 sp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Mirror, steel",
+    "summary": "Standard Gear · 5 gp · 0.5 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 gp",
+      "weight": "0.5 lb"
+    }
+  },
+  {
+    "name": "Morningstar",
+    "summary": "Martial Melee · 1d8 piercing · 15 gp · 4 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "15 gp",
+      "weight": "4 lb",
+      "damage": "1d8 piercing"
+    }
+  },
+  {
+    "name": "Mule",
+    "summary": "Mounts and Vehicles · 8 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "8 gp"
+    }
+  },
+  {
+    "name": "Navigator's Tools",
+    "summary": "Tools · 25 gp · 2 lb",
+    "bodyMd": "This set of instruments is used for navigation at sea. Proficiency with navigator's tools lets you chart a ship's course and follow navigation charts. In addition, these tools allow you to add your proficiency bonus to any ability check you make to avoid getting lost at sea.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "25 gp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Net",
+    "summary": "Martial Ranged · 1 gp · 3 lb",
+    "bodyMd": "A Large or smaller creature hit by a net is restrained until it is freed. A net has no effect on creatures that are formless, or creatures that are Huge or larger. A creature can use its action to make a DC 10 Strength check, freeing itself or another creature within its reach on a success. Dealing 5 slashing damage to the net (AC 10) also frees the creature without harming it, ending the effect and destroying the net. When you use an action, bonus action, or reaction to attack with a net, you can make only one attack regardless of the number of attacks you can normally make.\n\nRange 5/15 ft.",
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "ranged"
+    ],
+    "data": {
+      "category": "Martial Ranged",
+      "cost": "1 gp",
+      "weight": "3 lb",
+      "properties": "Thrown, Special"
+    }
+  },
+  {
+    "name": "Oil (flask)",
+    "summary": "Standard Gear · 1 sp · 1 lb",
+    "bodyMd": "Oil usually comes in a clay flask that holds 1 pint.\n\nAs an action, you can splash the oil in this flask onto a creature within 5 feet of you or throw it up to 20 feet, shattering it on impact. Make a ranged attack against a target creature or object, treating the oil as an improvised weapon.\n\nOn a hit, the target is covered in oil. If the target takes any fire damage before the oil dries (after 1 minute), the target takes an additional 5 fire damage from the burning oil.\n\nYou can also pour a flask of oil on the ground to cover a 5-foot-square area, provided that the surface is level.\n\nIf lit, the oil burns for 2 rounds and deals 5 fire damage to any creature that enters the area or ends its turn in the area. A creature can take this damage only once per turn.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 sp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Orb",
+    "summary": "Arcane Foci · 20 gp · 3 lb",
+    "bodyMd": "An arcane focus is a special item--an orb, a crystal, a rod, a specially constructed staff, a wand-like length of wood, or some similar item--designed to channel the power of arcane spells. A sorcerer, warlock, or wizard can use such an item as a spellcasting focus.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Arcane Foci",
+      "cost": "20 gp",
+      "weight": "3 lb"
+    }
+  },
+  {
+    "name": "Padded Armor",
+    "summary": "Light · AC 11 + Dex · 5 gp · 8 lb",
+    "bodyMd": "Disadvantage on Stealth checks.",
+    "tags": [
+      "srd",
+      "armor",
+      "light"
+    ],
+    "data": {
+      "category": "Light",
+      "cost": "5 gp",
+      "weight": "8 lb",
+      "armorClass": "11 + Dex"
+    }
+  },
+  {
+    "name": "Painter's Supplies",
+    "summary": "Tools · 10 gp · 5 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "10 gp",
+      "weight": "5 lb"
+    }
+  },
+  {
+    "name": "Pan flute",
+    "summary": "Tools · 12 gp · 2 lb",
+    "bodyMd": "Several of the most common types of musical instruments are shown on the table as examples. If you have proficiency with a given musical instrument, you can add your proficiency bonus to any ability checks you make to play music with the instrument. A bard can use a musical instrument as a spellcasting focus. Each type of musical instrument requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "12 gp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Paper (one sheet)",
+    "summary": "Standard Gear · 2 sp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 sp"
+    }
+  },
+  {
+    "name": "Parchment (one sheet)",
+    "summary": "Standard Gear · 1 sp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 sp"
+    }
+  },
+  {
+    "name": "Perfume (vial)",
+    "summary": "Standard Gear · 5 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 gp"
+    }
+  },
+  {
+    "name": "Pick, miner's",
+    "summary": "Standard Gear · 2 gp · 10 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 gp",
+      "weight": "10 lb"
+    }
+  },
+  {
+    "name": "Pike",
+    "summary": "Martial Melee · 1d10 piercing · 5 gp · 18 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "5 gp",
+      "weight": "18 lb",
+      "damage": "1d10 piercing",
+      "properties": "Heavy, Reach, Two-Handed"
+    }
+  },
+  {
+    "name": "Piton",
+    "summary": "Standard Gear · 5 cp · 0.25 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 cp",
+      "weight": "0.25 lb"
+    }
+  },
+  {
+    "name": "Plate Armor",
+    "summary": "Heavy · AC 18 · 1500 gp · 65 lb",
+    "bodyMd": "Disadvantage on Stealth checks.\n\nRequires Strength 15.",
+    "tags": [
+      "srd",
+      "armor",
+      "heavy"
+    ],
+    "data": {
+      "category": "Heavy",
+      "cost": "1500 gp",
+      "weight": "65 lb",
+      "armorClass": "18"
+    }
+  },
+  {
+    "name": "Playing Card Set",
+    "summary": "Tools · 5 sp",
+    "bodyMd": "This item encompasses a wide range of game pieces, including dice and decks of cards (for games such as Three-Dragon Ante). A few common examples appear on the Tools table, but other kinds of gaming sets exist. If you are proficient with a gaming set, you can add your proficiency bonus to ability checks you make to play a game with that set. Each type of gaming set requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "5 sp"
+    }
+  },
+  {
+    "name": "Poison, basic (vial)",
+    "summary": "Standard Gear · 100 gp",
+    "bodyMd": "You can use the poison in this vial to coat one slashing or piercing weapon or up to three pieces of ammunition. Applying the poison takes an action. A creature hit by the poisoned weapon or ammunition must make a DC 10 Constitution saving throw or take 1d4 poison damage. Once applied, the poison retains potency for 1 minute before drying.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "100 gp"
+    }
+  },
+  {
+    "name": "Poisoner's Kit",
+    "summary": "Kits · 50 gp · 2 lb",
+    "bodyMd": "A poisoner's kit includes the vials, chemicals, and other equipment necessary for the creation of poisons. Proficiency with this kit lets you add your proficiency bonus to any ability checks you make to craft or use poisons.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Kits",
+      "cost": "50 gp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Pole (10-foot)",
+    "summary": "Standard Gear · 5 cp · 7 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 cp",
+      "weight": "7 lb"
+    }
+  },
+  {
+    "name": "Pony",
+    "summary": "Mounts and Vehicles · 30 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "30 gp"
+    }
+  },
+  {
+    "name": "Pot, iron",
+    "summary": "Standard Gear · 2 gp · 10 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 gp",
+      "weight": "10 lb"
+    }
+  },
+  {
+    "name": "Potter's Tools",
+    "summary": "Tools · 10 gp · 3 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "10 gp",
+      "weight": "3 lb"
+    }
+  },
+  {
+    "name": "Pouch",
+    "summary": "Standard Gear · 5 sp · 1 lb",
+    "bodyMd": "A cloth or leather pouch can hold up to 20 sling bullets or 50 blowgun needles, among other things. A compartmentalized pouch for holding spell components is called a component pouch (described earlier in this section).",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 sp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Priest's Pack",
+    "summary": "Equipment Packs · 19 gp",
+    "bodyMd": "**Contains**\n- Backpack ×1\n- Blanket ×1\n- Candle ×10\n- Tinderbox ×1\n- Rations (1 day) ×2\n- Waterskin ×1\n- Alms box ×1\n- Block of incense ×2\n- Censer ×1\n- Vestments ×1",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Equipment Packs",
+      "cost": "19 gp"
+    }
+  },
+  {
+    "name": "Quarterstaff",
+    "summary": "Simple Melee · 1d6 bludgeoning (1d8 bludgeoning two-handed) · 2 sp · 4 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "simple",
+      "melee"
+    ],
+    "data": {
+      "category": "Simple Melee",
+      "cost": "2 sp",
+      "weight": "4 lb",
+      "damage": "1d6 bludgeoning (1d8 bludgeoning two-handed)",
+      "properties": "Versatile, Monk"
+    }
+  },
+  {
+    "name": "Quiver",
+    "summary": "Standard Gear · 1 gp · 1 lb",
+    "bodyMd": "A quiver can hold up to 20 arrows.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Ram, portable",
+    "summary": "Standard Gear · 4 gp · 35 lb",
+    "bodyMd": "You can use a portable ram to break down doors. When doing so, you gain a +4 bonus on the Strength check. One other character can help you use the ram, giving you advantage on this check.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "4 gp",
+      "weight": "35 lb"
+    }
+  },
+  {
+    "name": "Rapier",
+    "summary": "Martial Melee · 1d8 piercing · 25 gp · 2 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "25 gp",
+      "weight": "2 lb",
+      "damage": "1d8 piercing",
+      "properties": "Finesse"
+    }
+  },
+  {
+    "name": "Rations (1 day)",
+    "summary": "Standard Gear · 5 sp · 2 lb",
+    "bodyMd": "Rations consist of dry foods suitable for extended travel, including jerky, dried fruit, hardtack, and nuts.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 sp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Reliquary",
+    "summary": "Holy Symbols · 5 gp · 2 lb",
+    "bodyMd": "A holy symbol is a representation of a god or pantheon. It might be an amulet depicting a symbol representing a deity, the same symbol carefully engraved or inlaid as an emblem on a shield, or a tiny box holding a fragment of a sacred relic.\n\nAppendix B lists the symbols commonly associated with many gods in the multiverse. A cleric or paladin can use a holy symbol as a spellcasting focus. To use the symbol in this way, the caster must hold it in hand, wear it visibly, or bear it on a shield.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Holy Symbols",
+      "cost": "5 gp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Ring Mail",
+    "summary": "Heavy · AC 14 · 30 gp · 40 lb",
+    "bodyMd": "Disadvantage on Stealth checks.",
+    "tags": [
+      "srd",
+      "armor",
+      "heavy"
+    ],
+    "data": {
+      "category": "Heavy",
+      "cost": "30 gp",
+      "weight": "40 lb",
+      "armorClass": "14"
+    }
+  },
+  {
+    "name": "Robes",
+    "summary": "Standard Gear · 1 gp · 4 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 gp",
+      "weight": "4 lb"
+    }
+  },
+  {
+    "name": "Rod",
+    "summary": "Arcane Foci · 10 gp · 2 lb",
+    "bodyMd": "An arcane focus is a special item--an orb, a crystal, a rod, a specially constructed staff, a wand-like length of wood, or some similar item--designed to channel the power of arcane spells. A sorcerer, warlock, or wizard can use such an item as a spellcasting focus.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Arcane Foci",
+      "cost": "10 gp",
+      "weight": "2 lb"
+    }
+  },
+  {
+    "name": "Rope, hempen (50 feet)",
+    "summary": "Standard Gear · 1 gp · 10 lb",
+    "bodyMd": "Rope, whether made of hemp or silk, has 2 hit points and can be burst with a DC 17 Strength check.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 gp",
+      "weight": "10 lb"
+    }
+  },
+  {
+    "name": "Rope, silk (50 feet)",
+    "summary": "Standard Gear · 10 gp · 5 lb",
+    "bodyMd": "Rope, whether made of hemp or silk, has 2 hit points and can be burst with a DC 17 Strength check.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "10 gp",
+      "weight": "5 lb"
+    }
+  },
+  {
+    "name": "Rowboat",
+    "summary": "Mounts and Vehicles · 50 gp",
+    "bodyMd": "Keelboats and rowboats are used on lakes and rivers. If going downstream, add the speed of the current (typically 3 miles per hour) to the speed of the vehicle. These vehicles can't be rowed against any significant current, but they can be pulled upstream by draft animals on the shores. A rowboat weighs 100 pounds, in case adventurers carry it over land.",
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "50 gp"
+    }
+  },
+  {
+    "name": "Sack",
+    "summary": "Standard Gear · 1 cp · 0.5 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 cp",
+      "weight": "0.5 lb"
+    }
+  },
+  {
+    "name": "Saddle, Exotic",
+    "summary": "Mounts and Vehicles · 60 gp · 50 lb",
+    "bodyMd": "An exotic saddle is required for riding any aquatic or flying mount.",
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "60 gp",
+      "weight": "50 lb"
+    }
+  },
+  {
+    "name": "Saddle, Military",
+    "summary": "Mounts and Vehicles · 20 gp · 30 lb",
+    "bodyMd": "A military saddle braces the rider, helping you keep your seat on an active mount in battle. It gives you advantage on any check you make to remain mounted.",
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "20 gp",
+      "weight": "30 lb"
+    }
+  },
+  {
+    "name": "Saddle, Pack",
+    "summary": "Mounts and Vehicles · 5 gp · 15 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "5 gp",
+      "weight": "15 lb"
+    }
+  },
+  {
+    "name": "Saddle, Riding",
+    "summary": "Mounts and Vehicles · 10 gp · 25 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "10 gp",
+      "weight": "25 lb"
+    }
+  },
+  {
+    "name": "Saddlebags",
+    "summary": "Mounts and Vehicles · 4 gp · 8 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "4 gp",
+      "weight": "8 lb"
+    }
+  },
+  {
+    "name": "Sailing ship",
+    "summary": "Mounts and Vehicles · 10000 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "10000 gp"
+    }
+  },
+  {
+    "name": "Scale Mail",
+    "summary": "Medium · AC 14 + Dex (max 2) · 50 gp · 45 lb",
+    "bodyMd": "Disadvantage on Stealth checks.",
+    "tags": [
+      "srd",
+      "armor",
+      "medium"
+    ],
+    "data": {
+      "category": "Medium",
+      "cost": "50 gp",
+      "weight": "45 lb",
+      "armorClass": "14 + Dex (max 2)"
+    }
+  },
+  {
+    "name": "Scale, merchant's",
+    "summary": "Standard Gear · 5 gp · 3 lb",
+    "bodyMd": "A scale includes a small balance, pans, and a suitable assortment of weights up to 2 pounds. With it, you can measure the exact weight of small objects, such as raw precious metals or trade goods, to help determine their worth.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 gp",
+      "weight": "3 lb"
+    }
+  },
+  {
+    "name": "Scholar's Pack",
+    "summary": "Equipment Packs · 40 gp",
+    "bodyMd": "**Contains**\n- Backpack ×1\n- Book ×1\n- Ink (1 ounce bottle) ×1\n- Ink pen ×1\n- Parchment (one sheet) ×10\n- Little bag of sand ×1\n- Small knife ×1",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Equipment Packs",
+      "cost": "40 gp"
+    }
+  },
+  {
+    "name": "Scimitar",
+    "summary": "Martial Melee · 1d6 slashing · 25 gp · 3 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "25 gp",
+      "weight": "3 lb",
+      "damage": "1d6 slashing",
+      "properties": "Finesse, Light"
+    }
+  },
+  {
+    "name": "Sealing wax",
+    "summary": "Standard Gear · 5 sp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 sp"
+    }
+  },
+  {
+    "name": "Shawm",
+    "summary": "Tools · 2 gp · 1 lb",
+    "bodyMd": "Several of the most common types of musical instruments are shown on the table as examples. If you have proficiency with a given musical instrument, you can add your proficiency bonus to any ability checks you make to play music with the instrument. A bard can use a musical instrument as a spellcasting focus. Each type of musical instrument requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "2 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Shield",
+    "summary": "Shield · AC 2 · 10 gp · 6 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "armor",
+      "shield"
+    ],
+    "data": {
+      "category": "Shield",
+      "cost": "10 gp",
+      "weight": "6 lb",
+      "armorClass": "2"
+    }
+  },
+  {
+    "name": "Shortbow",
+    "summary": "Simple Ranged · 1d6 piercing · 25 gp · 2 lb",
+    "bodyMd": "Range 80/320 ft.",
+    "tags": [
+      "srd",
+      "weapon",
+      "simple",
+      "ranged"
+    ],
+    "data": {
+      "category": "Simple Ranged",
+      "cost": "25 gp",
+      "weight": "2 lb",
+      "damage": "1d6 piercing",
+      "properties": "Ammunition, Two-Handed"
+    }
+  },
+  {
+    "name": "Shortsword",
+    "summary": "Martial Melee · 1d6 piercing · 10 gp · 2 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "10 gp",
+      "weight": "2 lb",
+      "damage": "1d6 piercing",
+      "properties": "Finesse, Light, Monk"
+    }
+  },
+  {
+    "name": "Shovel",
+    "summary": "Standard Gear · 2 gp · 5 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 gp",
+      "weight": "5 lb"
+    }
+  },
+  {
+    "name": "Sickle",
+    "summary": "Simple Melee · 1d4 slashing · 1 gp · 2 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "simple",
+      "melee"
+    ],
+    "data": {
+      "category": "Simple Melee",
+      "cost": "1 gp",
+      "weight": "2 lb",
+      "damage": "1d4 slashing",
+      "properties": "Light, Monk"
+    }
+  },
+  {
+    "name": "Signal whistle",
+    "summary": "Standard Gear · 5 cp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 cp"
+    }
+  },
+  {
+    "name": "Signet ring",
+    "summary": "Standard Gear · 5 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 gp"
+    }
+  },
+  {
+    "name": "Sled",
+    "summary": "Mounts and Vehicles · 20 gp · 300 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "20 gp",
+      "weight": "300 lb"
+    }
+  },
+  {
+    "name": "Sling",
+    "summary": "Simple Ranged · 1d4 bludgeoning · 1 sp",
+    "bodyMd": "Range 30/120 ft.",
+    "tags": [
+      "srd",
+      "weapon",
+      "simple",
+      "ranged"
+    ],
+    "data": {
+      "category": "Simple Ranged",
+      "cost": "1 sp",
+      "damage": "1d4 bludgeoning",
+      "properties": "Ammunition"
+    }
+  },
+  {
+    "name": "Sling bullet",
+    "summary": "Ammunition · 4 cp · 1.5 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Ammunition",
+      "cost": "4 cp",
+      "weight": "1.5 lb"
+    }
+  },
+  {
+    "name": "Small knife",
+    "summary": "Standard Gear · 0 cp",
+    "bodyMd": "A small knife, typically found in a scholar's pack.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "0 cp"
+    }
+  },
+  {
+    "name": "Smith's Tools",
+    "summary": "Tools · 20 gp · 8 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "20 gp",
+      "weight": "8 lb"
+    }
+  },
+  {
+    "name": "Soap",
+    "summary": "Standard Gear · 2 cp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 cp"
+    }
+  },
+  {
+    "name": "Spear",
+    "summary": "Simple Melee · 1d6 piercing (1d8 piercing two-handed) · 1 gp · 3 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "simple",
+      "melee"
+    ],
+    "data": {
+      "category": "Simple Melee",
+      "cost": "1 gp",
+      "weight": "3 lb",
+      "damage": "1d6 piercing (1d8 piercing two-handed)",
+      "properties": "Thrown, Versatile, Monk"
+    }
+  },
+  {
+    "name": "Spellbook",
+    "summary": "Standard Gear · 50 gp · 3 lb",
+    "bodyMd": "Essential for wizards, a spellbook is a leather-bound tome with 100 blank vellum pages suitable for recording spells.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "50 gp",
+      "weight": "3 lb"
+    }
+  },
+  {
+    "name": "Spike, iron",
+    "summary": "Standard Gear · 1 sp · 5 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 sp",
+      "weight": "5 lb"
+    }
+  },
+  {
+    "name": "Splint Armor",
+    "summary": "Heavy · AC 17 · 200 gp · 60 lb",
+    "bodyMd": "Disadvantage on Stealth checks.\n\nRequires Strength 15.",
+    "tags": [
+      "srd",
+      "armor",
+      "heavy"
+    ],
+    "data": {
+      "category": "Heavy",
+      "cost": "200 gp",
+      "weight": "60 lb",
+      "armorClass": "17"
+    }
+  },
+  {
+    "name": "Sprig of mistletoe",
+    "summary": "Druidic Foci · 1 gp",
+    "bodyMd": "A druidic focus might be a sprig of mistletoe or holly, a wand or scepter made of yew or another special wood, a staff drawn whole out of a living tree, or a totem object incorporating feathers, fur, bones, and teeth from sacred animals. A druid can use such an object as a spellcasting focus.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Druidic Foci",
+      "cost": "1 gp"
+    }
+  },
+  {
+    "name": "Spyglass",
+    "summary": "Standard Gear · 1000 gp · 1 lb",
+    "bodyMd": "Objects viewed through a spyglass are magnified to twice their size.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1000 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Stabling (1 day)",
+    "summary": "Mounts and Vehicles · 5 sp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "5 sp"
+    }
+  },
+  {
+    "name": "Staff",
+    "summary": "Arcane Foci · 5 gp · 4 lb",
+    "bodyMd": "An arcane focus is a special item--an orb, a crystal, a rod, a specially constructed staff, a wand-like length of wood, or some similar item--designed to channel the power of arcane spells. A sorcerer, warlock, or wizard can use such an item as a spellcasting focus.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Arcane Foci",
+      "cost": "5 gp",
+      "weight": "4 lb"
+    }
+  },
+  {
+    "name": "String (10 feet)",
+    "summary": "Standard Gear · 0 cp",
+    "bodyMd": "A 10-foot length of string, typically found in a burglar's pack.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "0 cp"
+    }
+  },
+  {
+    "name": "Studded Leather Armor",
+    "summary": "Light · AC 12 + Dex · 45 gp · 13 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "armor",
+      "light"
+    ],
+    "data": {
+      "category": "Light",
+      "cost": "45 gp",
+      "weight": "13 lb",
+      "armorClass": "12 + Dex"
+    }
+  },
+  {
+    "name": "Tent, two-person",
+    "summary": "Standard Gear · 2 gp · 20 lb",
+    "bodyMd": "A simple and portable canvas shelter, a tent sleeps two.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 gp",
+      "weight": "20 lb"
+    }
+  },
+  {
+    "name": "Thieves' Tools",
+    "summary": "Tools · 25 gp · 1 lb",
+    "bodyMd": "This set of tools includes a small file, a set of lock picks, a small mirror mounted on a metal handle, a set of narrow-bladed scissors, and a pair of pliers. Proficiency with these tools lets you add your proficiency bonus to any ability checks you make to disarm traps or open locks.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "25 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Tinderbox",
+    "summary": "Standard Gear · 5 sp · 1 lb",
+    "bodyMd": "This small container holds flint, fire steel, and tinder (usually dry cloth soaked in light oil) used to kindle a fire. Using it to light a torch--or anything else with abundant, exposed fuel--takes an action.\n\nLighting any other fire takes 1 minute.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "5 sp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Tinker's Tools",
+    "summary": "Tools · 50 gp · 10 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "50 gp",
+      "weight": "10 lb"
+    }
+  },
+  {
+    "name": "Torch",
+    "summary": "Standard Gear · 1 cp · 1 lb",
+    "bodyMd": "A torch burns for 1 hour, providing bright light in a 20-foot radius and dim light for an additional 20 feet. If you make a melee attack with a burning torch and hit, it deals 1 fire damage.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 cp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Totem",
+    "summary": "Druidic Foci · 1 gp",
+    "bodyMd": "A druidic focus might be a sprig of mistletoe or holly, a wand or scepter made of yew or another special wood, a staff drawn whole out of a living tree, or a totem object incorporating feathers, fur, bones, and teeth from sacred animals. A druid can use such an object as a spellcasting focus.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Druidic Foci",
+      "cost": "1 gp"
+    }
+  },
+  {
+    "name": "Trident",
+    "summary": "Martial Melee · 1d6 piercing (1d8 piercing two-handed) · 5 gp · 4 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "5 gp",
+      "weight": "4 lb",
+      "damage": "1d6 piercing (1d8 piercing two-handed)",
+      "properties": "Thrown, Versatile"
+    }
+  },
+  {
+    "name": "Vestments",
+    "summary": "Standard Gear · 0 cp",
+    "bodyMd": "Religious clothing, typically found in a priest's pack.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "0 cp"
+    }
+  },
+  {
+    "name": "Vial",
+    "summary": "Standard Gear · 1 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 gp"
+    }
+  },
+  {
+    "name": "Viol",
+    "summary": "Tools · 30 gp · 1 lb",
+    "bodyMd": "Several of the most common types of musical instruments are shown on the table as examples. If you have proficiency with a given musical instrument, you can add your proficiency bonus to any ability checks you make to play music with the instrument. A bard can use a musical instrument as a spellcasting focus. Each type of musical instrument requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "30 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Wagon",
+    "summary": "Mounts and Vehicles · 35 gp · 400 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "35 gp",
+      "weight": "400 lb"
+    }
+  },
+  {
+    "name": "Wand",
+    "summary": "Arcane Foci · 10 gp · 1 lb",
+    "bodyMd": "An arcane focus is a special item--an orb, a crystal, a rod, a specially constructed staff, a wand-like length of wood, or some similar item--designed to channel the power of arcane spells. A sorcerer, warlock, or wizard can use such an item as a spellcasting focus.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Arcane Foci",
+      "cost": "10 gp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "War pick",
+    "summary": "Martial Melee · 1d8 piercing · 5 gp · 2 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "5 gp",
+      "weight": "2 lb",
+      "damage": "1d8 piercing"
+    }
+  },
+  {
+    "name": "Warhammer",
+    "summary": "Martial Melee · 1d8 bludgeoning (1d10 bludgeoning two-handed) · 15 gp · 2 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "15 gp",
+      "weight": "2 lb",
+      "damage": "1d8 bludgeoning (1d10 bludgeoning two-handed)",
+      "properties": "Versatile"
+    }
+  },
+  {
+    "name": "Warhorse",
+    "summary": "Mounts and Vehicles · 400 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "400 gp"
+    }
+  },
+  {
+    "name": "Warship",
+    "summary": "Mounts and Vehicles · 25000 gp",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "mounts-and-vehicles"
+    ],
+    "data": {
+      "category": "Mounts and Vehicles",
+      "cost": "25000 gp"
+    }
+  },
+  {
+    "name": "Waterskin",
+    "summary": "Standard Gear · 2 sp · 5 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "2 sp",
+      "weight": "5 lb"
+    }
+  },
+  {
+    "name": "Weaver's Tools",
+    "summary": "Tools · 1 gp · 5 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "1 gp",
+      "weight": "5 lb"
+    }
+  },
+  {
+    "name": "Whetstone",
+    "summary": "Standard Gear · 1 cp · 1 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Standard Gear",
+      "cost": "1 cp",
+      "weight": "1 lb"
+    }
+  },
+  {
+    "name": "Whip",
+    "summary": "Martial Melee · 1d4 slashing · 2 gp · 3 lb",
+    "bodyMd": null,
+    "tags": [
+      "srd",
+      "weapon",
+      "martial",
+      "melee"
+    ],
+    "data": {
+      "category": "Martial Melee",
+      "cost": "2 gp",
+      "weight": "3 lb",
+      "damage": "1d4 slashing",
+      "properties": "Finesse, Reach"
+    }
+  },
+  {
+    "name": "Woodcarver's Tools",
+    "summary": "Tools · 1 gp · 5 lb",
+    "bodyMd": "These special tools include the items needed to pursue a craft or trade. The table shows examples of the most common types of tools, each providing items related to a single craft. Proficiency with a set of artisan's tools lets you add your proficiency bonus to any ability checks you make using the tools in your craft. Each type of artisan's tools requires a separate proficiency.",
+    "tags": [
+      "srd",
+      "tools"
+    ],
+    "data": {
+      "category": "Tools",
+      "cost": "1 gp",
+      "weight": "5 lb"
+    }
+  },
+  {
+    "name": "Wooden staff",
+    "summary": "Druidic Foci · 5 gp · 4 lb",
+    "bodyMd": "A druidic focus might be a sprig of mistletoe or holly, a wand or scepter made of yew or another special wood, a staff drawn whole out of a living tree, or a totem object incorporating feathers, fur, bones, and teeth from sacred animals. A druid can use such an object as a spellcasting focus.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Druidic Foci",
+      "cost": "5 gp",
+      "weight": "4 lb"
+    }
+  },
+  {
+    "name": "Yew wand",
+    "summary": "Druidic Foci · 10 gp · 1 lb",
+    "bodyMd": "A druidic focus might be a sprig of mistletoe or holly, a wand or scepter made of yew or another special wood, a staff drawn whole out of a living tree, or a totem object incorporating feathers, fur, bones, and teeth from sacred animals. A druid can use such an object as a spellcasting focus.",
+    "tags": [
+      "srd",
+      "adventuring-gear"
+    ],
+    "data": {
+      "category": "Druidic Foci",
+      "cost": "10 gp",
+      "weight": "1 lb"
+    }
+  }
+]

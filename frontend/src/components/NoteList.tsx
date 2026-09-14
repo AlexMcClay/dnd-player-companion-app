@@ -5,10 +5,10 @@ import { useState } from 'react'
 import { LuPlus } from 'react-icons/lu'
 import { api, type NoteQuery } from '../api/client'
 import { usePlayerId } from '../lib/identity'
-import { listVariants, SPRING } from '../lib/motion'
+import { SPRING } from '../lib/motion'
 import NoteCard from './NoteCard'
 import NoteComposer from './NoteComposer'
-import { Empty, Loading } from './bits'
+import { Empty, Loading, StaggerList } from './bits'
 import { ctaClass } from './ui'
 
 /**
@@ -68,16 +68,11 @@ export default function NoteList({
       ) : rows.length === 0 ? (
         <Empty>{emptyLabel}</Empty>
       ) : (
-        <motion.div
-          className="flex flex-col gap-2"
-          variants={listVariants}
-          initial="hidden"
-          animate="show"
-        >
+        <StaggerList className="flex flex-col gap-2">
           {rows.map((note) => (
             <NoteCard key={note.id} note={note} />
           ))}
-        </motion.div>
+        </StaggerList>
       )}
 
       {/* Without a character there is nobody to sign a note, so the server

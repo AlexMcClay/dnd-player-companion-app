@@ -14,7 +14,7 @@ import {
   StaggerList,
 } from '../components/bits'
 import { cx, inputClass, panelClass } from '../components/ui'
-import { listVariants, rowVariants, SPRING } from '../lib/motion'
+import { rowVariants, SPRING } from '../lib/motion'
 import { useAllEntities } from '../lib/useAllEntities'
 import { CODEX_TYPES, templateFor } from '../templates'
 
@@ -79,12 +79,7 @@ function TypeGrid({ onPick }: { onPick: (type: CodexType) => void }) {
       {all.isLoading ? (
         <Loading />
       ) : (
-        <motion.div
-          className="grid grid-cols-2 gap-3"
-          variants={listVariants}
-          initial="hidden"
-          animate="show"
-        >
+        <StaggerList className="grid grid-cols-2 gap-3">
           {CODEX_TYPES.map((type) => {
             const template = templateFor(type)
             const Icon = template.icon
@@ -111,7 +106,7 @@ function TypeGrid({ onPick }: { onPick: (type: CodexType) => void }) {
               </motion.button>
             )
           })}
-        </motion.div>
+        </StaggerList>
       )}
 
       <div className="mt-4">

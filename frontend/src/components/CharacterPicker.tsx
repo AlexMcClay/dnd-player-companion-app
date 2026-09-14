@@ -3,8 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { LuCheck, LuUserRoundCog } from 'react-icons/lu'
 import { api } from '../api/client'
 import { setPlayerId, useIsDm, usePlayerId } from '../lib/identity'
-import { listVariants, rowVariants, SPRING } from '../lib/motion'
-import { Empty, Loading, Portrait } from './bits'
+import { rowVariants, SPRING } from '../lib/motion'
+import { Empty, Loading, Portrait, StaggerList } from './bits'
 import { ctaClass, cx, panelClass } from './ui'
 
 /**
@@ -42,12 +42,7 @@ export function CharacterPicker({ onPicked }: { onPicked?: () => void }) {
   }
 
   return (
-    <motion.div
-      className="grid grid-cols-2 gap-3"
-      variants={listVariants}
-      initial="hidden"
-      animate="show"
-    >
+    <StaggerList className="grid grid-cols-2 gap-3">
       {players.data?.map((player) => {
         const isCurrent = player.id === currentId
         return (
@@ -78,7 +73,7 @@ export function CharacterPicker({ onPicked }: { onPicked?: () => void }) {
           </motion.button>
         )
       })}
-    </motion.div>
+    </StaggerList>
   )
 }
 
