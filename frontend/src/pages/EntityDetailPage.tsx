@@ -9,16 +9,21 @@ import {
   Empty,
   KnowledgePill,
   Loading,
+  PageHead,
   Portrait,
   Section,
   SectionHead,
   StaggerList,
   TagChips,
 } from '../components/bits'
+import { cx, panelClass, Pill, rowClass, Sealed } from '../components/ui'
 import { useIsDm } from '../lib/dm'
 import { rowVariants, SPRING } from '../lib/motion'
 import { reagentStatus, stockFor } from '../lib/recipes'
 import { templateFor } from '../templates'
+
+const ICON_BTN =
+  'inline-flex cursor-pointer items-center gap-1.25 py-1 text-[9.5px] uppercase tracking-[0.13em]'
 
 export default function EntityDetailPage() {
   const { id = '' } = useParams()
@@ -39,11 +44,11 @@ export default function EntityDetailPage() {
 
   return (
     <>
-      <div className="head">
-        <div className="row-between">
+      <PageHead>
+        <div className="flex items-center justify-between gap-2.5">
           <motion.button
             type="button"
-            className="iconbtn"
+            className={cx(ICON_BTN, 'text-ink-faint')}
             onClick={() => navigate(-1)}
             whileTap={{ scale: 0.92 }}
             transition={SPRING}
@@ -53,7 +58,7 @@ export default function EntityDetailPage() {
           </motion.button>
           {isDm && (
             <motion.span whileTap={{ scale: 0.92 }} transition={SPRING}>
-              <Link to={`/e/${e.id}/edit`} className="iconbtn iconbtn-gold">
+              <Link to={`/e/${e.id}/edit`} className={cx(ICON_BTN, 'text-gold')}>
                 <LuPencil aria-hidden />
                 Edit
               </Link>
@@ -70,29 +75,25 @@ export default function EntityDetailPage() {
         </motion.div>
 
         <div>
-          <h1 className="ttl">{e.name}</h1>
-          {e.summary && (
-            <div className="meta" style={{ marginTop: 4 }}>
-              {e.summary}
-            </div>
-          )}
+          <h1 className="type-title m-0">{e.name}</h1>
+          {e.summary && <div className="type-meta mt-1">{e.summary}</div>}
         </div>
 
-        <div className="pill-row">
-          <span className="pill pill-n with-icon">
+        <div className="flex flex-wrap gap-1.75">
+          <Pill tone="neutral">
             <TypeIcon aria-hidden />
             {template.label}
-          </span>
+          </Pill>
           <KnowledgePill knowledge={e.knowledge} />
         </div>
-      </div>
+      </PageHead>
 
-      <div className="stack gap-16">
+      <div className="flex flex-col gap-4">
         {e.knowledge === 'unknown' && (
-          <div className="sealed with-icon" style={{ justifyContent: 'center' }}>
+          <Sealed>
             <LuX aria-hidden />
-            <span className="meta">Sealed — players cannot see this entry</span>
-          </div>
+            <span className="type-meta">Sealed — players cannot see this entry</span>
+          </Sealed>
         )}
 
         <SpecList entity={e} />
@@ -114,7 +115,7 @@ export default function EntityDetailPage() {
         )}
 
         {e.tags.length > 0 && (
-          <div className="stack gap-8">
+          <div className="flex flex-col gap-2">
             <SectionHead label="Tags" />
             <TagChips tags={e.tags} />
           </div>
@@ -136,15 +137,17 @@ function SpecList({ entity }: { entity: Entity }) {
 
   return (
     <motion.dl
-      className="spec panel"
+      className={panelClass('m-0 grid grid-cols-[auto_1fr] gap-x-3.5 gap-y-1.5 text-[13.5px]')}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       {rows.map(({ field, value }) => (
-        <div key={field.key} style={{ display: 'contents' }}>
-          <dt>{field.label}</dt>
-          <dd>{typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}</dd>
+        <div key={field.key} className="contents">
+          <dt className="type-meta self-center">{field.label}</dt>
+          <dd className="m-0">
+            {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}
+          </dd>
         </div>
       ))}
     </motion.dl>
@@ -165,19 +168,23 @@ function RecipeSheet({ recipe }: { recipe: Entity }) {
   const ready = status.every((r) => r.enough)
 
   return (
-    <Section className="stack gap-8">
+    <Section className="flex flex-col gap-2">
       <SectionHead label="Reagents" note={ready ? 'All in hand' : 'Missing something'} />
       <StaggerList>
         {status.map((reagent) => (
-          <motion.div key={reagent.name} className="row" variants={rowVariants}>
-            <span className={reagent.enough ? 'reagent-tick on' : 'reagent-tick'}>
+          <motion.div key={reagent.name} className={rowClass} variants={rowVariants}>
+            <span
+              className={cx(
+                'grid size-5.5 shrink-0 place-items-center border [&>svg]:size-3',
+                reagent.enough
+                  ? 'border-gold-dim bg-gold-tint text-gold'
+                  : 'border-line text-ink-faint',
+              )}
+            >
               {reagent.enough ? <LuCheck aria-hidden /> : <LuX aria-hidden />}
             </span>
-            <div style={{ flex: 1 }}>{reagent.name}</div>
-            <span
-              className="meta"
-              style={{ color: reagent.enough ? 'var(--gold)' : 'var(--ink-faint)' }}
-            >
+            <div className="flex-1">{reagent.name}</div>
+            <span className={cx('type-meta', reagent.enough && 'text-gold')}>
               have {reagent.have} / {reagent.qty}
             </span>
           </motion.div>
@@ -196,18 +203,18 @@ function Ownership({ entity }: { entity: Entity }) {
 
   return (
     <motion.div
-      className="panel row-between"
+      className={panelClass('flex items-center justify-between gap-2.5')}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       <div>
-        <div className="lab">Carried by</div>
-        <div className="name" style={{ marginTop: 3 }}>
+        <div className="type-lab">Carried by</div>
+        <div className="type-name mt-0.75">
           {entity.ownerId ? (owner.data?.name ?? '…') : 'Party stash'}
         </div>
       </div>
-      <span className="pill pill-n">×{entity.quantity}</span>
+      <Pill tone="neutral">×{entity.quantity}</Pill>
     </motion.div>
   )
 }
@@ -221,25 +228,19 @@ function Carrying({ playerId }: { playerId: string }) {
   if (!items.data || items.data.length === 0) return null
 
   return (
-    <Section className="stack gap-8">
+    <Section className="flex flex-col gap-2">
       <SectionHead label="Carrying" note={`${items.data.length} items`} />
       <StaggerList>
         {items.data.map((item) => (
-          <EntityRowCompact key={item.id} item={item} />
+          <motion.div key={item.id} variants={rowVariants}>
+            <Link to={`/e/${item.id}`} className={rowClass}>
+              <Portrait entity={item} size={36} />
+              <div className="flex-1">{item.name}</div>
+              <span className="type-meta">×{item.quantity}</span>
+            </Link>
+          </motion.div>
         ))}
       </StaggerList>
     </Section>
-  )
-}
-
-function EntityRowCompact({ item }: { item: Entity }) {
-  return (
-    <motion.div variants={rowVariants}>
-      <Link to={`/e/${item.id}`} className="row">
-        <Portrait entity={item} size={36} />
-        <div style={{ flex: 1 }}>{item.name}</div>
-        <span className="meta">×{item.quantity}</span>
-      </Link>
-    </motion.div>
   )
 }

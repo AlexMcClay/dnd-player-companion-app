@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { LuImage, LuTrash2, LuUpload } from 'react-icons/lu'
 import { api } from '../api/client'
 import { SPRING } from '../lib/motion'
+import { ctaClass, cx } from './ui'
 
 /**
  * Presigns, then PUTs straight to storage. The API only ever stores the key —
@@ -39,26 +40,28 @@ export default function ImageUpload({
   }
 
   return (
-    <div className="field">
-      <span className="lab with-icon">
+    <div className="flex flex-col gap-1.5">
+      <span className="type-lab flex items-center gap-1.75">
         <LuImage aria-hidden />
         Image
       </span>
+
       <AnimatePresence initial={false}>
         {preview && (
           <motion.div
-            className="port"
-            style={{ width: '100%', aspectRatio: '3 / 2', maxHeight: 220 }}
+            className="port-fill grid max-h-55 w-full place-items-center overflow-hidden border border-line"
+            style={{ aspectRatio: '3 / 2' }}
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.97 }}
             transition={SPRING}
           >
-            <img src={preview} alt="" />
+            <img src={preview} alt="" className="block size-full object-cover" />
           </motion.div>
         )}
       </AnimatePresence>
-      <label className="cta cta-ghost with-icon" style={{ cursor: busy ? 'wait' : 'pointer' }}>
+
+      <label className={cx(ctaClass('ghost'), busy ? 'cursor-wait' : 'cursor-pointer')}>
         <LuUpload aria-hidden />
         {busy ? 'Uploading…' : preview ? 'Replace image' : 'Upload image'}
         <input
@@ -69,10 +72,11 @@ export default function ImageUpload({
           onChange={pick}
         />
       </label>
+
       {preview && (
         <button
           type="button"
-          className="cta cta-ghost with-icon"
+          className={ctaClass('ghost')}
           onClick={() => {
             setPreview(null)
             onUploaded(null)
@@ -82,10 +86,9 @@ export default function ImageUpload({
           Remove image
         </button>
       )}
+
       {error && (
-        <div className="meta" style={{ color: '#d89494' }}>
-          {error}
-        </div>
+        <div className="type-meta flex items-center gap-1.75 text-danger">{error}</div>
       )}
     </div>
   )

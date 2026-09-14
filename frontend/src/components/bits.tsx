@@ -5,10 +5,11 @@ import { LuEyeOff, LuLoader, LuSparkles, LuTag } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
 import { listVariants, rowVariants, SPRING } from '../lib/motion'
 import { templateFor } from '../templates'
+import { cx, pillClass, rowClass } from './ui'
 
 const MotionLink = motion.create(Link)
 
-/** Image box. Falls back to the template's placeholder word when there is no art. */
+/** Image box. Falls back to the template's placeholder when there is no art. */
 export function Portrait({
   entity,
   size,
@@ -27,21 +28,27 @@ export function Portrait({
     : { width: '100%', aspectRatio: aspect ?? '3 / 2', ...style }
 
   return (
-    <div className="port" style={box}>
+    <div
+      className="port-fill grid shrink-0 place-items-center overflow-hidden border border-line"
+      style={box}
+    >
       {entity.imageUrl ? (
         <motion.img
           src={entity.imageUrl}
           alt={entity.name}
           loading="lazy"
+          className="block size-full object-cover"
           initial={{ opacity: 0, scale: 1.04 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.35 }}
         />
       ) : size && size <= 56 ? (
         // Small boxes get the type glyph; large ones keep the placeholder word.
-        <Icon className="port-glyph" aria-hidden />
+        <Icon className="size-[42%] text-ink-ghost" aria-hidden />
       ) : (
-        <span>{template.portraitWord}</span>
+        <span className="p-1 text-center font-mono text-[8px] tracking-[0.12em] text-ink-wisp uppercase">
+          {template.portraitWord}
+        </span>
       )}
     </div>
   )
@@ -61,7 +68,7 @@ export function KnowledgePill({ knowledge }: { knowledge: Knowledge }) {
   if (knowledge === 'known') return null
   const rumoured = knowledge === 'rumoured'
   return (
-    <span className={rumoured ? 'pill with-icon' : 'pill pill-n with-icon'}>
+    <span className={pillClass(rumoured ? 'gold' : 'neutral')}>
       {rumoured ? <LuSparkles aria-hidden /> : <LuEyeOff aria-hidden />}
       {KNOWLEDGE_LABEL[knowledge]}
     </span>
@@ -71,10 +78,10 @@ export function KnowledgePill({ knowledge }: { knowledge: Knowledge }) {
 export function TagChips({ tags }: { tags: string[] }) {
   if (tags.length === 0) return null
   return (
-    <div className="pill-row">
+    <div className="flex flex-wrap gap-[7px]">
       {tags.map((tag) => (
         <motion.span key={tag} whileTap={{ scale: 0.94 }} transition={SPRING}>
-          <Link to={`/search?tag=${encodeURIComponent(tag)}`} className="pill pill-n with-icon">
+          <Link to={`/search?tag=${encodeURIComponent(tag)}`} className={pillClass('neutral')}>
             <LuTag aria-hidden />
             {tag}
           </Link>
@@ -106,42 +113,45 @@ export function EntityRow({
   return (
     <MotionLink
       to={`/e/${entity.id}`}
-      className={entity.knowledge === 'unknown' ? 'row dimmed' : 'row'}
+      className={cx(rowClass, entity.knowledge === 'unknown' && 'opacity-55')}
       variants={rowVariants}
       whileTap={{ scale: 0.985, backgroundColor: 'rgba(236,230,220,0.04)' }}
       transition={SPRING}
     >
       <Portrait entity={entity} size={portraitSize} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="row-between">
-          <span className="name">{entity.name}</span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2.5">
+          <span className="type-name">{entity.name}</span>
           <KnowledgePill knowledge={entity.knowledge} />
         </div>
-        {entity.summary && (
-          <div className="meta" style={{ marginTop: 2 }}>
-            {entity.summary}
-          </div>
-        )}
+        {entity.summary && <div className="type-meta mt-0.5">{entity.summary}</div>}
       </div>
       {right}
     </MotionLink>
   )
 }
 
+/** Title block at the top of every page, with the gold rule under it. */
+export function PageHead({ children }: { children: ReactNode }) {
+  return (
+    <div className="mb-4 flex flex-col gap-2.25 border-b border-line pt-4.5 pb-3.5">{children}</div>
+  )
+}
+
 export function SectionHead({ label, note }: { label: string; note?: string }) {
   return (
-    <div className="row-between" style={{ alignItems: 'baseline' }}>
-      <span className="lab">{label}</span>
-      {note && <span className="meta">{note}</span>}
+    <div className="flex items-baseline justify-between gap-2.5">
+      <span className="type-lab">{label}</span>
+      {note && <span className="type-meta">{note}</span>}
     </div>
   )
 }
 
 export function Loading() {
   return (
-    <div className="empty">
+    <div className="px-3 py-10 text-center">
       <motion.span
-        className="spinner"
+        className="inline-grid place-items-center text-[22px] text-gold"
         animate={{ rotate: 360 }}
         transition={{ duration: 1.1, repeat: Infinity, ease: 'linear' }}
       >
@@ -153,20 +163,24 @@ export function Loading() {
 
 export function Empty({ children }: { children: ReactNode }) {
   return (
-    <motion.div className="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <span className="meta">{children}</span>
+    <motion.div
+      className="px-3 py-10 text-center"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      <span className="type-meta">{children}</span>
     </motion.div>
   )
 }
 
 /** Section wrapper that eases in — used for the stacked blocks on each tab. */
-export function Section({ children, ...rest }: { children: ReactNode; className?: string }) {
+export function Section({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <motion.section
+      className={className}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      {...rest}
     >
       {children}
     </motion.section>

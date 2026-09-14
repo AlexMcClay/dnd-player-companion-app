@@ -1,11 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
 import { LuSearch, LuX } from 'react-icons/lu'
 import { useSearchParams } from 'react-router-dom'
 import { ENTITY_TYPES } from '@codex/shared'
 import { api } from '../api/client'
-import { Empty, EntityRow, Loading, Section, SectionHead, StaggerList } from '../components/bits'
-import { SPRING } from '../lib/motion'
+import {
+  Empty,
+  EntityRow,
+  Loading,
+  PageHead,
+  Section,
+  SectionHead,
+  StaggerList,
+} from '../components/bits'
+import { cx, inputClass, PillButton } from '../components/ui'
 import { templateFor } from '../templates'
 
 export default function SearchPage() {
@@ -40,12 +47,15 @@ export default function SearchPage() {
 
   return (
     <>
-      <div className="head">
-        <h1 className="ttl">Search</h1>
-        <div className="input-with-icon">
-          <LuSearch className="input-icon" aria-hidden />
+      <PageHead>
+        <h1 className="type-title m-0">Search</h1>
+        <div className="relative flex items-center">
+          <LuSearch
+            className="pointer-events-none absolute left-3.25 size-3.75 text-ink-faint"
+            aria-hidden
+          />
           <input
-            className="input"
+            className={cx(inputClass, 'pl-9.5')}
             type="search"
             autoFocus
             value={q}
@@ -54,20 +64,14 @@ export default function SearchPage() {
           />
         </div>
         {tag && (
-          <div className="pill-row">
-            <motion.button
-              type="button"
-              className="pill pill-s with-icon"
-              onClick={() => update({ tag: '' })}
-              whileTap={{ scale: 0.94 }}
-              transition={SPRING}
-            >
+          <div className="flex flex-wrap gap-1.75">
+            <PillButton tone="solid" onClick={() => update({ tag: '' })}>
               tag: {tag}
               <LuX aria-hidden />
-            </motion.button>
+            </PillButton>
           </div>
         )}
-      </div>
+      </PageHead>
 
       {!q.trim() && !tag && <Empty>Type to search everything the party knows</Empty>}
 
@@ -75,17 +79,17 @@ export default function SearchPage() {
 
       {results.data && results.data.length === 0 && <Empty>Nothing matched</Empty>}
 
-      <div className="stack gap-16">
+      <div className="flex flex-col gap-4">
         {grouped.map((group) => {
           const Icon = group.template.icon
           return (
-            <Section key={group.type} className="stack gap-8">
-              <div className="row-between" style={{ alignItems: 'baseline' }}>
-                <span className="lab with-icon">
+            <Section key={group.type} className="flex flex-col gap-2">
+              <div className="flex items-baseline justify-between gap-2.5">
+                <span className="type-lab flex items-center gap-1.75">
                   <Icon aria-hidden />
                   {group.template.plural}
                 </span>
-                <span className="meta">{group.entities.length}</span>
+                <span className="type-meta">{group.entities.length}</span>
               </div>
               <StaggerList>
                 {group.entities.map((entity) => (
@@ -97,7 +101,7 @@ export default function SearchPage() {
         })}
 
         {other.length > 0 && (
-          <Section className="stack gap-8">
+          <Section className="flex flex-col gap-2">
             <SectionHead label="Other" note={`${other.length}`} />
             <StaggerList>
               {other.map((entity) => (

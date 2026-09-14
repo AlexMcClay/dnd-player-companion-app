@@ -65,8 +65,8 @@ export default function App() {
               <Route
                 path="*"
                 element={
-                  <div className="empty">
-                    <div className="meta">Nothing here</div>
+                  <div className="px-3 py-10 text-center">
+                    <div className="type-meta">Nothing here</div>
                   </div>
                 }
               />

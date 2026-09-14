@@ -1,10 +1,17 @@
 import { useQuery } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { api } from '../api/client'
-import { Empty, EntityRow, Loading, Section, SectionHead, StaggerList } from '../components/bits'
+import {
+  Empty,
+  EntityRow,
+  Loading,
+  PageHead,
+  Section,
+  SectionHead,
+  StaggerList,
+} from '../components/bits'
 import DmCreateBar from '../components/DmCreateBar'
-import { SPRING } from '../lib/motion'
+import { PillButton } from '../components/ui'
 
 export default function ItemsPage() {
   // 'stash' = unowned, 'all', or a player id.
@@ -41,27 +48,24 @@ export default function ItemsPage() {
 
   return (
     <>
-      <div className="head">
-        <h1 className="ttl">Items</h1>
-        <div className="pill-row">
+      <PageHead>
+        <h1 className="type-title m-0">Items</h1>
+        <div className="flex flex-wrap gap-1.75">
           {scopes.map(({ key, label }) => (
-            <motion.button
+            <PillButton
               key={key}
-              type="button"
-              className={scope === key ? 'pill pill-s' : 'pill pill-n'}
+              tone={scope === key ? 'solid' : 'neutral'}
               onClick={() => setScope(key)}
-              whileTap={{ scale: 0.94 }}
-              transition={SPRING}
             >
               {label}
-            </motion.button>
+            </PillButton>
           ))}
         </div>
-      </div>
+      </PageHead>
 
-      <div className="stack gap-16">
+      <div className="flex flex-col gap-4">
         {showStash && (
-          <Section className="stack gap-8">
+          <Section className="flex flex-col gap-2">
             <SectionHead label="Party stash" note={`${stash.length} items`} />
             <StaggerList>
               {stash.map((item) => (
@@ -69,7 +73,7 @@ export default function ItemsPage() {
                   key={item.id}
                   entity={item}
                   portraitSize={40}
-                  right={<span className="meta">×{item.quantity}</span>}
+                  right={<span className="type-meta">×{item.quantity}</span>}
                 />
               ))}
             </StaggerList>
@@ -81,7 +85,7 @@ export default function ItemsPage() {
           const carried = carriedBy(player.id)
           if (carried.length === 0 && scope === 'all') return null
           return (
-            <Section key={player.id} className="stack gap-8">
+            <Section key={player.id} className="flex flex-col gap-2">
               <SectionHead label={`${player.name} carries`} note={`${carried.length} items`} />
               <StaggerList>
                 {carried.map((item) => (
@@ -89,7 +93,7 @@ export default function ItemsPage() {
                     key={item.id}
                     entity={item}
                     portraitSize={40}
-                    right={<span className="meta">×{item.quantity}</span>}
+                    right={<span className="type-meta">×{item.quantity}</span>}
                   />
                 ))}
               </StaggerList>

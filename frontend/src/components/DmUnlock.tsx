@@ -5,6 +5,7 @@ import { LuLock, LuLockOpen, LuTriangleAlert } from 'react-icons/lu'
 import { api } from '../api/client'
 import { setDmKey, useIsDm } from '../lib/dm'
 import { SPRING } from '../lib/motion'
+import { Cta, ctaClass, inputClass, panelClass } from './ui'
 
 export default function DmUnlock({ onClose }: { onClose: () => void }) {
   const isDm = useIsDm()
@@ -38,7 +39,7 @@ export default function DmUnlock({ onClose }: { onClose: () => void }) {
 
   return (
     <motion.div
-      className="modal-scrim"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-5"
       onClick={onClose}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -46,45 +47,39 @@ export default function DmUnlock({ onClose }: { onClose: () => void }) {
       transition={{ duration: 0.16 }}
     >
       <motion.div
-        className="modal panel stack gap-12"
+        className={panelClass('flex w-full max-w-90 flex-col gap-3')}
         onClick={(e) => e.stopPropagation()}
         initial={{ opacity: 0, scale: 0.94, y: 14 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 8 }}
         transition={SPRING}
       >
-        <div className="lab with-icon">
+        <div className="type-lab flex items-center gap-1.75">
           {isDm ? <LuLockOpen aria-hidden /> : <LuLock aria-hidden />}
           {isDm ? 'DM mode is on' : 'Unlock DM mode'}
         </div>
 
         {isDm ? (
           <>
-            <p className="body-text" style={{ margin: 0 }}>
+            <p className="type-body m-0">
               You can see sealed entries and edit anything. Lock up before handing the phone to a
               player.
             </p>
-            <motion.button
-              type="button"
-              className="cta cta-danger with-icon"
-              onClick={lock}
-              whileTap={{ scale: 0.97 }}
-              transition={SPRING}
-            >
+            <Cta tone="danger" onClick={lock}>
               <LuLock aria-hidden />
               Lock
-            </motion.button>
-            <button type="button" className="cta cta-ghost" onClick={onClose}>
+            </Cta>
+            <button type="button" className={ctaClass('ghost')} onClick={onClose}>
               Stay unlocked
             </button>
           </>
         ) : (
-          <form className="stack gap-12" onSubmit={submit}>
-            <p className="body-text" style={{ margin: 0 }}>
+          <form className="flex flex-col gap-3" onSubmit={submit}>
+            <p className="type-body m-0">
               Players do not need this. It reveals unknown entries and turns on editing.
             </p>
             <input
-              className="input"
+              className={inputClass}
               type="password"
               autoFocus
               value={value}
@@ -93,8 +88,7 @@ export default function DmUnlock({ onClose }: { onClose: () => void }) {
             />
             {error && (
               <motion.div
-                className="meta with-icon"
-                style={{ color: '#d89494' }}
+                className="type-meta flex items-center gap-1.75 text-danger"
                 initial={{ x: 0 }}
                 animate={{ x: [0, -6, 6, -4, 4, 0] }}
                 transition={{ duration: 0.35 }}
@@ -103,17 +97,11 @@ export default function DmUnlock({ onClose }: { onClose: () => void }) {
                 {error}
               </motion.div>
             )}
-            <motion.button
-              type="submit"
-              className="cta with-icon"
-              disabled={checking || value.length === 0}
-              whileTap={{ scale: 0.97 }}
-              transition={SPRING}
-            >
+            <Cta type="submit" disabled={checking || value.length === 0}>
               <LuLockOpen aria-hidden />
               {checking ? 'Checking…' : 'Unlock'}
-            </motion.button>
-            <button type="button" className="cta cta-ghost" onClick={onClose}>
+            </Cta>
+            <button type="button" className={ctaClass('ghost')} onClick={onClose}>
               Cancel
             </button>
           </form>

@@ -2,8 +2,17 @@ import { useQuery } from '@tanstack/react-query'
 import type { Entity, RecipeData } from '@codex/shared'
 import { LuCheck } from 'react-icons/lu'
 import { api } from '../api/client'
-import { Empty, EntityRow, Loading, Section, SectionHead, StaggerList } from '../components/bits'
+import {
+  Empty,
+  EntityRow,
+  Loading,
+  PageHead,
+  Section,
+  SectionHead,
+  StaggerList,
+} from '../components/bits'
 import DmCreateBar from '../components/DmCreateBar'
+import { Pill } from '../components/ui'
 import { reagentStatus, stockFor } from '../lib/recipes'
 
 export default function CraftPage() {
@@ -31,14 +40,14 @@ export default function CraftPage() {
 
   return (
     <>
-      <div className="head">
-        <h1 className="ttl">Crafting</h1>
-        <div className="meta">{all.length} recipes the party knows</div>
-      </div>
+      <PageHead>
+        <h1 className="type-title m-0">Crafting</h1>
+        <div className="type-meta">{all.length} recipes the party knows</div>
+      </PageHead>
 
-      <div className="stack gap-16">
+      <div className="flex flex-col gap-4">
         {ready.length > 0 && (
-          <Section className="stack gap-8">
+          <Section className="flex flex-col gap-2">
             <SectionHead label="Ready to make" note={`${ready.length} with reagents in hand`} />
             <StaggerList>
               {ready.map((recipe) => (
@@ -47,10 +56,10 @@ export default function CraftPage() {
                   entity={recipe}
                   portraitSize={44}
                   right={
-                    <span className="pill pill-s with-icon">
+                    <Pill tone="solid">
                       <LuCheck aria-hidden />
                       Can make
-                    </span>
+                    </Pill>
                   }
                 />
               ))}
@@ -58,7 +67,7 @@ export default function CraftPage() {
           </Section>
         )}
 
-        <Section className="stack gap-8">
+        <Section className="flex flex-col gap-2">
           <SectionHead label={ready.length > 0 ? 'Everything else' : 'Known recipes'} />
           <StaggerList>
             {rest.map((recipe) => (

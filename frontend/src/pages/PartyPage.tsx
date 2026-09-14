@@ -1,10 +1,17 @@
 import { useQuery } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { api } from '../api/client'
-import { Empty, EntityRow, Loading, Section, SectionHead, StaggerList } from '../components/bits'
+import {
+  Empty,
+  EntityRow,
+  Loading,
+  PageHead,
+  Section,
+  SectionHead,
+  StaggerList,
+} from '../components/bits'
 import DmCreateBar from '../components/DmCreateBar'
-import { SPRING } from '../lib/motion'
+import { PillButton } from '../components/ui'
 
 const FILTERS = [
   { key: 'all', label: 'Everyone' },
@@ -31,27 +38,24 @@ export default function PartyPage() {
 
   return (
     <>
-      <div className="head">
-        <h1 className="ttl">Party &amp; NPCs</h1>
-        <div className="pill-row">
+      <PageHead>
+        <h1 className="type-title m-0">Party &amp; NPCs</h1>
+        <div className="flex flex-wrap gap-1.75">
           {FILTERS.map(({ key, label }) => (
-            <motion.button
+            <PillButton
               key={key}
-              type="button"
-              className={filter === key ? 'pill pill-s' : 'pill pill-n'}
+              tone={filter === key ? 'solid' : 'neutral'}
               onClick={() => setFilter(key)}
-              whileTap={{ scale: 0.94 }}
-              transition={SPRING}
             >
               {label}
-            </motion.button>
+            </PillButton>
           ))}
         </div>
-      </div>
+      </PageHead>
 
-      <div className="stack gap-16">
+      <div className="flex flex-col gap-4">
         {showPlayers && (
-          <Section className="stack gap-8">
+          <Section className="flex flex-col gap-2">
             <SectionHead label="The party" note={`${players.data?.length ?? 0} characters`} />
             <StaggerList>
               {players.data?.map((entity) => (
@@ -63,7 +67,7 @@ export default function PartyPage() {
         )}
 
         {showNpcs && (
-          <Section className="stack gap-8">
+          <Section className="flex flex-col gap-2">
             <SectionHead label="People you have met" note={`${npcs.data?.length ?? 0} known`} />
             <StaggerList>
               {npcs.data?.map((entity) => (

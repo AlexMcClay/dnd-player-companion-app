@@ -14,9 +14,9 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import ImageUpload from '../components/ImageUpload'
 import IngredientsEditor from '../components/IngredientsEditor'
-import { Empty, Loading } from '../components/bits'
+import { Empty, Loading, PageHead } from '../components/bits'
+import { Cta, ctaClass, Field, inputClass, textareaClass } from '../components/ui'
 import { useIsDm } from '../lib/dm'
-import { SPRING } from '../lib/motion'
 import { templateFor } from '../templates'
 
 type Draft = Required<Pick<EntityInput, 'type' | 'name' | 'knowledge' | 'quantity'>> & {
@@ -40,6 +40,14 @@ const BLANK = (type: string): Draft => ({
   quantity: 1,
   data: {},
 })
+
+const KNOWLEDGE_HELP: Record<Knowledge, string> = {
+  unknown: 'Unknown — hidden from players',
+  rumoured: 'Rumoured — visible, flagged',
+  known: 'Known — fully visible',
+}
+
+const LABEL = 'type-lab'
 
 /** Handles both /new?type=npc and /e/:id/edit. */
 export default function EntityEditPage() {
@@ -130,16 +138,17 @@ export default function EntityEditPage() {
 
   return (
     <>
-      <div className="head">
-        <h1 className="ttl">{id ? `Edit ${template.label}` : `New ${template.label}`}</h1>
-      </div>
+      <PageHead>
+        <h1 className="type-title m-0">
+          {id ? `Edit ${template.label}` : `New ${template.label}`}
+        </h1>
+      </PageHead>
 
-      <form className="stack gap-16" onSubmit={submit}>
+      <form className="flex flex-col gap-4" onSubmit={submit}>
         {!id && (
-          <label className="field">
-            <span className="lab">Type</span>
+          <Field label={<span className={LABEL}>Type</span>}>
             <select
-              className="input"
+              className={inputClass}
               value={draft.type}
               onChange={(e) => setDraft((d) => ({ ...d, type: e.target.value, data: {} }))}
             >
@@ -149,49 +158,40 @@ export default function EntityEditPage() {
                 </option>
               ))}
             </select>
-          </label>
+          </Field>
         )}
 
-        <label className="field">
-          <span className="lab">Name</span>
+        <Field label={<span className={LABEL}>Name</span>}>
           <input
-            className="input"
+            className={inputClass}
             required
             value={draft.name}
             onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
           />
-        </label>
+        </Field>
 
-        <label className="field">
-          <span className="lab">Summary</span>
+        <Field label={<span className={LABEL}>Summary</span>}>
           <input
-            className="input"
+            className={inputClass}
             value={draft.summary}
             placeholder="One line, shown under the name in lists"
             onChange={(e) => setDraft((d) => ({ ...d, summary: e.target.value }))}
           />
-        </label>
+        </Field>
 
-        <label className="field">
-          <span className="lab">Knowledge</span>
+        <Field label={<span className={LABEL}>Knowledge</span>}>
           <select
-            className="input"
+            className={inputClass}
             value={draft.knowledge}
-            onChange={(e) =>
-              setDraft((d) => ({ ...d, knowledge: e.target.value as Knowledge }))
-            }
+            onChange={(e) => setDraft((d) => ({ ...d, knowledge: e.target.value as Knowledge }))}
           >
             {KNOWLEDGE_STATES.map((state) => (
               <option key={state} value={state}>
-                {state === 'unknown'
-                  ? 'Unknown — hidden from players'
-                  : state === 'rumoured'
-                    ? 'Rumoured — visible, flagged'
-                    : 'Known — fully visible'}
+                {KNOWLEDGE_HELP[state]}
               </option>
             ))}
           </select>
-        </label>
+        </Field>
 
         <ImageUpload
           entityType={draft.type}
@@ -201,10 +201,9 @@ export default function EntityEditPage() {
 
         {template.ownable && (
           <>
-            <label className="field">
-              <span className="lab">Carried by</span>
+            <Field label={<span className={LABEL}>Carried by</span>}>
               <select
-                className="input"
+                className={inputClass}
                 value={draft.ownerId ?? ''}
                 onChange={(e) => setDraft((d) => ({ ...d, ownerId: e.target.value || null }))}
               >
@@ -215,20 +214,17 @@ export default function EntityEditPage() {
                   </option>
                 ))}
               </select>
-            </label>
+            </Field>
 
-            <label className="field">
-              <span className="lab">Quantity</span>
+            <Field label={<span className={LABEL}>Quantity</span>}>
               <input
-                className="input"
+                className={inputClass}
                 type="number"
                 min={0}
                 value={draft.quantity}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, quantity: Number(e.target.value) || 0 }))
-                }
+                onChange={(e) => setDraft((d) => ({ ...d, quantity: Number(e.target.value) || 0 }))}
               />
-            </label>
+            </Field>
           </>
         )}
 
@@ -240,23 +236,18 @@ export default function EntityEditPage() {
               onChange={(next) => setData(field.key, next)}
             />
           ) : field.kind === 'boolean' ? (
-            <label
-              key={field.key}
-              className="field"
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}
-            >
+            <label key={field.key} className="flex flex-row items-center gap-2.5">
               <input
                 type="checkbox"
                 checked={Boolean(draft.data[field.key])}
                 onChange={(e) => setData(field.key, e.target.checked)}
               />
-              <span className="lab">{field.label}</span>
+              <span className={LABEL}>{field.label}</span>
             </label>
           ) : (
-            <label key={field.key} className="field">
-              <span className="lab">{field.label}</span>
+            <Field key={field.key} label={<span className={LABEL}>{field.label}</span>}>
               <input
-                className="input"
+                className={inputClass}
                 type={field.kind === 'number' ? 'number' : 'text'}
                 placeholder={field.placeholder}
                 value={String(draft.data[field.key] ?? '')}
@@ -271,35 +262,32 @@ export default function EntityEditPage() {
                   )
                 }
               />
-            </label>
+            </Field>
           ),
         )}
 
-        <label className="field">
-          <span className="lab">Tags</span>
+        <Field label={<span className={LABEL}>Tags</span>}>
           <input
-            className="input"
+            className={inputClass}
             value={draft.tags}
             placeholder="comma, separated"
             onChange={(e) => setDraft((d) => ({ ...d, tags: e.target.value }))}
           />
-        </label>
+        </Field>
 
-        <label className="field">
-          <span className="lab">Body</span>
+        <Field label={<span className={LABEL}>Body</span>}>
           <textarea
-            className="input"
+            className={textareaClass}
             rows={10}
             value={draft.bodyMd}
             placeholder={'Markdown. Link other entries with [[Their Name]].'}
             onChange={(e) => setDraft((d) => ({ ...d, bodyMd: e.target.value }))}
           />
-        </label>
+        </Field>
 
         {error && (
           <motion.div
-            className="meta with-icon"
-            style={{ color: '#d89494' }}
+            className="type-meta flex items-center gap-1.75 text-danger"
             animate={{ x: [0, -6, 6, -4, 4, 0] }}
             transition={{ duration: 0.35 }}
           >
@@ -308,33 +296,25 @@ export default function EntityEditPage() {
           </motion.div>
         )}
 
-        <motion.button
-          type="submit"
-          className="cta with-icon"
-          disabled={save.isPending}
-          whileTap={{ scale: 0.97 }}
-          transition={SPRING}
-        >
+        <Cta type="submit" disabled={save.isPending}>
           <LuSave aria-hidden />
           {save.isPending ? 'Saving…' : 'Save'}
-        </motion.button>
-        <button type="button" className="cta cta-ghost with-icon" onClick={() => navigate(-1)}>
+        </Cta>
+        <button type="button" className={ctaClass('ghost')} onClick={() => navigate(-1)}>
           <LuX aria-hidden />
           Cancel
         </button>
         {id && (
-          <motion.button
+          <Cta
+            tone="danger"
             type="button"
-            className="cta cta-danger with-icon"
             onClick={() => {
               if (confirm(`Delete ${draft.name}? This cannot be undone.`)) remove.mutate()
             }}
-            whileTap={{ scale: 0.97 }}
-            transition={SPRING}
           >
             <LuTrash2 aria-hidden />
             Delete
-          </motion.button>
+          </Cta>
         )}
       </form>
     </>
