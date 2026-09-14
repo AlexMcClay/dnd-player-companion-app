@@ -1,13 +1,13 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { Holding } from '@codex/shared'
-import { motion } from 'framer-motion'
-import type { IconType } from 'react-icons'
-import { LuMinus, LuPlus, LuTrash2 } from 'react-icons/lu'
-import { Link } from 'react-router-dom'
-import { api } from '../api/client'
-import { rowVariants, SPRING } from '../lib/motion'
-import { Portrait } from './bits'
-import { cx, rowClass } from './ui'
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Holding } from "@codex/shared";
+import { motion } from "framer-motion";
+import type { IconType } from "react-icons";
+import { LuMinus, LuPlus, LuTrash2 } from "react-icons/lu";
+import { Link } from "react-router-dom";
+import { api } from "../api/client";
+import { rowVariants, SPRING } from "../lib/motion";
+import { Portrait } from "./bits";
+import { cx, rowClass } from "./ui";
 
 /**
  * One stack, with the controls to change it. Quantity edits are optimistic-free
@@ -17,7 +17,7 @@ export default function HoldingRow({
   holding,
   onMove,
 }: {
-  holding: Holding
+  holding: Holding;
   /**
    * Where this stack can be sent, if anywhere. Omitted hides the button.
    *
@@ -25,11 +25,12 @@ export default function HoldingRow({
    * the button is an icon in the row's control cluster, so the words still have
    * to exist somewhere for anyone not going by the picture.
    */
-  onMove?: { label: string; icon: IconType; ownerId: string | null }
+  onMove?: { label: string; icon: IconType; ownerId: string | null };
 }) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['holdings'] })
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ["holdings"] });
 
   const setQuantity = useMutation({
     mutationFn: (quantity: number) =>
@@ -37,20 +38,24 @@ export default function HoldingRow({
         ? api.deleteHolding(holding.id)
         : api.updateHolding(holding.id, { quantity }).then(() => undefined),
     onSuccess: invalidate,
-  })
+  });
 
   const move = useMutation({
-    mutationFn: (ownerId: string | null) => api.updateHolding(holding.id, { ownerId }),
+    mutationFn: (ownerId: string | null) =>
+      api.updateHolding(holding.id, { ownerId }),
     onSuccess: invalidate,
-  })
+  });
 
-  const busy = setQuantity.isPending || move.isPending
+  const busy = setQuantity.isPending || move.isPending;
 
-  const MoveIcon = onMove?.icon
+  const MoveIcon = onMove?.icon;
 
   return (
     <motion.div className={rowClass} variants={rowVariants}>
-      <Link to={`/e/${holding.itemId}`} className="flex min-w-0 flex-1 items-center gap-3">
+      <Link
+        to={`/e/${holding.itemId}`}
+        className="flex min-w-0 flex-1 items-center gap-3"
+      >
         <Portrait entity={holding.item} size={40} />
         <div className="min-w-0 flex-1">
           <div className="type-name truncate">{holding.item.name}</div>
@@ -59,16 +64,20 @@ export default function HoldingRow({
             this stack is separate from an otherwise identical one.
           */}
           {holding.note ? (
-            <div className="type-meta mt-0.5 truncate text-gold">{holding.note}</div>
+            <div className="type-meta mt-0.5 truncate text-gold">
+              {holding.note}
+            </div>
           ) : (
             holding.item.summary && (
-              <div className="type-meta mt-0.5 truncate">{holding.item.summary}</div>
+              <div className="type-meta mt-0.5 truncate">
+                {holding.item.summary}
+              </div>
             )
           )}
         </div>
       </Link>
 
-      <div className="flex shrink-0 items-center gap-1.5">
+      <div className="flex shrink-0 items-center gap-0.5">
         {/*
           The move used to be a full-width bar below the row, which made every
           stack two lines tall and shouted louder than the item itself. As an
@@ -95,7 +104,9 @@ export default function HoldingRow({
           <LuMinus aria-hidden />
         </StepButton>
 
-        <span className="type-meta w-7 text-center text-ink">×{holding.quantity}</span>
+        <span className="type-meta w-7 text-center text-ink">
+          ×{holding.quantity}
+        </span>
 
         <StepButton
           label={`One more ${holding.item.name}`}
@@ -113,9 +124,8 @@ export default function HoldingRow({
           <LuTrash2 aria-hidden />
         </StepButton>
       </div>
-
     </motion.div>
-  )
+  );
 }
 
 function StepButton({
@@ -123,14 +133,14 @@ function StepButton({
   disabled,
   onClick,
   children,
-  tone = 'plain',
+  tone = "plain",
 }: {
-  label: string
-  disabled: boolean
-  onClick: () => void
-  children: React.ReactNode
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
   /** Gold marks the one button that moves the stack somewhere else. */
-  tone?: 'plain' | 'gold'
+  tone?: "plain" | "gold";
 }) {
   return (
     <motion.button
@@ -141,8 +151,10 @@ function StepButton({
       title={label}
       disabled={disabled}
       className={cx(
-        'grid size-7 cursor-pointer place-items-center border disabled:opacity-40 [&>svg]:size-3',
-        tone === 'gold' ? 'border-gold-dim bg-gold-tint text-gold' : 'border-line text-ink-faint',
+        "grid size-7 cursor-pointer place-items-center border disabled:opacity-40 [&>svg]:size-3",
+        tone === "gold"
+          ? "border-gold-dim bg-gold-tint text-gold"
+          : "border-line text-ink-faint",
       )}
       whileTap={{ scale: 0.9 }}
       transition={SPRING}
@@ -150,5 +162,5 @@ function StepButton({
     >
       {children}
     </motion.button>
-  )
+  );
 }
