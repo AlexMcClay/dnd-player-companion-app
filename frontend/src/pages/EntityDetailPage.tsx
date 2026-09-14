@@ -207,10 +207,17 @@ function Hero({ entity, tall }: { entity: Entity; tall: boolean }) {
       // self-start keeps the frame hugging the image; stretched by the column
       // it would grow bars down the sides again. The width cap stops a
       // panoramic map from squeezing the title into a gutter.
+      // Centred on a phone, where the frame sits alone above the title and an
+      // off-centre hug reads as a mistake; from md up it is one of two columns,
+      // so it hugs the left edge instead and shares the row with the title.
+      //
+      // Either way it never stretches — stretched by the column it would grow
+      // bars down the sides, which is the thing being fixed.
+      //
       // min-h so the frame does not start at zero height and shove the title
       // down when the image lands — we have no intrinsic size to reserve, since
       // the API carries a URL and nothing else.
-      className="port-fill self-start max-w-full min-h-25 shrink-0 border border-line md:max-w-[58%]"
+      className="port-fill max-w-full min-h-25 shrink-0 self-center border border-line md:max-w-[58%] md:self-start"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.32 }}
