@@ -73,8 +73,9 @@ The data is SRD 5.1, used under CC-BY-4.0. The required attribution lives in
 and must stay with the data. It covers the SRD only — published monsters,
 settings and magic items outside it are not licensed for redistribution.
 
-The seed loads the sample campaign from the design mockups (The Marrow Coast) so
-nothing is ever empty on first run. `npm run db:reset` wipes and re-migrates.
+The seed loads the campaign as the party knows it through session 4 — Red Larch,
+the drow raid, the Netherese dig, and the four characters. `npm run db:reset`
+wipes and re-migrates.
 
 ## Who you are
 

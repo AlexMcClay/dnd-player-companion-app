@@ -1,6 +1,15 @@
 /**
- * Seeds the sample campaign from the design mockups (The Marrow Coast) so the
- * app is never empty on first run. Wipes the table first — this is a dev seed.
+ * Seeds the campaign as the party knows it, through session 4.
+ *
+ * **This wipes every entity first**, and holdings and notes cascade from them.
+ * It is for setting up, not for topping up: once real content is being written
+ * in the app, add it there rather than here. Re-run `db:seed:srd` afterwards to
+ * put the SRD item library back.
+ *
+ * Knowledge states follow the campaign notes exactly:
+ *   known    — directly experienced, been told, or confirmed
+ *   rumoured — heard secondhand, partial, unconfirmed
+ *   unknown  — exists in the world, but the party has no idea; DM eyes only
  */
 import { PrismaClient, type Prisma } from '@prisma/client'
 
@@ -15,15 +24,21 @@ type Seed = {
   tags?: string[]
   knowledge?: string
   /**
-   * Items only. The entity itself is just the definition; these two describe
-   * the holding seeded alongside it. Omit both for a definition the party has
+   * Items only. The entity itself is just the definition; these describe the
+   * holding seeded alongside it. Omit all three for a definition the party has
    * catalogued but does not currently own.
    */
   quantity?: number
   /** Name of the player carrying it. Omit for the party stash. */
   ownerName?: string
+  /** Per-stack note, shown on the row. */
+  holdingNote?: string
 }
 
+/**
+ * The party. Descriptions are left empty on purpose: a player writes their own
+ * from the Me tab, and an empty section is the invitation to do it.
+ */
 const PLAYERS: Seed[] = [
   {
     type: 'player',
@@ -45,7 +60,6 @@ const PLAYERS: Seed[] = [
     summary: 'Lvl 4 | Tiefling | Warlock / The Fiend',
     knowledge: 'known',
     tags: ['party'],
-    bodyMd: 'Convinced the lamps of [[The Pale Lantern]] are bound elementals. Nobody has tested it.',
     data: {
       level: 4,
       race: 'Tiefling',
@@ -60,8 +74,6 @@ const PLAYERS: Seed[] = [
     summary: 'Lvl 4 | Elf | Ranger / Gloom Stalker',
     knowledge: 'known',
     tags: ['party'],
-    bodyMd:
-      'Ran cargo manifests on the [[Ashgate]] quay before all this, which is how he knows [[Mira Thrushbane]].',
     data: {
       level: 4,
       race: 'Elf',
@@ -87,355 +99,752 @@ const PLAYERS: Seed[] = [
 ]
 
 const REST: Seed[] = [
-  // — NPCs —
+  // ── NPCs ────────────────────────────────────────────────────────────────
   {
     type: 'npc',
-    name: 'Mira Thrushbane',
-    summary: 'Harbourmaster · Ashgate · she/her',
+    name: 'Luckbringer Bress',
+    summary: 'Cleric of Tymora · Red Larch',
     knowledge: 'known',
-    tags: ['ashgate', 'ally'],
-    data: { role: 'Harbourmaster', location: 'Ashgate', stance: 'Uneasy ally', firstMet: 'Session 9' },
+    tags: ['red-larch', 'ally', 'patron'],
+    data: {
+      role: 'Cleric of Tymora',
+      location: 'Red Larch',
+      stance: 'Ally',
+      firstMet: 'Session 1',
+    },
     bodyMd: [
-      '## First met',
-      "Session 9, on the Ashgate quay. She waved off the Lantern's writ and let the party's cargo through unopened.",
+      'Serves the shrine of Tymora in [[Red Larch]] — see [[The Shrine of Tymora]].',
       '',
-      '## Appearance',
-      'Fifties, salt-burned, a brass tally-ring on every finger. Speaks in shipping weights.',
+      'Hired the party to look into a string of disappearances: deliveries and couriers not coming back from the trade routes. That job is what started all of this.',
       '',
-      '## What she wants',
-      'Her brother\'s ship back. She has not said from whom.',
-      '',
-      'Salva noted she flinched when Odric said "Saltbone".',
+      'Introduced the party to [[Pendrel Dornwood]].',
     ].join('\n'),
   },
   {
     type: 'npc',
-    name: 'Ser Odric Vale',
-    summary: 'Knight · The Pale Lantern · he/him',
+    name: 'Pendrel Dornwood',
+    summary: 'Travelling merchant and antiquities dealer · Neverwinter',
     knowledge: 'known',
-    tags: ['pale-lantern', 'hostile'],
-    data: { role: 'Knight', location: 'Coastwide', stance: 'Hostile', firstMet: 'Session 9' },
-    bodyMd: 'Carries the writ of [[The Pale Lantern]] and reads it aloud at every opportunity. Supper with him in session 12 went badly.',
+    tags: ['ally', 'patron', 'merchant'],
+    data: {
+      role: 'Antiquities dealer',
+      location: '[[Neverwinter]]',
+      stance: 'Ally, and owed a favour',
+      firstMet: 'Session 1',
+    },
+    bodyMd: [
+      'Hired the party to recover a stolen silver griffon statuette, 50 gp each.',
+      '',
+      '## What he has told you',
+      'Examined the [[Carved Obsidian Token]] and confirmed they are drow-made and magical. He could not read the [[Sealed Drow Dispatch]] — outside his experience — so he brought the party to his contact [[Krag Bronzebeard]] in [[Triboar]].',
+      '',
+      'He is tagging along, and he is collecting on that favour eventually.',
+    ].join('\n'),
   },
   {
     type: 'npc',
-    name: 'Grym the Ledger',
-    summary: 'Fence · Drowned Quarter · he/him',
+    name: 'Captain Harbek Ironwood',
+    summary: 'Captain of the guard · Red Larch',
     knowledge: 'known',
-    tags: ['drowned-quarter'],
-    data: { role: 'Fence', location: 'Drowned Quarter', stance: 'Business only', firstMet: 'Session 11' },
-    bodyMd: 'Offered 300 gp for the [[Saltbone Charm]] without looking at it twice. Pays in Lantern coin — nobody has asked him where he gets it.',
+    tags: ['red-larch', 'ally', 'patron'],
+    data: {
+      role: 'Captain of the guard',
+      location: '[[Red Larch]]',
+      stance: 'Ally',
+      firstMet: 'Session 2',
+    },
+    bodyMd: [
+      'Leads [[Red Larch Town Guard]] — a volunteer militia, not a garrison.',
+      '',
+      '## The raid',
+      "Led the town's defence when the drow struck. His militia forced a retreat but could not stop dozens of townsfolk being taken.",
+      '',
+      'Hired the party to recover the captives. The town had nothing to spare but horses.',
+      '',
+      '## After',
+      'Debriefed the party on their return and paid out 500 gold and the [[Ring of Magic Missiles]].',
+    ].join('\n'),
   },
   {
     type: 'npc',
-    name: 'Sister Ive',
-    summary: 'Lamp-keeper · The Pale Lantern',
+    name: 'Mayor Jaina Silvermoor',
+    summary: 'Mayor of Red Larch · not yet met',
     knowledge: 'rumoured',
-    tags: ['pale-lantern'],
-    data: { role: 'Lamp-keeper', location: 'Unknown', stance: 'Unknown' },
-    bodyMd: 'A name on the quay ledger. The party has not met her.',
+    tags: ['red-larch'],
+    data: { role: 'Mayor', location: '[[Red Larch]]', stance: 'Unknown' },
+    bodyMd: [
+      'Away in [[Goldenfields]] negotiating grain and food supply when the raid happened.',
+      '',
+      "Approved the party's reward through [[Captain Harbek Ironwood]]. The party knows her name and her office and nothing else — they have never been in a room with her.",
+    ].join('\n'),
   },
   {
     type: 'npc',
-    name: 'The Salt Cantor',
+    name: 'Skeld Wagonwright',
+    summary: 'Quarry worker · Red Larch',
+    knowledge: 'known',
+    tags: ['red-larch'],
+    data: { role: 'Quarry worker', location: '[[Red Larch]]', firstMet: 'Session 1' },
+    bodyMd: [
+      'The only one of his delivery crew to come back.',
+      '',
+      'He has no memory of how he got home. Only a vague recollection of "talking to someone".',
+      '',
+      'Led the party to [[The Quarry]], where they found the first [[Carved Obsidian Token]].',
+    ].join('\n'),
+  },
+  {
+    type: 'npc',
+    name: 'Garun',
+    summary: 'Red Larch citizen · escaped the tunnels',
+    knowledge: 'known',
+    tags: ['red-larch'],
+    data: { role: 'Citizen', location: '[[Red Larch]]', firstMet: 'Session 3' },
+    bodyMd: [
+      "Got himself out of the drow tunnels under [[Kryptgarden Forest]] alone.",
+      '',
+      'Told the party the captives were being marched deeper underground, and that only a few were left in the next chamber.',
+    ].join('\n'),
+  },
+  {
+    type: 'npc',
+    name: 'Ondrel Kest',
+    summary: 'Wagonwright · rescued from the column',
+    knowledge: 'known',
+    tags: ['red-larch'],
+    data: { role: 'Wagonwright', location: '[[Red Larch]]', firstMet: 'Session 3' },
+    bodyMd: [
+      'A wagonwright in his fifties. Found injured and left behind by the retreating drow column, and carried out by the party.',
+      '',
+      '## What he said',
+      '> They aren\'t being sold... they want us digging.',
+      '',
+      'He does not know what for.',
+      '',
+      'Sent ahead to [[Red Larch]] on horseback. Recovering there now.',
+    ].join('\n'),
+  },
+  {
+    type: 'npc',
+    name: 'Krag Bronzebeard',
+    summary: 'Dwarf · translating the dispatches · Triboar',
+    knowledge: 'known',
+    tags: ['triboar', 'ally', 'patron'],
+    data: {
+      role: 'Scholar of sorts',
+      location: '[[Triboar]]',
+      stance: 'Ally',
+      firstMet: 'Session 4',
+    },
+    bodyMd: [
+      'A friend of [[Pendrel Dornwood]], met at [[The Laughing Hollow]].',
+      '',
+      'Red hair and beard with gold rings braided into it, stocky, green eyes, dressed well.',
+      '',
+      '## The dispatches',
+      'He can translate the [[Sealed Drow Dispatch]], but he needs time with his notes first.',
+      '',
+      '## The job',
+      'While the party waits, he has offered **1,000 gold total** to deal with the [[Large Winged Creature]] that has been hitting caravans from the north.',
+    ].join('\n'),
+  },
+  {
+    type: 'npc',
+    name: 'Abigail',
+    summary: 'Tavernmaster · The Everwyvern House',
+    knowledge: 'known',
+    tags: ['triboar'],
+    data: {
+      role: 'Tavernmaster',
+      location: '[[The Everwyvern House]]',
+      stance: 'Friendly',
+      firstMet: 'Session 4',
+    },
+    bodyMd: [
+      'Runs [[The Everwyvern House]], the fancier inn in [[Triboar]] — mostly Waterdhavian nobles.',
+      '',
+      'Blonde, blue eyes. Talked the room rate down from 20 gp to 12 gp a night for [[Salva]].',
+    ].join('\n'),
+  },
+  {
+    type: 'npc',
+    name: 'Captain Felenar',
     summary: 'Unknown',
     knowledge: 'unknown',
-    tags: ['pale-lantern'],
-    bodyMd: 'Who actually funds the Lantern. Not for player eyes yet.',
-  },
-
-  // — Factions —
-  {
-    type: 'faction',
-    name: 'The Pale Lantern',
-    summary: 'Militant order · Coastwide',
-    knowledge: 'known',
-    tags: ['hostile'],
-    data: { kind: 'Militant order', reach: 'Coastwide', stance: 'Hostile' },
-    bodyMd: [
-      '## What they are',
-      'Lamp-bearers who claim writ over every harbour from Ashgate to the Marrow. They inspect, they tally, they burn what they cannot tally.',
-      '',
-      '## How the party learned this',
-      "[[Ser Odric Vale]]'s own telling, session 9. Confirmed by the quay ledger, session 11.",
-    ].join('\n'),
-  },
-  {
-    type: 'faction',
-    name: 'Thrushbane Shipping',
-    summary: 'Family concern · Ashgate',
-    knowledge: 'known',
-    tags: ['ashgate', 'ally'],
-    data: { kind: 'Family concern', reach: 'Ashgate', stance: 'Uneasy ally' },
-    bodyMd: 'Two hulls and a warehouse, run by [[Mira Thrushbane]] since her brother stopped coming back.',
-  },
-
-  // — Locations —
-  // One free-text `kind` covers a whole region, a city and a single taproom,
-  // rather than a fixed hierarchy nobody wants to maintain at the table.
-  {
-    type: 'location',
-    name: 'The Marrow Coast',
-    summary: 'Region · the whole campaign',
-    knowledge: 'known',
-    tags: ['region'],
-    data: { kind: 'Region', within: 'The western reach', ruledBy: 'Nominally the Lantern' },
+    tags: ['drow'],
     bodyMd:
-      'Cold water, bad harbours and a tide that takes more than it gives. Everything from [[Ashgate]] south belongs to it.',
-  },
-  {
-    type: 'location',
-    name: 'Ashgate',
-    summary: 'City · the party\'s base',
-    knowledge: 'known',
-    tags: ['ashgate'],
-    data: { kind: 'Port city', within: 'The Marrow Coast', ruledBy: '[[Mira Thrushbane]] on the quay' },
-    bodyMd: [
-      '## What you know',
-      'Stone piers, a grain exchange, and more Lantern lamps every month. The party made landfall here in session 9.',
-      '',
-      '[[The Drowned Quarter]] is technically part of it, though nobody official says so.',
-    ].join('\n'),
-  },
-  {
-    type: 'location',
-    name: 'The Drowned Quarter',
-    summary: 'District · below the tide line',
-    knowledge: 'known',
-    tags: ['ashgate', 'drowned-quarter'],
-    data: { kind: 'District', within: 'Ashgate', ruledBy: 'Whoever [[Grym the Ledger]] answers to' },
-    bodyMd: 'Floods twice a day and is rebuilt twice a week. Where you go to sell something that should not exist.',
-  },
-  {
-    type: 'location',
-    name: 'The Gutted Lamp',
-    summary: 'Inn · Drowned Quarter',
-    knowledge: 'known',
-    tags: ['drowned-quarter', 'inn'],
-    data: { kind: 'Inn', within: 'The Drowned Quarter', ruledBy: 'A woman called Pell' },
-    bodyMd: 'Four rooms, no windows, and a Lantern helm nailed above the bar with its glass prised out. Ask Pell about that and she changes the subject.',
-  },
-  {
-    type: 'location',
-    name: 'The Saltbone Reach',
-    summary: 'Unknown',
-    knowledge: 'rumoured',
-    tags: ['marrow-coast'],
-    data: { kind: 'Unknown', within: 'The Marrow Coast' },
-    bodyMd: 'A name off the quay ledger. Somewhere south, past where the charts stop being useful.',
+      'The true name and identity behind "the Captain". The party has never seen his face or heard this name spoken. Do not reveal until they do.',
   },
 
-  // — Monsters —
+  // ── Factions ────────────────────────────────────────────────────────────
   {
-    type: 'monster',
-    name: 'Tidewretch',
-    summary: 'Drowned humanoid · Marrow shallows',
+    type: 'faction',
+    name: 'The Drow Raiders',
+    summary: 'Organised drow force · the excavation',
     knowledge: 'known',
-    tags: ['aberration', 'marrow-coast'],
-    data: { kind: 'Aberration', habitat: 'Marrow shallows', groupSize: 'Pack of 3–6' },
+    tags: ['drow', 'hostile'],
+    data: { kind: 'Raiding force', reach: 'Dessarin Valley', stance: 'Hostile' },
     bodyMd: [
-      '## What you have seen',
-      'Comes up the tide-line at dusk. Grapples, then drags toward deep water. Rook\'s light did not slow them.',
+      '## What they did',
+      'Struck [[Red Larch]] during its founding festival and took dozens of townsfolk captive instead of looting goods. Before that they had been quietly taking people one or two at a time, using the [[Carved Obsidian Token]].',
       '',
-      '## Confirmed in play',
-      '- Fire hurts them badly — session 11',
-      '- Cannot cross dry sand — session 13',
-      '- Blunt weapons barely mark them — session 13',
+      '## What the party worked out',
+      'This is not a slave-trading operation. The captives are forced labour on an excavation — [[The Gallery]] — and the drow are behind schedule.',
       '',
-      'A kill yields [[Tidewretch Ichor]].',
+      '> They\'re late.',
+      '',
+      'Overheard more than once.',
     ].join('\n'),
   },
   {
-    type: 'monster',
-    name: 'Marrow-hound',
-    summary: 'Scavenger pack · the dunes above Ashgate',
+    type: 'faction',
+    name: 'Red Larch Town Guard',
+    summary: 'Volunteer militia · Red Larch',
     knowledge: 'known',
-    tags: ['beast', 'marrow-coast'],
-    data: { kind: 'Beast', habitat: 'Dunes', groupSize: 'Pack of 4–8' },
-    bodyMd: 'Fast, thin, and unbothered by fire. The pelt is worth taking — see [[Marrow-hound Pelt]].',
+    tags: ['red-larch', 'ally'],
+    data: { kind: 'Militia', reach: '[[Red Larch]]', stance: 'Ally' },
+    bodyMd:
+      'Not a standing garrison — wagonwrights, quarrymen and farmhands, led by [[Captain Harbek Ironwood]]. Held the line during the raid at heavy cost.',
   },
   {
-    type: 'monster',
-    name: 'The Thing Under Ashgate',
+    type: 'faction',
+    name: 'The Shrine of Tymora',
+    summary: 'Local temple · Red Larch',
+    knowledge: 'known',
+    tags: ['red-larch', 'ally'],
+    data: { kind: 'Temple', reach: '[[Red Larch]]', stance: 'Ally' },
+    bodyMd:
+      'The local temple, represented by [[Luckbringer Bress]]. First hired the party over the pattern of disappearances.',
+  },
+  {
+    type: 'faction',
+    name: 'Netheril',
+    summary: 'Ancient fallen empire of wizards',
+    knowledge: 'known',
+    tags: ['ancient'],
+    data: { kind: 'Fallen empire', reach: 'Long gone', stance: 'Historical' },
+    bodyMd: [
+      'An ancient, powerful, long-fallen empire of wizards.',
+      '',
+      'The party got the name off the engravings at the dig face in [[The Gallery]], and confirmed the same worked stone at [[The Ruined Watchtower]].',
+      '',
+      '**That is genuinely all they have** — a name and a one-line description. What Netheril has to do with what the drow are digging for is still a mystery to them.',
+    ].join('\n'),
+  },
+  {
+    type: 'faction',
+    name: 'House Celofraie',
     summary: 'Unknown',
     knowledge: 'unknown',
-    tags: ['ashgate'],
-    bodyMd: 'Reserved. Players should not see this yet.',
+    tags: ['drow'],
+    bodyMd:
+      'The noble drow house behind the silver spider heraldry. The party has the brooches and knows they mark *some* house — not which one.',
+  },
+  {
+    type: 'faction',
+    name: 'The Jaezred Chaulssin',
+    summary: 'Unknown',
+    knowledge: 'unknown',
+    tags: ['drow'],
+    bodyMd:
+      'A secret order the party has no inkling exists at all. The true power behind the drow operation.',
   },
 
-  // — Items —
+  // ── Locations ───────────────────────────────────────────────────────────
   {
-    type: 'item',
-    name: 'Lanternglass Lens',
-    summary: 'Attuned · 1 charge left',
+    type: 'location',
+    name: 'Red Larch',
+    summary: "Trade town · the party's home base",
     knowledge: 'known',
-    quantity: 1,
-    tags: ['attuned', 'magic'],
-    ownerName: 'Salva',
-    data: { attuned: true, charges: '1 of 3' },
-    bodyMd: 'Prised out of a Lantern helm. Shows what the lamp saw last.',
+    tags: ['red-larch'],
+    data: {
+      kind: 'Trade town',
+      within: 'Dessarin Valley',
+      ruledBy: '[[Mayor Jaina Silvermoor]]',
+    },
+    bodyMd: [
+      'Roughly 600 people. Known for its farmers\' market, wagon works, buckle-and-lock factory and cattle market.',
+      '',
+      '## The raid',
+      'Site of the founding festival and the drow raid. Several buildings burned; others were left completely untouched, and nobody has explained why.',
+    ].join('\n'),
   },
   {
-    type: 'item',
-    name: 'Emberdraught',
-    summary: 'Crafted · quality: fine',
+    type: 'location',
+    name: 'The Blackbutter Inn',
+    summary: 'Inn · Red Larch',
     knowledge: 'known',
-    quantity: 3,
-    tags: ['consumable', 'crafted'],
-    data: { effect: 'Thrown · 2d6 fire in a 10 ft burst', quality: 'Fine' },
-    bodyMd: 'Made at the bench in session 13. See the [[Emberdraught]] recipe.',
+    tags: ['red-larch', 'inn'],
+    data: { kind: 'Inn', within: '[[Red Larch]]' },
+    bodyMd: 'Where the party first stayed in [[Red Larch]].',
   },
   {
-    type: 'item',
-    name: 'Saltbone Charm',
-    summary: 'Unidentified · found session 13',
+    type: 'location',
+    name: 'The Red Larch Rambler',
+    summary: 'Public gathering hall · Red Larch',
+    knowledge: 'known',
+    tags: ['red-larch'],
+    data: { kind: 'Gathering hall', within: '[[Red Larch]]' },
+    bodyMd: "Large and well lit. Red Larch's public hall.",
+  },
+  {
+    type: 'location',
+    name: 'The Stockades',
+    summary: 'Guardhouse · Red Larch',
+    knowledge: 'known',
+    tags: ['red-larch'],
+    data: {
+      kind: 'Guardhouse',
+      within: '[[Red Larch]]',
+      ruledBy: '[[Captain Harbek Ironwood]]',
+    },
+    bodyMd:
+      'A few holding cells, a questioning room, and the captain\'s private office. Where the party has been briefed, contracted and debriefed.',
+  },
+  {
+    type: 'location',
+    name: 'The Quarry',
+    summary: 'Abandoned quarry camp · east of Red Larch',
+    knowledge: 'known',
+    tags: ['red-larch'],
+    data: { kind: 'Abandoned camp', within: 'East of [[Red Larch]]' },
+    bodyMd:
+      'The goblin and bugbear camp where the party recovered the first [[Carved Obsidian Token]]. [[Skeld Wagonwright]] led them here.',
+  },
+  {
+    type: 'location',
+    name: 'The Ruined Watchtower',
+    summary: 'Three-storey ruin · forest clearing',
+    knowledge: 'known',
+    tags: ['drow', 'netherese'],
+    data: { kind: 'Ruin', within: 'Outside [[Red Larch]]' },
+    bodyMd: [
+      'A crumbling three-storey tower in a forest clearing. The party fought drow here and looted the [[Silver Spider Brooch]].',
+      '',
+      'On a second look, it carries the same worked-stone engravings as the dig face far below [[Kryptgarden Forest]] — [[Netheril]] make.',
+    ].join('\n'),
+  },
+  {
+    type: 'location',
+    name: 'Kryptgarden Forest',
+    summary: 'Forest northwest of Red Larch',
+    knowledge: 'known',
+    tags: ['drow'],
+    data: { kind: 'Forest', within: 'Dessarin Valley' },
+    bodyMd:
+      'The party rode in here pursuing the drow column. The cave entrance to the tunnels lies beneath it.',
+  },
+  {
+    type: 'location',
+    name: 'The Gallery',
+    summary: 'The dig site · deep under Kryptgarden Forest',
+    knowledge: 'known',
+    tags: ['drow', 'netherese'],
+    data: { kind: 'Excavation', within: 'Beneath [[Kryptgarden Forest]]' },
+    bodyMd: [
+      'An overlook above a large excavation. Dozens of townsfolk hauling cut stone away from a wall of worked, fitted stone — confirmed [[Netheril]].',
+      '',
+      '## What happened here',
+      'The party arrived too late to stop the main column of captives being sealed behind a collapsing passage, and fought to save eight stragglers. Most survived.',
+      '',
+      '**What is actually being dug for is still unknown.**',
+    ].join('\n'),
+  },
+  {
+    type: 'location',
+    name: 'Neverwinter',
+    summary: 'Coastal city',
+    knowledge: 'known',
+    tags: [],
+    data: { kind: 'City', within: 'The Sword Coast' },
+    bodyMd:
+      '[[Pendrel Dornwood]] calls it home, and his network of antiquities contacts is there.',
+  },
+  {
+    type: 'location',
+    name: 'Goldenfields',
+    summary: 'Farming settlement',
+    knowledge: 'known',
+    tags: [],
+    data: { kind: 'Settlement', within: 'Dessarin Valley' },
+    bodyMd:
+      'Where [[Mayor Jaina Silvermoor]] was conducting grain and supply business during the raid.',
+  },
+  {
+    type: 'location',
+    name: 'Triboar',
+    summary: 'Town north of Red Larch · the party is here',
+    knowledge: 'known',
+    tags: ['triboar'],
+    data: { kind: 'Town', within: 'Dessarin Valley' },
+    bodyMd:
+      'The party has arrived. Home to [[Krag Bronzebeard]], who is translating the dispatches.',
+  },
+  {
+    type: 'location',
+    name: 'The Laughing Hollow',
+    summary: 'Tavern · Triboar',
+    knowledge: 'known',
+    tags: ['triboar', 'inn'],
+    data: { kind: 'Tavern', within: '[[Triboar]]' },
+    bodyMd: 'Where [[Pendrel Dornwood]] introduced the party to [[Krag Bronzebeard]].',
+  },
+  {
+    type: 'location',
+    name: 'The Everwyvern House',
+    summary: 'Inn · Triboar · 12 gp a night',
+    knowledge: 'known',
+    tags: ['triboar', 'inn'],
+    data: { kind: 'Inn', within: '[[Triboar]]', ruledBy: '[[Abigail]]' },
+    bodyMd:
+      'The fancier Triboar inn, catering mostly to Waterdhavian nobles. The party is staying here — 12 gp a night, talked down from 20.',
+  },
+  {
+    type: 'location',
+    name: 'Jhachalkhyn',
+    summary: 'Unknown',
+    knowledge: 'unknown',
+    tags: ['drow'],
+    bodyMd:
+      'Drow city beneath the southern Neverwinter Wood. Home of [[House Celofraie]]. The party has never heard of it.',
+  },
+  {
+    type: 'location',
+    name: 'Chaulssin',
+    summary: 'Unknown',
+    knowledge: 'unknown',
+    tags: ['drow'],
+    bodyMd:
+      'Ruined drow city beneath the northern Rauvin Mountains. Base of [[The Jaezred Chaulssin]]. Completely unknown to the party.',
+  },
+
+  // ── Bestiary ────────────────────────────────────────────────────────────
+  // Each body keeps the campaign notes' split: what any adventurer would know,
+  // then what this party actually saw.
+  {
+    type: 'monster',
+    name: 'Goblins',
+    summary: 'Small humanoids · ambushers',
+    knowledge: 'known',
+    tags: ['goblinoid'],
+    data: { kind: 'Humanoid', habitat: 'Caves and camps', groupSize: 'Packs' },
+    bodyMd: [
+      '## What is commonly known',
+      'Small, cowardly in groups without backup, notorious for ambushes and traps. Frequently found serving stronger creatures as muscle or cannon fodder.',
+      '',
+      '## What the party saw',
+      'Guarded [[The Quarry]] alongside a bugbear and a goblin boss carrying the first [[Carved Obsidian Token]].',
+    ].join('\n'),
+  },
+  {
+    type: 'monster',
+    name: 'Bugbear',
+    summary: 'Large goblinoid · surprise attacker',
+    knowledge: 'known',
+    tags: ['goblinoid'],
+    data: { kind: 'Humanoid', habitat: 'Caves and camps', groupSize: 'Leads goblin bands' },
+    bodyMd: [
+      '## What is commonly known',
+      'Large, surprisingly stealthy goblinoids that favour surprise attacks with heavy weapons. Usually found leading or bullying smaller goblin bands.',
+      '',
+      '## What the party saw',
+      "Fought in the boss room at [[The Quarry]].",
+    ].join('\n'),
+  },
+  {
+    type: 'monster',
+    name: 'Giant Spiders',
+    summary: 'Web predators · found harnessed',
+    knowledge: 'known',
+    tags: ['beast', 'drow'],
+    data: { kind: 'Beast', habitat: 'Forests and caves', groupSize: 'Nests' },
+    bodyMd: [
+      '## What is commonly known',
+      'Web-slinging forest and cave predators with a painful, poisonous bite. They move through their own webbing easily and climb almost any surface.',
+      '',
+      '## What the party saw',
+      'Ambushed the party near [[The Ruined Watchtower]] — and were **wearing strange harnesses**.',
+    ].join('\n'),
+  },
+  {
+    type: 'monster',
+    name: 'Phase Spider',
+    summary: 'Underdark native · shifts out of reach',
+    knowledge: 'known',
+    tags: ['drow', 'underdark'],
+    data: { kind: 'Monstrosity', habitat: 'Underdark', groupSize: 'Solitary or few' },
+    bodyMd: [
+      '## What is commonly known',
+      'Underdark natives that briefly shift into the Ethereal Plane, appearing and vanishing without warning. Poisonous bite that can put a victim to sleep.',
+      '',
+      '## What the party saw',
+      'Fought during the drow raid on the festival at [[Red Larch]].',
+    ].join('\n'),
+  },
+  {
+    type: 'monster',
+    name: 'Drow',
+    summary: 'Dark elves of the Underdark',
+    knowledge: 'known',
+    tags: ['drow', 'underdark'],
+    data: { kind: 'Humanoid', habitat: 'Underdark', groupSize: 'Squads' },
+    bodyMd: [
+      '## What is commonly known',
+      'Dark elves with keen darkvision and minor innate magic, vulnerable to bright sunlight. Most surface folk associate them with the spider-goddess Lolth and treat any sighting as an ill omen.',
+      '',
+      '## What the party saw',
+      "The raiders' rank and file. Tougher and faster in a fight than expected, every time.",
+    ].join('\n'),
+  },
+  {
+    type: 'monster',
+    name: 'Drow Elite Warrior',
+    summary: 'Veteran drow soldier',
+    knowledge: 'known',
+    tags: ['drow', 'underdark'],
+    data: { kind: 'Humanoid', habitat: 'Underdark', groupSize: 'Leads squads' },
+    bodyMd: [
+      '## What is commonly known',
+      'Veteran, disciplined drow soldiers. Considerably more dangerous in melee than common drow.',
+      '',
+      '## What the party saw',
+      'Led the ambush at [[The Ruined Watchtower]].',
+    ].join('\n'),
+  },
+  {
+    type: 'monster',
+    name: 'Drow Apprentice Wizard',
+    summary: 'Drow arcanist',
+    knowledge: 'known',
+    tags: ['drow', 'underdark'],
+    data: { kind: 'Humanoid', habitat: 'Underdark', groupSize: 'With squads' },
+    bodyMd: [
+      '## What is commonly known',
+      'Drow who study arcane magic on top of their innate abilities.',
+      '',
+      '## What the party saw',
+      'Fought at the [[The Ruined Watchtower]] ambush.',
+    ].join('\n'),
+  },
+  {
+    type: 'monster',
+    name: 'Umber Hulk',
+    summary: 'Burrowing monstrosity · confounding gaze',
+    knowledge: 'known',
+    tags: ['underdark'],
+    data: { kind: 'Monstrosity', habitat: 'Underdark', groupSize: 'Solitary' },
+    bodyMd: [
+      '## What is commonly known',
+      'Burrowing subterranean monstrosities strong enough to tunnel through solid rock. Infamous for a confounding gaze.',
+      '',
+      '## What the party saw',
+      'Burst up out of the cavern floor in the fungi cavern. Several of the party briefly felt **a calm, certain thought in their heads that was not their own** after meeting its eyes.',
+    ].join('\n'),
+  },
+  {
+    type: 'monster',
+    name: 'Quaggoths',
+    summary: 'Feral Underdark humanoids · slave-drivers',
+    knowledge: 'known',
+    tags: ['drow', 'underdark'],
+    data: { kind: 'Humanoid', habitat: 'Underdark', groupSize: 'Packs' },
+    bodyMd: [
+      '## What is commonly known',
+      'Feral, white-furred Underdark humanoids. Immensely strong and savage in melee. Sometimes kept as muscle by drow and other Underdark powers.',
+      '',
+      '## What the party saw',
+      'Serving as slave-drivers at [[The Gallery]].',
+    ].join('\n'),
+  },
+  {
+    type: 'monster',
+    name: 'Bandits',
+    summary: 'Highway thieves · the road to Triboar',
+    knowledge: 'known',
+    tags: ['humanoid'],
+    data: { kind: 'Humanoid', habitat: 'Trade roads', groupSize: 'Gangs with a captain' },
+    bodyMd: [
+      '## What is commonly known',
+      'Common highway thieves found on most major trade roads. Usually after coin rather than blood, and quick to scatter once a fight turns against them.',
+      '',
+      '## What the party saw',
+      'Stopped the party and [[Pendrel Dornwood]] on the road to [[Triboar]], demanding a toll.',
+    ].join('\n'),
+  },
+  {
+    type: 'monster',
+    name: 'Large Winged Creature',
+    summary: 'Unidentified · attacking caravans north of Triboar',
     knowledge: 'rumoured',
-    quantity: 1,
-    tags: ['unidentified', 'lead'],
-    bodyMd: 'Taken from the Thrushbane counting house. [[Grym the Ledger]] wants it badly.',
+    tags: ['triboar', 'unconfirmed'],
+    data: { kind: 'Unknown', habitat: 'North of [[Triboar]]', groupSize: 'Unknown' },
+    bodyMd: [
+      '## What the party has heard',
+      'Caravan survivors describe a huge creature with bat-like wings. One account says it lifted an entire caravan off the ground.',
+      '',
+      '[[Krag Bronzebeard]] suspects a dragon, possibly black or green. **Nothing is confirmed** — nobody in the party has seen it.',
+      '',
+      '## If it is a dragon',
+      'Black dragons favour swamps and acid breath. Green dragons favour forests and poison breath. Either would be capable of exactly this kind of raiding.',
+      '',
+      'Worth 1,000 gold to deal with.',
+    ].join('\n'),
   },
+
+  // ── Items the party holds ───────────────────────────────────────────────
   {
     type: 'item',
-    name: 'Marrow-hound Pelt',
-    summary: 'Reagent · used by 2 recipes',
+    name: 'Silver Spider Brooch',
+    summary: 'Drow heraldry · unidentified house',
     knowledge: 'known',
     quantity: 4,
-    tags: ['reagent'],
-    data: { source: 'Marrow-hound' },
+    holdingNote: 'Looted from drow bodies',
+    tags: ['drow', 'lead'],
+    data: { category: 'Heraldry', source: 'Drow bodies' },
+    // Deliberately does not name the house: this entry is player-visible, and a
+    // sealed entry's *name* leaks just as badly as its page would.
+    bodyMd:
+      'Worn by every drow the party has fought. Marks a noble drow house — **which one is still unknown**.',
   },
   {
     type: 'item',
-    name: 'Tidewretch Ichor',
-    summary: 'Reagent · spoils session 16',
+    name: 'Carved Obsidian Token',
+    summary: 'Enchanted · compels ordinary people',
     knowledge: 'known',
     quantity: 2,
-    tags: ['reagent', 'perishable'],
-    data: { source: 'Tidewretch' },
-  },
-  {
-    type: 'item',
-    name: 'Ashgate Firesalt',
-    summary: 'Reagent · bought by the crate',
-    knowledge: 'known',
-    quantity: 6,
-    tags: ['reagent'],
-  },
-  {
-    type: 'item',
-    name: 'Greenwhistle Bow',
-    summary: 'Attuned since session 10',
-    knowledge: 'known',
-    quantity: 1,
-    tags: ['attuned', 'weapon'],
-    ownerName: 'Talion',
-    data: { attuned: true },
-  },
-  {
-    type: 'item',
-    name: 'Glasswing Arrow',
-    summary: 'Crafted · keen',
-    knowledge: 'known',
-    quantity: 6,
-    tags: ['crafted', 'ammunition'],
-    ownerName: 'Talion',
-  },
-  {
-    type: 'item',
-    name: 'Ring of the Quiet Step',
-    summary: 'Attuned since session 12',
-    knowledge: 'known',
-    quantity: 1,
-    tags: ['attuned', 'magic'],
-    ownerName: 'Talion',
-  },
-  {
-    // Catalogued but not held — shows the repository holding entries the party
-    // knows of but does not own, and keeps the Glasswing Arrow recipe short.
-    type: 'item',
-    name: 'Glass Shard',
-    summary: 'Reagent · scavenged from Lantern glass',
-    knowledge: 'known',
-    tags: ['reagent'],
-  },
-
-  // — Recipes —
-  {
-    type: 'recipe',
-    name: 'Emberdraught',
-    summary: 'Consumable · alchemy · learned session 10',
-    knowledge: 'known',
-    tags: ['alchemy'],
-    data: {
-      ingredients: [
-        { name: 'Marrow-hound Pelt', qty: 1 },
-        { name: 'Tidewretch Ichor', qty: 2 },
-        { name: 'Ashgate Firesalt', qty: 3 },
-      ],
-      output: 'Emberdraught',
-      skill: 'Alchemy (Intelligence)',
-      dc: 'DC 14',
-      checks: '2 successes',
-      time: '6 h per check',
-    },
+    holdingNote: 'Function still unknown',
+    tags: ['drow', 'magic', 'lead'],
+    data: { category: 'Wondrous item', source: 'Drow' },
     bodyMd: [
-      '| Roll | Result |',
-      '| --- | --- |',
-      '| Fail by 5+ | Ruined — reagents lost |',
-      '| 14–18 | Crude — 1 use, 6 h |',
-      '| 19–23 | Fine — 2 uses, 5 h |',
-      '| 24+ | Masterwork — 3 uses, 3 h |',
+      'Used to psychically compel ordinary people — the thief, [[Skeld Wagonwright]], the vanished couriers.',
       '',
-      'Produces [[Emberdraught]] — thrown, 2d6 fire in a 10 ft burst.',
+      '[[Pendrel Dornwood]] confirmed they are drow-made and magical. **Exactly how they work is still unknown.**',
     ].join('\n'),
   },
   {
-    type: 'recipe',
-    name: 'Glasswing Arrow',
-    summary: 'Ammunition · smithing · learned session 8',
+    type: 'item',
+    name: 'Sealed Drow Dispatch',
+    summary: 'Written orders in Drow · sealed in black wax',
     knowledge: 'known',
-    tags: ['smithing'],
-    data: {
-      ingredients: [
-        { name: 'Ashgate Firesalt', qty: 1 },
-        { name: 'Glass shard', qty: 3 },
-      ],
-      output: 'Glasswing Arrow',
-      skill: 'Smithing (Dexterity)',
-      dc: 'DC 12',
-      checks: '1 success',
-      time: '2 h',
-    },
+    quantity: 2,
+    holdingNote: 'With Krag Bronzebeard for translation',
+    tags: ['drow', 'lead'],
+    data: { category: 'Document', source: 'Drow courier' },
+    bodyMd:
+      'Sealed in black wax with a spider sigil. Nobody in the party reads Drow. [[Krag Bronzebeard]] is working on them now.',
   },
   {
-    type: 'recipe',
-    name: 'Tidewretch Salve',
-    summary: 'Half-heard from a Drowned Quarter hedge-witch',
-    knowledge: 'rumoured',
-    tags: ['alchemy'],
-    data: {
-      ingredients: [{ name: 'Tidewretch Ichor', qty: 3 }],
-      output: 'Unknown',
-      skill: 'Alchemy (Intelligence)',
-      dc: 'Unknown',
-    },
-    bodyMd: 'The party knows this exists. They do not know the method.',
+    type: 'item',
+    name: 'The Drow Tunnel Map',
+    summary: "Recovered from a courier's satchel",
+    knowledge: 'known',
+    quantity: 1,
+    tags: ['drow', 'lead'],
+    data: { category: 'Document', source: 'Drow courier' },
+    bodyMd:
+      'Marked with three points along the route: the waystation, the ledge chokepoint, and [[The Gallery]].',
   },
   {
-    type: 'recipe',
-    name: 'Saltbone Ward',
-    summary: 'Unknown',
-    knowledge: 'unknown',
-    tags: ['alchemy'],
+    type: 'item',
+    name: 'Ring of Magic Missiles',
+    summary: 'Ring, uncommon (requires attunement)',
+    knowledge: 'known',
+    quantity: 1,
+    ownerName: 'Salva',
+    holdingNote: 'Attuned',
+    tags: ['magic', 'attuned', 'reward'],
     data: {
-      ingredients: [{ name: 'Saltbone Charm', qty: 1 }],
-      output: 'Saltbone Ward',
-      skill: 'Arcana (Intelligence)',
-      dc: 'DC 18',
-      checks: '3 successes',
-      time: '1 day per check',
+      category: 'Ring',
+      rarity: 'Uncommon',
+      attunement: 'Requires attunement',
+      charges: '3',
+      effect: 'Cast magic missile — three darts, 1d4+1 force each',
     },
-    bodyMd: 'Unlock this once they work out what the charm is.',
+    bodyMd: [
+      'Expend 1 charge as an action to cast *magic missile*: three darts, 1d4+1 force damage each, automatically hitting.',
+      '',
+      'Regains 1d3 charges at dawn.',
+      '',
+      '**Minor property:** advantage on saving throws against being blinded.',
+      '',
+      'Given by [[Captain Harbek Ironwood]] as part of the reward for the captives.',
+    ].join('\n'),
   },
+  {
+    type: 'item',
+    name: 'Moonstone',
+    summary: 'Gemstone',
+    knowledge: 'known',
+    quantity: 3,
+    tags: ['treasure'],
+    data: { category: 'Gemstone', cost: '50 gp' },
+  },
+  {
+    type: 'item',
+    name: 'Tiger Eye Gemstone',
+    summary: 'Gemstone',
+    knowledge: 'known',
+    quantity: 1,
+    tags: ['treasure'],
+    data: { category: 'Gemstone', cost: '10 gp' },
+  },
+  {
+    type: 'item',
+    name: 'Silvered Crossbow Bolts',
+    summary: 'Ammunition · silvered',
+    knowledge: 'known',
+    quantity: 10,
+    holdingNote: 'Taken off drow bodies',
+    tags: ['ammunition'],
+    data: { category: 'Ammunition' },
+  },
+  {
+    type: 'item',
+    name: 'Vial of Drow Poison',
+    summary: 'Poison · 2 doses',
+    knowledge: 'known',
+    quantity: 1,
+    holdingNote: '2 doses',
+    tags: ['consumable', 'drow'],
+    data: { category: 'Poison', source: 'Drow bodies' },
+    bodyMd: 'Taken off drow bodies. Two doses left.',
+  },
+
+  // ── Recipes ─────────────────────────────────────────────────────────────
+  // None yet — the Craft tab shows its empty state until real ones exist.
+  //
+  // Kept below purely as a shape reference for writing your own. The one
+  // non-obvious part: `ingredients[].name` is matched against *item names*, so
+  // "Ashgate Firesalt" only counts as in-stock if an item is literally called
+  // that and somebody holds it. Everything else is free text.
+  //
+  // {
+  //   type: 'recipe',
+  //   name: 'Emberdraught',
+  //   summary: 'Consumable · alchemy · learned session 10',
+  //   knowledge: 'known',
+  //   tags: ['alchemy'],
+  //   data: {
+  //     ingredients: [
+  //       { name: 'Marrow-hound Pelt', qty: 1 },
+  //       { name: 'Tidewretch Ichor', qty: 2 },
+  //       { name: 'Ashgate Firesalt', qty: 3 },
+  //     ],
+  //     output: 'Emberdraught',
+  //     skill: 'Alchemy (Intelligence)',
+  //     dc: 'DC 14',
+  //     checks: '2 successes',
+  //     time: '6 h per check',
+  //   },
+  //   bodyMd: [
+  //     '| Roll | Result |',
+  //     '| --- | --- |',
+  //     '| Fail by 5+ | Ruined — reagents lost |',
+  //     '| 14–18 | Crude — 1 use, 6 h |',
+  //     '| 19–23 | Fine — 2 uses, 5 h |',
+  //     '| 24+ | Masterwork — 3 uses, 3 h |',
+  //   ].join('\n'),
+  // },
 ]
 
 function toCreate(seed: Seed): Prisma.EntityCreateManyInput {
@@ -451,7 +860,7 @@ function toCreate(seed: Seed): Prisma.EntityCreateManyInput {
 }
 
 async function main() {
-  // Holdings cascade from entities, so this clears both.
+  // Holdings and notes cascade from entities, so this clears everything.
   await prisma.entity.deleteMany()
 
   await prisma.entity.createMany({ data: PLAYERS.map(toCreate) })
@@ -469,6 +878,7 @@ async function main() {
     itemId: itemByName.get(s.name)!,
     ownerId: s.ownerName ? (playerByName.get(s.ownerName) ?? null) : null,
     quantity: s.quantity!,
+    note: s.holdingNote ?? null,
   }))
   await prisma.holding.createMany({ data: holdings })
 
@@ -478,60 +888,28 @@ async function main() {
   const held = await prisma.holding.count()
   const notes = await prisma.note.count()
   console.log(`seeded ${entities} entities, ${held} holdings and ${notes} notes`)
+  console.log('run `npm run db:seed:srd` to put the SRD item library back')
 }
 
-/** A note of each kind, so none of the three surfaces starts empty. */
+/** One board note: where the party actually is, and what is open. */
 async function seedNotes(playerByName: Map<string, string>) {
-  const byName = new Map(
-    (await prisma.entity.findMany({ select: { id: true, name: true } })).map((e) => [e.name, e.id]),
-  )
+  const author = playerByName.get('Talion') ?? [...playerByName.values()][0]
+  if (!author) return
 
-  const talion = playerByName.get('Talion')
-  const salva = playerByName.get('Salva')
-  if (!talion || !salva) return
-
-  await prisma.note.createMany({
-    data: [
-      {
-        authorId: salva,
-        subjectId: byName.get('Mira Thrushbane') ?? null,
-        placement: 'entry',
-        visibility: 'shared',
-        bodyMd: 'She flinched when Odric said "Saltbone". Worth a push.',
-      },
-      {
-        authorId: talion,
-        subjectId: byName.get('Tidewretch') ?? null,
-        placement: 'entry',
-        visibility: 'shared',
-        bodyMd: 'Fire works. Do not let them get a grip near deep water.',
-      },
-      {
-        authorId: talion,
-        placement: 'vault',
-        visibility: 'private',
-        title: 'On Grym',
-        bodyMd: 'Pays in Lantern coin. Ask where he gets it. Do not mention this to [[Ted Bundy]].',
-      },
-      {
-        authorId: talion,
-        placement: 'vault',
-        visibility: 'shared',
-        title: 'The charm',
-        bodyMd: 'Do not let Ted wear the [[Saltbone Charm]] until we know what it does.',
-      },
-      {
-        authorId: salva,
-        placement: 'party',
-        visibility: 'shared',
-        title: 'Before session 15',
-        bodyMd: [
-          '- Sell the ledger copy to [[Grym the Ledger]], or not?',
-          '- Someone needs to talk to [[Mira Thrushbane]] about her brother.',
-          '- We are low on Tidewretch ichor and it spoils session 16.',
-        ].join('\n'),
-      },
-    ],
+  await prisma.note.create({
+    data: {
+      authorId: author,
+      placement: 'party',
+      visibility: 'shared',
+      title: 'Where we are — Triboar, session 4',
+      bodyMd: [
+        '- [[Krag Bronzebeard]] is translating the [[Sealed Drow Dispatch]]. Needs time with his notes.',
+        '- He is offering **1,000 gold** for the [[Large Winged Creature]] hitting caravans north of [[Triboar]]. Possibly a dragon.',
+        '- Still no idea what the drow are digging for at [[The Gallery]], or what the [[Carved Obsidian Token]] actually does.',
+        '- The main column of captives is still down there, sealed behind the collapse.',
+        '- [[Pendrel Dornwood]] is owed a favour and has not called it in yet.',
+      ].join('\n'),
+    },
   })
 }
 

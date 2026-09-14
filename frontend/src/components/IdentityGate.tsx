@@ -23,7 +23,7 @@ export default function IdentityGate({ children }: { children: ReactNode }) {
     <div className="app-ground flex min-h-full flex-col items-center justify-center px-4.5 py-10">
       <div className="flex w-full max-w-105 flex-col gap-4">
         <div className="flex flex-col gap-2 text-center">
-          <span className="type-lab">The Marrow Coast</span>
+          <span className="type-lab">Dessarin Valley</span>
           <h1 className="type-title m-0">Who are you?</h1>
           <p className="type-body m-0">
             Pick your character. This is remembered on this device, and you can change it any time

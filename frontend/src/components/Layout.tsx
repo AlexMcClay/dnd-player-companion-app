@@ -31,7 +31,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     <div className="app-ground flex min-h-full flex-col">
       <header className="sticky top-0 z-20 border-b border-line bg-topbar">
         <div className="mx-auto flex max-w-195 items-center justify-between gap-2 px-4.5 py-2.5">
-          <span className="type-lab shrink-0">The Marrow Coast</span>
+          <span className="type-lab shrink-0">Dessarin Valley</span>
 
           <div className="flex min-w-0 items-center gap-2">
             <CharacterButton

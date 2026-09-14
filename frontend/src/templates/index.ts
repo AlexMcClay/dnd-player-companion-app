@@ -65,10 +65,10 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
     portraitWord: 'Portrait',
     heroAspect: '4 / 3',
     fields: [
-      { key: 'role', label: 'Role', kind: 'text', placeholder: 'Harbourmaster' },
-      { key: 'location', label: 'Location', kind: 'text', placeholder: 'Ashgate' },
-      { key: 'stance', label: 'Stance', kind: 'text', placeholder: 'Uneasy ally' },
-      { key: 'firstMet', label: 'First met', kind: 'text', placeholder: 'Session 9' },
+      { key: 'role', label: 'Role', kind: 'text', placeholder: 'Captain of the guard' },
+      { key: 'location', label: 'Location', kind: 'text', placeholder: '[[Red Larch]]' },
+      { key: 'stance', label: 'Stance', kind: 'text', placeholder: 'Ally' },
+      { key: 'firstMet', label: 'First met', kind: 'text', placeholder: 'Session 4' },
     ],
   },
   faction: {
@@ -79,8 +79,8 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
     portraitWord: 'Crest',
     heroAspect: '1 / 1',
     fields: [
-      { key: 'kind', label: 'Kind', kind: 'text', placeholder: 'Militant order' },
-      { key: 'reach', label: 'Reach', kind: 'text', placeholder: 'Coastwide' },
+      { key: 'kind', label: 'Kind', kind: 'text', placeholder: 'Militia' },
+      { key: 'reach', label: 'Reach', kind: 'text', placeholder: 'Dessarin Valley' },
       { key: 'stance', label: 'Stance', kind: 'text', placeholder: 'Hostile' },
     ],
   },
@@ -94,11 +94,11 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
     fields: [
       // Deliberately one free-text field rather than a fixed hierarchy: a
       // country, a city and a single inn all live here.
-      { key: 'kind', label: 'Kind', kind: 'text', placeholder: 'City · Inn · Region' },
+      { key: 'kind', label: 'Kind', kind: 'text', placeholder: 'Town · Inn · Forest' },
       // The placeholders double as a lesson: these fields resolve [[links]],
       // which is not obvious anywhere else in the DM form.
-      { key: 'within', label: 'Part of', kind: 'text', placeholder: '[[The Marrow Coast]]' },
-      { key: 'ruledBy', label: 'Run by', kind: 'text', placeholder: '[[Mira Thrushbane]]' },
+      { key: 'within', label: 'Part of', kind: 'text', placeholder: '[[Red Larch]]' },
+      { key: 'ruledBy', label: 'Run by', kind: 'text', placeholder: '[[Captain Harbek Ironwood]]' },
     ],
   },
   monster: {
@@ -110,8 +110,8 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
     heroAspect: '3 / 2',
     fields: [
       { key: 'kind', label: 'Kind', kind: 'text', placeholder: 'Aberration' },
-      { key: 'habitat', label: 'Habitat', kind: 'text', placeholder: 'Marrow shallows' },
-      { key: 'groupSize', label: 'Group size', kind: 'text', placeholder: 'Pack of 3–6' },
+      { key: 'habitat', label: 'Habitat', kind: 'text', placeholder: 'Underdark' },
+      { key: 'groupSize', label: 'Group size', kind: 'text', placeholder: 'Squads' },
     ],
   },
   item: {
@@ -136,7 +136,7 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
       { key: 'effect', label: 'Effect', kind: 'text', placeholder: '2d6 fire in a 10 ft burst' },
       { key: 'attuned', label: 'Attuned', kind: 'boolean' },
       { key: 'charges', label: 'Charges', kind: 'text', placeholder: '1 of 3' },
-      { key: 'source', label: 'Source', kind: 'text', placeholder: 'Tidewretch' },
+      { key: 'source', label: 'Source', kind: 'text', placeholder: 'Drow bodies' },
     ],
   },
   recipe: {
