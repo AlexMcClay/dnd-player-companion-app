@@ -1,12 +1,15 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { Entity } from '@codex/shared'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { LuBackpack, LuNotebookPen, LuUsers } from 'react-icons/lu'
+import { LuBackpack, LuNotebookPen, LuPencil, LuScrollText, LuUsers } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import AddItemSheet from '../components/AddItemSheet'
 import { CharacterPicker, CharacterSwitcherPortal } from '../components/CharacterPicker'
 import HoldingRow from '../components/HoldingRow'
+import Markdown from '../components/Markdown'
+import NoteComposer from '../components/NoteComposer'
 import NoteList from '../components/NoteList'
 import WikiText from '../components/WikiText'
 import { Empty, Loading, PageHead, Portrait, Section, StaggerList } from '../components/bits'
@@ -62,6 +65,17 @@ function MyCharacter({ playerId }: { playerId: string }) {
         <Section className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between gap-2.5">
             <span className="type-lab flex items-center gap-1.75">
+              <LuScrollText aria-hidden />
+              About {character.name.split(' ')[0] ?? character.name}
+            </span>
+            <span className="type-meta">Yours to write</span>
+          </div>
+          <CharacterBody character={character} />
+        </Section>
+
+        <Section className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-2.5">
+            <span className="type-lab flex items-center gap-1.75">
               <LuBackpack aria-hidden />
               Carrying
             </span>
@@ -107,6 +121,67 @@ function MyCharacter({ playerId }: { playerId: string }) {
 
         <SwitchCharacter />
       </div>
+    </>
+  )
+}
+
+/**
+ * The character's own description, and the one thing on their sheet they are
+ * allowed to change — the API lets a player write `bodyMd` on their own
+ * character and nothing else.
+ */
+function CharacterBody({ character }: { character: Entity }) {
+  const queryClient = useQueryClient()
+  const [editing, setEditing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const save = useMutation({
+    mutationFn: (bodyMd: string) => api.updateEntity(character.id, { bodyMd: bodyMd || null }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['entity', character.id] })
+      // The wiki-link index and any list showing this character go stale too.
+      await queryClient.invalidateQueries({ queryKey: ['entities'] })
+      setEditing(false)
+      setError(null)
+    },
+    onError: (err: Error) => setError(err.message),
+  })
+
+  if (editing) {
+    return (
+      <NoteComposer
+        initial={{ bodyMd: character.bodyMd ?? '' }}
+        withVisibility={false}
+        submitLabel="Save"
+        placeholder={'Who are they? Markdown works, and [[The Gutted Lamp]] links an entry.'}
+        busy={save.isPending}
+        error={error}
+        onSubmit={(draft) => save.mutate(draft.bodyMd)}
+        onCancel={() => {
+          setEditing(false)
+          setError(null)
+        }}
+      />
+    )
+  }
+
+  return (
+    <>
+      {character.bodyMd ? (
+        <Markdown source={character.bodyMd} />
+      ) : (
+        <Empty>Nothing written yet</Empty>
+      )}
+      <motion.button
+        type="button"
+        className={ctaClass('ghost')}
+        whileTap={{ scale: 0.98 }}
+        transition={SPRING}
+        onClick={() => setEditing(true)}
+      >
+        <LuPencil aria-hidden />
+        {character.bodyMd ? 'Edit' : 'Write something'}
+      </motion.button>
     </>
   )
 }

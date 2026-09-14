@@ -4,7 +4,7 @@ import { KNOWLEDGE_STATES, type EntityInput, type Knowledge } from '@codex/share
 import { knowledgeFilter, knowledgeSql } from '../lib/knowledge.js'
 import { prisma } from '../lib/prisma.js'
 import { serializeEntity, serializeEntitySummary } from '../lib/serialize.js'
-import { requireDm } from '../middleware/identity.js'
+import { requireActor, requireDm } from '../middleware/identity.js'
 
 export const entitiesRouter = Router()
 
@@ -187,14 +187,45 @@ entitiesRouter.post('/', requireDm, async (req, res, next) => {
   }
 })
 
-// PUT /api/entities/:id
-entitiesRouter.put('/:id', requireDm, async (req, res, next) => {
+/**
+ * The only fields a player may change on their own character. Everything else —
+ * their name, their level, whether they are a secret — stays the DM's.
+ *
+ * Checked fail-closed: a field added to EntityInput later is rejected for
+ * players until it is deliberately listed here.
+ */
+const PLAYER_EDITABLE: ReadonlySet<string> = new Set(['bodyMd'])
+
+// PUT /api/entities/:id — the DM, or a player editing their own character.
+entitiesRouter.put('/:id', requireActor, async (req, res, next) => {
   try {
     const parsed = parseInput(req.body, true)
     if (typeof parsed === 'string') {
       res.status(400).json(badRequest(parsed))
       return
     }
+
+    if (!req.isDm) {
+      const target = await prisma.entity.findUnique({
+        where: { id: req.params.id },
+        select: { id: true, type: true },
+      })
+
+      const isOwnCharacter =
+        target !== null && target.type === 'player' && target.id === req.playerId
+
+      if (!isOwnCharacter) {
+        res.status(401).json(badRequest('You can only edit your own character'))
+        return
+      }
+
+      const disallowed = Object.keys(parsed).filter((key) => !PLAYER_EDITABLE.has(key))
+      if (disallowed.length > 0) {
+        res.status(401).json(badRequest(`Only the DM can change: ${disallowed.join(', ')}`))
+        return
+      }
+    }
+
     const { data, ...rest } = parsed
     const row = await prisma.entity.update({
       where: { id: req.params.id },

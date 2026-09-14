@@ -85,6 +85,12 @@ your own pack and, later, your own notes.
 The character shows in the header on every screen; tap it to switch. Handy when
 one phone gets passed around the table. The **Me** tab has the same control.
 
+Players write their own character's description from the **Me** tab — markdown
+and `[[links]]`, same as anywhere else. That is the *only* field on a character a
+player may change; name, level and everything else stay the DM's. The rule is
+`PLAYER_EDITABLE` in `backend/src/routes/entities.ts`, checked fail-closed, so a
+field added later is refused for players until it is deliberately listed.
+
 ### DM mode
 
 Tap **Locked** in the top right and enter `DM_KEY`. That reveals sealed entries and
@@ -218,7 +224,7 @@ API returns a ready-to-use `imageUrl`.
 | `GET /api/entities?type=&q=&tag=` | List. Knowledge-filtered unless DM. |
 | `GET /api/entities/:id` | 404s for players on sealed entries — a 403 would confirm something is there. |
 | `POST /api/entities` | DM only |
-| `PUT /api/entities/:id` | DM only, partial |
+| `PUT /api/entities/:id` | DM, or a player editing `bodyMd` on their own character |
 | `DELETE /api/entities/:id` | DM only |
 | `GET /api/holdings?owner=&item=` | `owner=none` is the party stash. Hidden if the item is sealed. |
 | `POST /api/holdings` | Any player or the DM |

@@ -20,6 +20,7 @@ export default function NoteComposer({
   withTitle = false,
   withVisibility = true,
   submitLabel = 'Post',
+  placeholder = 'Write a note. Link an entry with [[Their Name]].',
   busy = false,
   error,
   onSubmit,
@@ -31,6 +32,7 @@ export default function NoteComposer({
   /** The party board forbids private notes, so it hides the toggle. */
   withVisibility?: boolean
   submitLabel?: string
+  placeholder?: string
   busy?: boolean
   error?: string | null
   onSubmit: (draft: NoteDraft) => void
@@ -62,7 +64,7 @@ export default function NoteComposer({
       <textarea
         className={cx(textareaClass, 'min-h-24')}
         value={bodyMd}
-        placeholder="Write a note. Link an entry with [[Their Name]]."
+        placeholder={placeholder}
         onChange={(e) => setBodyMd(e.target.value)}
       />
 
