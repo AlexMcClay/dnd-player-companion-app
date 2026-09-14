@@ -147,3 +147,16 @@ export function Field({ label, children }: { label: ReactNode; children: ReactNo
 
 export const rowClass =
   'flex w-full items-center gap-3 border-b border-line-soft py-2.5 text-left last:border-b-0'
+
+/**
+ * Inventory lists, two items to a line on a wide screen.
+ *
+ * A row is a thumbnail, a name and a few small buttons, which leaves most of a
+ * 740px line empty. Only the columns are gapped: the rows keep their own bottom
+ * border as the separator, so a two-up list still reads as one list rather than
+ * as two stacked next to each other.
+ *
+ * grid-cols-1 is explicit because bare `grid` leaves an implicit `auto` track,
+ * which is content-sized and can push past the viewport on a phone.
+ */
+export const twoUpClass = 'grid grid-cols-1 gap-x-3 md:grid-cols-2'

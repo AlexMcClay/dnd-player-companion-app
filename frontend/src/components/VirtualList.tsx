@@ -83,8 +83,13 @@ function Row<T>({
 
   return (
     // Explicit equal tracks rather than auto-fit, so a final half-full row
-    // leaves a gap instead of stretching one item across the width.
-    <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+    // leaves a gap instead of stretching one item across the width. minmax(0,
+    // 1fr) rather than 1fr: a bare 1fr has an auto minimum and would be pushed
+    // wider by a long unbroken name.
+    <div
+      className="grid gap-x-3"
+      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+    >
       {row.map((item) => (
         <div key={getKey(item)} className="min-w-0">
           {renderItem(item)}

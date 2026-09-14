@@ -22,7 +22,7 @@ import NoteComposer from '../components/NoteComposer'
 import NoteList from '../components/NoteList'
 import WikiText from '../components/WikiText'
 import { Empty, Loading, PageHead, Portrait, Section, StaggerList } from '../components/bits'
-import { ctaClass, panelClass } from '../components/ui'
+import { ctaClass, panelClass, twoUpClass } from '../components/ui'
 import { usePlayerId } from '../lib/identity'
 import { SPRING } from '../lib/motion'
 import { templateFor } from '../templates'
@@ -107,7 +107,7 @@ function MyCharacter({ playerId }: { playerId: string }) {
           {carried.isLoading ? (
             <Loading />
           ) : (
-            <StaggerList>
+            <StaggerList className={twoUpClass}>
               {stacks.map((holding) => (
                 <HoldingRow
                   key={holding.id}

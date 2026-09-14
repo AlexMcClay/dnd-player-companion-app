@@ -10,7 +10,7 @@ import { useItemIndex } from '../lib/useItemIndex'
 import { rowVariants, SPRING } from '../lib/motion'
 import { relativeTime } from '../lib/relativeTime'
 import { Empty, Loading, SectionHead, StaggerList } from './bits'
-import { cx, ctaClass, Panel, panelClass, Pill, rowClass } from './ui'
+import { cx, ctaClass, Panel, panelClass, Pill, rowClass, twoUpClass } from './ui'
 
 /** Largest denominations first — gold is what anyone actually asks about. */
 const COIN_ORDER: Array<[keyof DdbCurrencies, string]> = [
@@ -163,7 +163,7 @@ export function DdbItemList({ items, label }: { items: DdbItem[]; label: string 
         label={label}
         note={`${items.length} entries · ${carried}${linked < items.length ? ` · ${linked} in the codex` : ''}`}
       />
-      <StaggerList>
+      <StaggerList className={twoUpClass}>
         {items.map((item, i) => {
           const entityId = resolveItem(item)
 

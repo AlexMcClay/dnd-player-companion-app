@@ -60,8 +60,16 @@ export default function PartyPage() {
           Side by side from md up. They are siblings — two inventories the party
           has — so a row says that more plainly than a stack, and each is only a
           count and a few names wide.
+
+          grid-cols-1 is not redundant. Bare `grid` leaves an implicit `auto`
+          track, which is sized by its content and will happily grow past the
+          viewport; the preview line is one long unbroken string, so it did.
+          grid-cols-1 is repeat(1, minmax(0, 1fr)) — a zero minimum, so the
+          track is bounded by the container and the preview truncates instead.
+          That is what md:grid-cols-2 was already giving desktop, which is why
+          only the phone overflowed.
         */}
-        <Section className="grid gap-3 md:grid-cols-2">
+        <Section className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <SummaryCard
             to="/party/stash"
             icon={LuVault}
@@ -142,7 +150,7 @@ function SummaryCard({
   return (
     // h-full both here and on the link, so the two cards match height in the
     // grid however long their previews are.
-    <motion.div className="h-full" whileTap={{ scale: 0.98 }} transition={SPRING}>
+    <motion.div className="h-full min-w-0" whileTap={{ scale: 0.98 }} transition={SPRING}>
       <Link to={to} className={panelClass('flex h-full items-center gap-3')}>
         <span className="grid size-10 shrink-0 place-items-center border border-gold-dim bg-gold-tint text-gold">
           <Icon className="size-4.5" aria-hidden />

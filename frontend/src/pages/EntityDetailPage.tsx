@@ -20,7 +20,7 @@ import {
   StaggerList,
   TagChips,
 } from '../components/bits'
-import { cx, panelClass, Pill, rowClass, Sealed } from '../components/ui'
+import { cx, panelClass, Pill, rowClass, Sealed, twoUpClass } from '../components/ui'
 import { useIsDm } from '../lib/identity'
 import { rowVariants, SPRING } from '../lib/motion'
 import { reagentStatus, stockFor } from '../lib/recipes'
@@ -385,7 +385,7 @@ function Holders({ itemId }: { itemId: string }) {
   return (
     <Section className="flex flex-col gap-2">
       <SectionHead label="Held by" note={`${total} in total`} />
-      <StaggerList>
+      <StaggerList className={twoUpClass}>
         {stacks.map((holding) => (
           <motion.div key={holding.id} variants={rowVariants} className={rowClass}>
             <div className="flex-1">
@@ -417,7 +417,7 @@ function Carrying({ playerId }: { playerId: string }) {
   return (
     <Section className="flex flex-col gap-2">
       <SectionHead label="Carrying" note={`${stacks.length} entries`} />
-      <StaggerList>
+      <StaggerList className={twoUpClass}>
         {stacks.map((holding) => (
           <motion.div key={holding.id} variants={rowVariants}>
             <Link to={`/e/${holding.itemId}`} className={rowClass}>
