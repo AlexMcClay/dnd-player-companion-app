@@ -15,11 +15,13 @@ export function Portrait({
   size,
   aspect,
   style,
+  className,
 }: {
   entity: Pick<Entity, 'imageUrl' | 'name' | 'type'>
   size?: number
   aspect?: string
   style?: CSSProperties
+  className?: string
 }) {
   const template = templateFor(entity.type)
   const Icon = template.icon
@@ -29,7 +31,10 @@ export function Portrait({
 
   return (
     <div
-      className="port-fill grid shrink-0 place-items-center overflow-hidden border border-line"
+      className={cx(
+        'port-fill grid shrink-0 place-items-center overflow-hidden border border-line',
+        className,
+      )}
       style={box}
     >
       {entity.imageUrl ? (
@@ -78,7 +83,7 @@ export function KnowledgePill({ knowledge }: { knowledge: Knowledge }) {
 export function TagChips({ tags }: { tags: string[] }) {
   if (tags.length === 0) return null
   return (
-    <div className="flex flex-wrap gap-[7px]">
+    <div className="flex flex-wrap gap-1.75">
       {tags.map((tag) => (
         <motion.span key={tag} whileTap={{ scale: 0.94 }} transition={SPRING}>
           <Link to={`/search?tag=${encodeURIComponent(tag)}`} className={pillClass('neutral')}>

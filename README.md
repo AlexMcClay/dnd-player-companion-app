@@ -31,7 +31,10 @@ nothing is ever empty on first run. `npm run db:reset` wipes and re-migrates.
 
 On first load the app asks you to pick a character. That choice is kept in the
 browser and sent with every request as `x-player-id`, so the app can show you
-your own pack and, later, your own notes. You can change it from the **Me** tab.
+your own pack and, later, your own notes.
+
+The character shows in the header on every screen; tap it to switch. Handy when
+one phone gets passed around the table. The **Me** tab has the same control.
 
 ### DM mode
 

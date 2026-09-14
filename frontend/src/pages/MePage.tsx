@@ -1,21 +1,16 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
+import { useState } from 'react'
 import { LuBackpack, LuUsers } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import AddItemSheet from '../components/AddItemSheet'
+import { CharacterPicker, CharacterSwitcherPortal } from '../components/CharacterPicker'
 import HoldingRow from '../components/HoldingRow'
-import {
-  Empty,
-  Loading,
-  PageHead,
-  Portrait,
-  Section,
-  StaggerList,
-} from '../components/bits'
+import { Empty, Loading, PageHead, Portrait, Section, StaggerList } from '../components/bits'
 import { ctaClass, panelClass } from '../components/ui'
-import { setPlayerId, usePlayerId } from '../lib/identity'
-import { listVariants, rowVariants, SPRING } from '../lib/motion'
+import { usePlayerId } from '../lib/identity'
+import { SPRING } from '../lib/motion'
 import { templateFor } from '../templates'
 
 /** Your own character: who you are and what you are carrying. Notes land here next. */
@@ -124,72 +119,34 @@ function SpecPanel({
 }
 
 function SwitchCharacter() {
-  const queryClient = useQueryClient()
-
-  async function forget() {
-    setPlayerId(null)
-    await queryClient.invalidateQueries()
-  }
+  const [open, setOpen] = useState(false)
 
   return (
-    <motion.button
-      type="button"
-      className={ctaClass('ghost')}
-      whileTap={{ scale: 0.98 }}
-      transition={SPRING}
-      onClick={() => void forget()}
-    >
-      <LuUsers aria-hidden />
-      Switch character
-    </motion.button>
+    <>
+      <motion.button
+        type="button"
+        className={ctaClass('ghost')}
+        whileTap={{ scale: 0.98 }}
+        transition={SPRING}
+        onClick={() => setOpen(true)}
+      >
+        <LuUsers aria-hidden />
+        Switch character
+      </motion.button>
+      <CharacterSwitcherPortal open={open} onClose={() => setOpen(false)} />
+    </>
   )
 }
 
 /** Shown when nobody has been chosen — the DM browsing, or after switching. */
 function PickCharacter({ problem }: { problem?: string }) {
-  const queryClient = useQueryClient()
-
-  const players = useQuery({
-    queryKey: ['entities', { type: 'player' }],
-    queryFn: () => api.listEntities({ type: 'player' }),
-  })
-
-  async function choose(id: string) {
-    setPlayerId(id)
-    await queryClient.invalidateQueries()
-  }
-
   return (
     <>
       <PageHead>
         <h1 className="type-title m-0">Pick a character</h1>
         <div className="type-meta">{problem ?? 'This tab shows whoever you are playing'}</div>
       </PageHead>
-
-      {players.isLoading && <Loading />}
-      {players.data?.length === 0 && <Empty>No characters yet</Empty>}
-
-      <motion.div
-        className="grid grid-cols-2 gap-3"
-        variants={listVariants}
-        initial="hidden"
-        animate="show"
-      >
-        {players.data?.map((player) => (
-          <motion.button
-            key={player.id}
-            type="button"
-            className={panelClass('flex cursor-pointer flex-col items-center gap-2 text-center')}
-            variants={rowVariants}
-            whileTap={{ scale: 0.96 }}
-            transition={SPRING}
-            onClick={() => void choose(player.id)}
-          >
-            <Portrait entity={player} size={72} />
-            <span className="type-name">{player.name}</span>
-          </motion.button>
-        ))}
-      </motion.div>
+      <CharacterPicker />
     </>
   )
 }

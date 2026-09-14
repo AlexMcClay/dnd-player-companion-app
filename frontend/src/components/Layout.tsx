@@ -2,20 +2,23 @@ import { useQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
-import { LuLock, LuLockOpen } from 'react-icons/lu'
+import { LuChevronDown, LuLock, LuLockOpen, LuUser } from 'react-icons/lu'
 import { NavLink } from 'react-router-dom'
 import { api } from '../api/client'
 import { useIsDm, usePlayerId } from '../lib/identity'
 import { SPRING } from '../lib/motion'
 import { useSwipeNav } from '../lib/useSwipeNav'
 import { TABS } from '../templates'
+import { CharacterSwitcherPortal } from './CharacterPicker'
 import DmUnlock from './DmUnlock'
-import { PillButton } from './ui'
+import { Portrait } from './bits'
+import { cx, PillButton } from './ui'
 
 export default function Layout({ children }: { children: ReactNode }) {
   const isDm = useIsDm()
   const playerId = usePlayerId()
   const [unlockOpen, setUnlockOpen] = useState(false)
+  const [switchOpen, setSwitchOpen] = useState(false)
   const onPanEnd = useSwipeNav()
 
   const me = useQuery({
@@ -27,15 +30,23 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="app-ground flex min-h-full flex-col">
       <header className="sticky top-0 z-20 border-b border-line bg-topbar">
-        <div className="mx-auto flex max-w-195 items-center justify-between gap-3 px-4.5 py-3">
-          <div className="flex min-w-0 flex-col">
-            <span className="type-lab">The Marrow Coast</span>
-            {me.data && <span className="type-meta truncate">Playing {me.data.name}</span>}
+        <div className="mx-auto flex max-w-195 items-center justify-between gap-2 px-4.5 py-2.5">
+          <span className="type-lab shrink-0">The Marrow Coast</span>
+
+          <div className="flex min-w-0 items-center gap-2">
+            <CharacterButton
+              character={me.data ?? null}
+              onClick={() => setSwitchOpen(true)}
+            />
+            <PillButton
+              tone={isDm ? 'solid' : 'neutral'}
+              aria-label={isDm ? 'DM mode is on' : 'Unlock DM mode'}
+              onClick={() => setUnlockOpen(true)}
+            >
+              {isDm ? <LuLockOpen aria-hidden /> : <LuLock aria-hidden />}
+              <span className="hidden sm:inline">{isDm ? 'DM mode' : 'Locked'}</span>
+            </PillButton>
           </div>
-          <PillButton tone={isDm ? 'solid' : 'neutral'} onClick={() => setUnlockOpen(true)}>
-            {isDm ? <LuLockOpen aria-hidden /> : <LuLock aria-hidden />}
-            {isDm ? 'DM mode' : 'Locked'}
-          </PillButton>
         </div>
       </header>
 
@@ -91,9 +102,49 @@ export default function Layout({ children }: { children: ReactNode }) {
         })}
       </nav>
 
+      <CharacterSwitcherPortal open={switchOpen} onClose={() => setSwitchOpen(false)} />
+
       <AnimatePresence>
         {unlockOpen && <DmUnlock onClose={() => setUnlockOpen(false)} />}
       </AnimatePresence>
     </div>
+  )
+}
+
+/**
+ * Shows who you are playing and swaps them. Falls back to a prompt when nobody
+ * is chosen, which only happens for a DM browsing without a character.
+ */
+function CharacterButton({
+  character,
+  onClick,
+}: {
+  character: { id: string; name: string; type: string; imageUrl: string | null } | null
+  onClick: () => void
+}) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      aria-label={character ? `Playing ${character.name}. Change character` : 'Pick a character'}
+      className={cx(
+        'flex min-w-0 cursor-pointer items-center gap-1.75 rounded-full border py-1 pr-2 pl-1',
+        character ? 'border-gold-dim text-gold' : 'border-line text-ink-soft',
+      )}
+      whileTap={{ scale: 0.94 }}
+      transition={SPRING}
+    >
+      {character ? (
+        <Portrait entity={character} size={20} className="rounded-full" />
+      ) : (
+        <span className="grid size-5 place-items-center">
+          <LuUser aria-hidden />
+        </span>
+      )}
+      <span className="truncate text-[9.5px] uppercase tracking-[0.11em]">
+        {character ? (character.name.split(' ')[0] ?? character.name) : 'Pick one'}
+      </span>
+      <LuChevronDown className="size-3 shrink-0 opacity-70" aria-hidden />
+    </motion.button>
   )
 }
