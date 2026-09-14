@@ -2,9 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { DdbCurrencies, DdbItem } from '@codex/shared'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { LuCoins, LuRefreshCw, LuSwords, LuTriangleAlert } from 'react-icons/lu'
+import { LuChevronRight, LuCoins, LuRefreshCw, LuSwords, LuTriangleAlert } from 'react-icons/lu'
+import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import { useIsDm, usePlayerId } from '../lib/identity'
+import { useItemIndex } from '../lib/useItemIndex'
 import { rowVariants, SPRING } from '../lib/motion'
 import { relativeTime } from '../lib/relativeTime'
 import { Empty, Loading, SectionHead, StaggerList } from './bits'
@@ -148,42 +150,76 @@ export function Purse({ currencies }: { currencies: DdbCurrencies }) {
 }
 
 export function DdbItemList({ items, label }: { items: DdbItem[]; label: string }) {
+  const resolveItem = useItemIndex()
+
   if (items.length === 0) return <Empty>Nothing on D&amp;D Beyond</Empty>
 
   const carried = items.reduce((sum, i) => sum + i.quantity, 0)
+  const linked = items.filter((i) => resolveItem(i)).length
 
   return (
     <div className="flex flex-col gap-2">
-      <SectionHead label={label} note={`${items.length} entries · ${carried}`} />
+      <SectionHead
+        label={label}
+        note={`${items.length} entries · ${carried}${linked < items.length ? ` · ${linked} in the codex` : ''}`}
+      />
       <StaggerList>
-        {items.map((item, i) => (
-          <motion.div
-            // D&D Beyond happily lists the same item twice (two daggers), so
-            // the index is part of the identity here.
-            key={`${item.name}-${i}`}
-            className={cx(rowClass, 'gap-2')}
-            variants={rowVariants}
-          >
-            <span className="grid size-7 shrink-0 place-items-center border border-line text-ink-faint">
-              <LuSwords className="size-3" aria-hidden />
-            </span>
+        {items.map((item, i) => {
+          const entityId = resolveItem(item)
 
-            <div className="min-w-0 flex-1">
-              <div className="type-name truncate">{item.name}</div>
-              <div className="type-meta mt-0.5 truncate">
-                {[item.type, item.rarity !== 'Common' ? item.rarity : null]
-                  .filter(Boolean)
-                  .join(' · ')}
+          const body = (
+            <>
+              <span
+                className={cx(
+                  'grid size-7 shrink-0 place-items-center border',
+                  entityId ? 'border-gold-dim text-gold' : 'border-line text-ink-faint',
+                )}
+              >
+                <LuSwords className="size-3" aria-hidden />
+              </span>
+
+              <div className="min-w-0 flex-1">
+                <div className={cx('type-name truncate', entityId && 'text-gold')}>
+                  {item.name}
+                </div>
+                <div className="type-meta mt-0.5 truncate">
+                  {[item.type, item.rarity !== 'Common' ? item.rarity : null]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </div>
               </div>
-            </div>
 
-            <div className="flex shrink-0 items-center gap-1.5">
-              {item.attuned && <Pill tone="solid">Attuned</Pill>}
-              {item.equipped && !item.attuned && <Pill tone="neutral">Worn</Pill>}
-              {item.quantity > 1 && <span className="type-meta">×{item.quantity}</span>}
-            </div>
-          </motion.div>
-        ))}
+              <div className="flex shrink-0 items-center gap-1.5">
+                {item.attuned && <Pill tone="solid">Attuned</Pill>}
+                {item.equipped && !item.attuned && <Pill tone="neutral">Worn</Pill>}
+                {item.quantity > 1 && <span className="type-meta">×{item.quantity}</span>}
+                {entityId && <LuChevronRight className="size-3.5 text-ink-faint" aria-hidden />}
+              </div>
+            </>
+          )
+
+          return (
+            <motion.div
+              // D&D Beyond happily lists the same item twice (two daggers), so
+              // the index is part of the identity here.
+              key={`${item.name}-${i}`}
+              variants={rowVariants}
+            >
+              {/*
+                Only the rows that resolved are links. An unmatched item — a
+                magic variant, homebrew — stays plain rather than leading
+                somewhere wrong.
+              */}
+              {entityId ? (
+                <Link to={`/e/${entityId}`} className={cx(rowClass, 'gap-2')}>
+                  {body}
+                </Link>
+              ) : (
+                <div className={cx(rowClass, 'gap-2')}>{body}</div>
+              )}
+            </motion.div>
+          )
+        })}
       </StaggerList>
     </div>
   )

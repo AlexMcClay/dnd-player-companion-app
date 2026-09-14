@@ -120,6 +120,15 @@ its own name and the panel points out any mismatch.
 Avatars are linked from dndbeyond.com rather than copied. A portrait uploaded in
 the app always wins over the synced avatar.
 
+A D&D Beyond item whose name matches a Codex item is a link — tap it for the
+rules text. Matching is tiered and deterministic, never fuzzy, because a wrong
+entry is worse than no link: exact name, then ignoring a parenthetical ("Oil" →
+"Oil (flask)"), then singular ("Arrows" → "Arrow"), and finally an `Armor`
+suffix, but only when D&D Beyond itself types the item as armour ("Leather" →
+"Leather Armor"). Across the party's real inventories that resolves 77 of 80.
+Anything left over stays plain text — a magic variant like "Longbow, +1" has no
+Codex entry to open.
+
 ### The party inventory
 
 D&D Beyond also keeps a shared party purse and item list, synced from its own
