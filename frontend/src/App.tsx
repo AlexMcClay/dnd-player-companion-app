@@ -2,7 +2,7 @@ import { AnimatePresence, motion, MotionConfig } from 'framer-motion'
 import { useEffect } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import Layout from './components/Layout'
-import { EASE, PAGE_TRANSITION } from './lib/motion'
+import { EASE, pageVariants } from './lib/motion'
 import { useNavDirection } from './lib/useSwipeNav'
 import CodexPage from './pages/CodexPage'
 import CraftPage from './pages/CraftPage'
@@ -11,9 +11,6 @@ import EntityEditPage from './pages/EntityEditPage'
 import ItemsPage from './pages/ItemsPage'
 import PartyPage from './pages/PartyPage'
 import SearchPage from './pages/SearchPage'
-
-/** Sideways for tab-to-tab, a plain crossfade for anything else. */
-const SHIFT = 26
 
 /**
  * Mounts with the incoming page. Resetting scroll on the location change
@@ -35,13 +32,20 @@ export default function App() {
     // animation is dropped, opacity fades stay.
     <MotionConfig reducedMotion="user" transition={{ ease: EASE }}>
       <Layout>
-        <AnimatePresence mode="wait" initial={false}>
+        {/*
+          `custom` on the AnimatePresence is what makes the exit directional.
+          Without it the outgoing page animates with the direction from the
+          previous navigation, because AnimatePresence re-renders the element
+          it cached rather than a fresh one.
+        */}
+        <AnimatePresence mode="wait" initial={false} custom={direction}>
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0, x: direction * SHIFT }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: direction * -SHIFT }}
-            transition={PAGE_TRANSITION}
+            custom={direction}
+            variants={pageVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
           >
             <ScrollToTop />
             {/*

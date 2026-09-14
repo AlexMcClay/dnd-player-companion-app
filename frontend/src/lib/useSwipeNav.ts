@@ -1,6 +1,6 @@
 import type { PanInfo } from 'framer-motion'
 import { useRef } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 import { TABS } from '../templates'
 
 /** Past this much horizontal travel a swipe counts, regardless of speed. */
@@ -49,18 +49,36 @@ export function useSwipeNav() {
 }
 
 /**
- * -1, 0 or 1, for direction-aware page transitions. Only tab-to-tab moves get a
- * direction; navigating into a detail page just crossfades.
+ * 1 (forward/rightward) or -1 (backward/leftward).
+ *
+ * Two rules, because the two kinds of navigation mean different things:
+ *  - Tab to tab, the bar's own order decides. Craft -> Party moves left even
+ *    though it is a push, because that is the direction the user sees.
+ *  - Anywhere else it is a push/pop, so opening a detail page moves forward and
+ *    Back — including the browser and hardware back buttons, which both report
+ *    POP — moves back.
+ *
+ * Pure and exported so the matrix can be tested without a browser.
  */
+export function navDirection(from: string, to: string, navigationType: string): number {
+  const fromTab = tabIndex(from)
+  const toTab = tabIndex(to)
+
+  if (fromTab !== -1 && toTab !== -1) {
+    return Math.sign(toTab - fromTab) || 1
+  }
+  return navigationType === 'POP' ? -1 : 1
+}
+
+/** Tracks the previous pathname so each render knows which way the page moved. */
 export function useNavDirection(): number {
   const { pathname } = useLocation()
+  const navigationType = useNavigationType()
   const previous = useRef(pathname)
-  const direction = useRef(0)
+  const direction = useRef(1)
 
   if (previous.current !== pathname) {
-    const from = tabIndex(previous.current)
-    const to = tabIndex(pathname)
-    direction.current = from !== -1 && to !== -1 ? Math.sign(to - from) : 0
+    direction.current = navDirection(previous.current, pathname, navigationType)
     previous.current = pathname
   }
 
