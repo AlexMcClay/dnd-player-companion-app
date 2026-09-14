@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { api } from '../api/client'
-import { Empty, EntityRow, Loading, SectionHead } from '../components/bits'
+import { Empty, EntityRow, Loading, Section, SectionHead, StaggerList } from '../components/bits'
 import DmCreateBar from '../components/DmCreateBar'
+import { SPRING } from '../lib/motion'
 
 export default function ItemsPage() {
   // 'stash' = unowned, 'all', or a player id.
@@ -28,43 +30,40 @@ export default function ItemsPage() {
   )
   const showStash = scope === 'all' || scope === 'stash'
 
+  const scopes = [
+    { key: 'all', label: 'All' },
+    { key: 'stash', label: 'Party stash' },
+    ...(players.data ?? []).map((player) => ({
+      key: player.id,
+      label: player.name.split(' ')[0] ?? player.name,
+    })),
+  ]
+
   return (
     <>
       <div className="head">
         <h1 className="ttl">Items</h1>
         <div className="pill-row">
-          <button
-            type="button"
-            className={scope === 'all' ? 'pill pill-s' : 'pill pill-n'}
-            onClick={() => setScope('all')}
-          >
-            All
-          </button>
-          <button
-            type="button"
-            className={scope === 'stash' ? 'pill pill-s' : 'pill pill-n'}
-            onClick={() => setScope('stash')}
-          >
-            Party stash
-          </button>
-          {players.data?.map((player) => (
-            <button
-              key={player.id}
+          {scopes.map(({ key, label }) => (
+            <motion.button
+              key={key}
               type="button"
-              className={scope === player.id ? 'pill pill-s' : 'pill pill-n'}
-              onClick={() => setScope(player.id)}
+              className={scope === key ? 'pill pill-s' : 'pill pill-n'}
+              onClick={() => setScope(key)}
+              whileTap={{ scale: 0.94 }}
+              transition={SPRING}
             >
-              {player.name.split(' ')[0]}
-            </button>
+              {label}
+            </motion.button>
           ))}
         </div>
       </div>
 
       <div className="stack gap-16">
         {showStash && (
-          <section className="stack gap-8">
+          <Section className="stack gap-8">
             <SectionHead label="Party stash" note={`${stash.length} items`} />
-            <div>
+            <StaggerList>
               {stash.map((item) => (
                 <EntityRow
                   key={item.id}
@@ -73,18 +72,18 @@ export default function ItemsPage() {
                   right={<span className="meta">×{item.quantity}</span>}
                 />
               ))}
-            </div>
+            </StaggerList>
             {stash.length === 0 && <Empty>The stash is empty</Empty>}
-          </section>
+          </Section>
         )}
 
         {visiblePlayers.map((player) => {
           const carried = carriedBy(player.id)
           if (carried.length === 0 && scope === 'all') return null
           return (
-            <section key={player.id} className="stack gap-8">
+            <Section key={player.id} className="stack gap-8">
               <SectionHead label={`${player.name} carries`} note={`${carried.length} items`} />
-              <div>
+              <StaggerList>
                 {carried.map((item) => (
                   <EntityRow
                     key={item.id}
@@ -93,9 +92,9 @@ export default function ItemsPage() {
                     right={<span className="meta">×{item.quantity}</span>}
                   />
                 ))}
-              </div>
+              </StaggerList>
               {carried.length === 0 && <Empty>Carrying nothing</Empty>}
-            </section>
+            </Section>
           )
         })}
 

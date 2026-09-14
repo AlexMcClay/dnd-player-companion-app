@@ -1,7 +1,10 @@
 import { useQueryClient } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
 import { useState } from 'react'
+import { LuLock, LuLockOpen, LuTriangleAlert } from 'react-icons/lu'
 import { api } from '../api/client'
 import { setDmKey, useIsDm } from '../lib/dm'
+import { SPRING } from '../lib/motion'
 
 export default function DmUnlock({ onClose }: { onClose: () => void }) {
   const isDm = useIsDm()
@@ -34,9 +37,26 @@ export default function DmUnlock({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="modal-scrim" onClick={onClose}>
-      <div className="modal panel stack gap-12" onClick={(e) => e.stopPropagation()}>
-        <div className="lab">{isDm ? 'DM mode is on' : 'Unlock DM mode'}</div>
+    <motion.div
+      className="modal-scrim"
+      onClick={onClose}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.16 }}
+    >
+      <motion.div
+        className="modal panel stack gap-12"
+        onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0, scale: 0.94, y: 14 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+        transition={SPRING}
+      >
+        <div className="lab with-icon">
+          {isDm ? <LuLockOpen aria-hidden /> : <LuLock aria-hidden />}
+          {isDm ? 'DM mode is on' : 'Unlock DM mode'}
+        </div>
 
         {isDm ? (
           <>
@@ -44,9 +64,16 @@ export default function DmUnlock({ onClose }: { onClose: () => void }) {
               You can see sealed entries and edit anything. Lock up before handing the phone to a
               player.
             </p>
-            <button type="button" className="cta cta-danger" onClick={lock}>
+            <motion.button
+              type="button"
+              className="cta cta-danger with-icon"
+              onClick={lock}
+              whileTap={{ scale: 0.97 }}
+              transition={SPRING}
+            >
+              <LuLock aria-hidden />
               Lock
-            </button>
+            </motion.button>
             <button type="button" className="cta cta-ghost" onClick={onClose}>
               Stay unlocked
             </button>
@@ -65,19 +92,33 @@ export default function DmUnlock({ onClose }: { onClose: () => void }) {
               onChange={(e) => setValue(e.target.value)}
             />
             {error && (
-              <div className="meta" style={{ color: '#d89494' }}>
+              <motion.div
+                className="meta with-icon"
+                style={{ color: '#d89494' }}
+                initial={{ x: 0 }}
+                animate={{ x: [0, -6, 6, -4, 4, 0] }}
+                transition={{ duration: 0.35 }}
+              >
+                <LuTriangleAlert aria-hidden />
                 {error}
-              </div>
+              </motion.div>
             )}
-            <button type="submit" className="cta" disabled={checking || value.length === 0}>
+            <motion.button
+              type="submit"
+              className="cta with-icon"
+              disabled={checking || value.length === 0}
+              whileTap={{ scale: 0.97 }}
+              transition={SPRING}
+            >
+              <LuLockOpen aria-hidden />
               {checking ? 'Checking…' : 'Unlock'}
-            </button>
+            </motion.button>
             <button type="button" className="cta cta-ghost" onClick={onClose}>
               Cancel
             </button>
           </form>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

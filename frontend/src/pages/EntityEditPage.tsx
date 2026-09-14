@@ -7,13 +7,16 @@ import {
   type Knowledge,
   type RecipeIngredient,
 } from '@codex/shared'
+import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
+import { LuSave, LuTrash2, LuTriangleAlert, LuX } from 'react-icons/lu'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import ImageUpload from '../components/ImageUpload'
 import IngredientsEditor from '../components/IngredientsEditor'
 import { Empty, Loading } from '../components/bits'
 import { useIsDm } from '../lib/dm'
+import { SPRING } from '../lib/motion'
 import { templateFor } from '../templates'
 
 type Draft = Required<Pick<EntityInput, 'type' | 'name' | 'knowledge' | 'quantity'>> & {
@@ -294,27 +297,44 @@ export default function EntityEditPage() {
         </label>
 
         {error && (
-          <div className="meta" style={{ color: '#d89494' }}>
+          <motion.div
+            className="meta with-icon"
+            style={{ color: '#d89494' }}
+            animate={{ x: [0, -6, 6, -4, 4, 0] }}
+            transition={{ duration: 0.35 }}
+          >
+            <LuTriangleAlert aria-hidden />
             {error}
-          </div>
+          </motion.div>
         )}
 
-        <button type="submit" className="cta" disabled={save.isPending}>
+        <motion.button
+          type="submit"
+          className="cta with-icon"
+          disabled={save.isPending}
+          whileTap={{ scale: 0.97 }}
+          transition={SPRING}
+        >
+          <LuSave aria-hidden />
           {save.isPending ? 'Saving…' : 'Save'}
-        </button>
-        <button type="button" className="cta cta-ghost" onClick={() => navigate(-1)}>
+        </motion.button>
+        <button type="button" className="cta cta-ghost with-icon" onClick={() => navigate(-1)}>
+          <LuX aria-hidden />
           Cancel
         </button>
         {id && (
-          <button
+          <motion.button
             type="button"
-            className="cta cta-danger"
+            className="cta cta-danger with-icon"
             onClick={() => {
               if (confirm(`Delete ${draft.name}? This cannot be undone.`)) remove.mutate()
             }}
+            whileTap={{ scale: 0.97 }}
+            transition={SPRING}
           >
+            <LuTrash2 aria-hidden />
             Delete
-          </button>
+          </motion.button>
         )}
       </form>
     </>

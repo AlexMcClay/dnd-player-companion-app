@@ -1,10 +1,22 @@
 import { useQuery } from '@tanstack/react-query'
 import type { Entity, RecipeData } from '@codex/shared'
+import { motion } from 'framer-motion'
+import { LuCheck, LuChevronLeft, LuPencil, LuX } from 'react-icons/lu'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import Markdown from '../components/Markdown'
-import { Empty, KnowledgePill, Loading, Portrait, SectionHead, TagChips } from '../components/bits'
+import {
+  Empty,
+  KnowledgePill,
+  Loading,
+  Portrait,
+  Section,
+  SectionHead,
+  StaggerList,
+  TagChips,
+} from '../components/bits'
 import { useIsDm } from '../lib/dm'
+import { rowVariants, SPRING } from '../lib/motion'
 import { reagentStatus, stockFor } from '../lib/recipes'
 import { templateFor } from '../templates'
 
@@ -23,27 +35,39 @@ export default function EntityDetailPage() {
 
   const e = entity.data
   const template = templateFor(e.type)
+  const TypeIcon = template.icon
 
   return (
     <>
       <div className="head">
         <div className="row-between">
-          <button
+          <motion.button
             type="button"
-            className="backlink"
-            style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer' }}
+            className="iconbtn"
             onClick={() => navigate(-1)}
+            whileTap={{ scale: 0.92 }}
+            transition={SPRING}
           >
-            ‹ Back
-          </button>
+            <LuChevronLeft aria-hidden />
+            Back
+          </motion.button>
           {isDm && (
-            <Link to={`/e/${e.id}/edit`} className="meta" style={{ color: 'var(--gold)' }}>
-              Edit
-            </Link>
+            <motion.span whileTap={{ scale: 0.92 }} transition={SPRING}>
+              <Link to={`/e/${e.id}/edit`} className="iconbtn iconbtn-gold">
+                <LuPencil aria-hidden />
+                Edit
+              </Link>
+            </motion.span>
           )}
         </div>
 
-        <Portrait entity={e} aspect={template.heroAspect} style={{ maxHeight: 260 }} />
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.32 }}
+        >
+          <Portrait entity={e} aspect={template.heroAspect} style={{ maxHeight: 260 }} />
+        </motion.div>
 
         <div>
           <h1 className="ttl">{e.name}</h1>
@@ -55,14 +79,18 @@ export default function EntityDetailPage() {
         </div>
 
         <div className="pill-row">
-          <span className="pill pill-n">{template.label}</span>
+          <span className="pill pill-n with-icon">
+            <TypeIcon aria-hidden />
+            {template.label}
+          </span>
           <KnowledgePill knowledge={e.knowledge} />
         </div>
       </div>
 
       <div className="stack gap-16">
         {e.knowledge === 'unknown' && (
-          <div className="sealed">
+          <div className="sealed with-icon" style={{ justifyContent: 'center' }}>
+            <LuX aria-hidden />
             <span className="meta">Sealed — players cannot see this entry</span>
           </div>
         )}
@@ -75,7 +103,15 @@ export default function EntityDetailPage() {
 
         {e.type === 'player' && <Carrying playerId={e.id} />}
 
-        {e.bodyMd && <Markdown source={e.bodyMd} />}
+        {e.bodyMd && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.06 }}
+          >
+            <Markdown source={e.bodyMd} />
+          </motion.div>
+        )}
 
         {e.tags.length > 0 && (
           <div className="stack gap-8">
@@ -99,14 +135,19 @@ function SpecList({ entity }: { entity: Entity }) {
   if (rows.length === 0) return null
 
   return (
-    <dl className="spec panel">
+    <motion.dl
+      className="spec panel"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       {rows.map(({ field, value }) => (
         <div key={field.key} style={{ display: 'contents' }}>
           <dt>{field.label}</dt>
           <dd>{typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}</dd>
         </div>
       ))}
-    </dl>
+    </motion.dl>
   )
 }
 
@@ -124,11 +165,14 @@ function RecipeSheet({ recipe }: { recipe: Entity }) {
   const ready = status.every((r) => r.enough)
 
   return (
-    <section className="stack gap-8">
+    <Section className="stack gap-8">
       <SectionHead label="Reagents" note={ready ? 'All in hand' : 'Missing something'} />
-      <div>
+      <StaggerList>
         {status.map((reagent) => (
-          <div key={reagent.name} className="row">
+          <motion.div key={reagent.name} className="row" variants={rowVariants}>
+            <span className={reagent.enough ? 'reagent-tick on' : 'reagent-tick'}>
+              {reagent.enough ? <LuCheck aria-hidden /> : <LuX aria-hidden />}
+            </span>
             <div style={{ flex: 1 }}>{reagent.name}</div>
             <span
               className="meta"
@@ -136,10 +180,10 @@ function RecipeSheet({ recipe }: { recipe: Entity }) {
             >
               have {reagent.have} / {reagent.qty}
             </span>
-          </div>
+          </motion.div>
         ))}
-      </div>
-    </section>
+      </StaggerList>
+    </Section>
   )
 }
 
@@ -151,7 +195,12 @@ function Ownership({ entity }: { entity: Entity }) {
   })
 
   return (
-    <div className="panel row-between">
+    <motion.div
+      className="panel row-between"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <div>
         <div className="lab">Carried by</div>
         <div className="name" style={{ marginTop: 3 }}>
@@ -159,7 +208,7 @@ function Ownership({ entity }: { entity: Entity }) {
         </div>
       </div>
       <span className="pill pill-n">×{entity.quantity}</span>
-    </div>
+    </motion.div>
   )
 }
 
@@ -172,17 +221,25 @@ function Carrying({ playerId }: { playerId: string }) {
   if (!items.data || items.data.length === 0) return null
 
   return (
-    <section className="stack gap-8">
+    <Section className="stack gap-8">
       <SectionHead label="Carrying" note={`${items.data.length} items`} />
-      <div>
+      <StaggerList>
         {items.data.map((item) => (
-          <Link key={item.id} to={`/e/${item.id}`} className="row">
-            <Portrait entity={item} size={36} />
-            <div style={{ flex: 1 }}>{item.name}</div>
-            <span className="meta">×{item.quantity}</span>
-          </Link>
+          <EntityRowCompact key={item.id} item={item} />
         ))}
-      </div>
-    </section>
+      </StaggerList>
+    </Section>
+  )
+}
+
+function EntityRowCompact({ item }: { item: Entity }) {
+  return (
+    <motion.div variants={rowVariants}>
+      <Link to={`/e/${item.id}`} className="row">
+        <Portrait entity={item} size={36} />
+        <div style={{ flex: 1 }}>{item.name}</div>
+        <span className="meta">×{item.quantity}</span>
+      </Link>
+    </motion.div>
   )
 }

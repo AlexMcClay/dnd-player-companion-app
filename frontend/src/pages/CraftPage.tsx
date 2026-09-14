@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import type { Entity, RecipeData } from '@codex/shared'
+import { LuCheck } from 'react-icons/lu'
 import { api } from '../api/client'
-import { Empty, EntityRow, Loading, SectionHead } from '../components/bits'
+import { Empty, EntityRow, Loading, Section, SectionHead, StaggerList } from '../components/bits'
 import DmCreateBar from '../components/DmCreateBar'
-import { stockFor, reagentStatus } from '../lib/recipes'
+import { reagentStatus, stockFor } from '../lib/recipes'
 
 export default function CraftPage() {
   const recipes = useQuery({
@@ -37,30 +38,35 @@ export default function CraftPage() {
 
       <div className="stack gap-16">
         {ready.length > 0 && (
-          <section className="stack gap-8">
+          <Section className="stack gap-8">
             <SectionHead label="Ready to make" note={`${ready.length} with reagents in hand`} />
-            <div>
+            <StaggerList>
               {ready.map((recipe) => (
                 <EntityRow
                   key={recipe.id}
                   entity={recipe}
                   portraitSize={44}
-                  right={<span className="pill pill-s">Can make</span>}
+                  right={
+                    <span className="pill pill-s with-icon">
+                      <LuCheck aria-hidden />
+                      Can make
+                    </span>
+                  }
                 />
               ))}
-            </div>
-          </section>
+            </StaggerList>
+          </Section>
         )}
 
-        <section className="stack gap-8">
+        <Section className="stack gap-8">
           <SectionHead label={ready.length > 0 ? 'Everything else' : 'Known recipes'} />
-          <div>
+          <StaggerList>
             {rest.map((recipe) => (
               <EntityRow key={recipe.id} entity={recipe} portraitSize={44} />
             ))}
-          </div>
+          </StaggerList>
           {rest.length === 0 && ready.length === 0 && <Empty>No recipes learned yet</Empty>}
-        </section>
+        </Section>
 
         <DmCreateBar types={['recipe']} />
       </div>

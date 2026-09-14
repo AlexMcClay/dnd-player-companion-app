@@ -1,11 +1,19 @@
 import { useQuery } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { api } from '../api/client'
-import { Empty, EntityRow, Loading, SectionHead } from '../components/bits'
+import { Empty, EntityRow, Loading, Section, SectionHead, StaggerList } from '../components/bits'
 import DmCreateBar from '../components/DmCreateBar'
+import { SPRING } from '../lib/motion'
+
+const FILTERS = [
+  { key: 'all', label: 'Everyone' },
+  { key: 'player', label: 'Players' },
+  { key: 'npc', label: 'NPCs' },
+] as const
 
 export default function PartyPage() {
-  const [filter, setFilter] = useState<'all' | 'player' | 'npc'>('all')
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]['key']>('all')
 
   const players = useQuery({
     queryKey: ['entities', { type: 'player' }],
@@ -26,42 +34,44 @@ export default function PartyPage() {
       <div className="head">
         <h1 className="ttl">Party &amp; NPCs</h1>
         <div className="pill-row">
-          {(['all', 'player', 'npc'] as const).map((key) => (
-            <button
+          {FILTERS.map(({ key, label }) => (
+            <motion.button
               key={key}
               type="button"
               className={filter === key ? 'pill pill-s' : 'pill pill-n'}
               onClick={() => setFilter(key)}
+              whileTap={{ scale: 0.94 }}
+              transition={SPRING}
             >
-              {key === 'all' ? 'Everyone' : key === 'player' ? 'Players' : 'NPCs'}
-            </button>
+              {label}
+            </motion.button>
           ))}
         </div>
       </div>
 
       <div className="stack gap-16">
         {showPlayers && (
-          <section className="stack gap-8">
+          <Section className="stack gap-8">
             <SectionHead label="The party" note={`${players.data?.length ?? 0} characters`} />
-            <div>
+            <StaggerList>
               {players.data?.map((entity) => (
                 <EntityRow key={entity.id} entity={entity} portraitSize={52} />
               ))}
-            </div>
+            </StaggerList>
             {players.data?.length === 0 && <Empty>No player characters yet</Empty>}
-          </section>
+          </Section>
         )}
 
         {showNpcs && (
-          <section className="stack gap-8">
+          <Section className="stack gap-8">
             <SectionHead label="People you have met" note={`${npcs.data?.length ?? 0} known`} />
-            <div>
+            <StaggerList>
               {npcs.data?.map((entity) => (
                 <EntityRow key={entity.id} entity={entity} portraitSize={44} />
               ))}
-            </div>
+            </StaggerList>
             {npcs.data?.length === 0 && <Empty>No NPCs recorded yet</Empty>}
-          </section>
+          </Section>
         )}
 
         <DmCreateBar types={['player', 'npc']} />

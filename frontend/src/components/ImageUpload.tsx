@@ -1,5 +1,8 @@
+import { AnimatePresence, motion } from 'framer-motion'
 import { useState } from 'react'
+import { LuImage, LuTrash2, LuUpload } from 'react-icons/lu'
 import { api } from '../api/client'
+import { SPRING } from '../lib/motion'
 
 /**
  * Presigns, then PUTs straight to storage. The API only ever stores the key —
@@ -37,13 +40,26 @@ export default function ImageUpload({
 
   return (
     <div className="field">
-      <span className="lab">Image</span>
-      {preview && (
-        <div className="port" style={{ width: '100%', aspectRatio: '3 / 2', maxHeight: 220 }}>
-          <img src={preview} alt="" />
-        </div>
-      )}
-      <label className="cta cta-ghost" style={{ cursor: busy ? 'wait' : 'pointer' }}>
+      <span className="lab with-icon">
+        <LuImage aria-hidden />
+        Image
+      </span>
+      <AnimatePresence initial={false}>
+        {preview && (
+          <motion.div
+            className="port"
+            style={{ width: '100%', aspectRatio: '3 / 2', maxHeight: 220 }}
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={SPRING}
+          >
+            <img src={preview} alt="" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <label className="cta cta-ghost with-icon" style={{ cursor: busy ? 'wait' : 'pointer' }}>
+        <LuUpload aria-hidden />
         {busy ? 'Uploading…' : preview ? 'Replace image' : 'Upload image'}
         <input
           type="file"
@@ -56,12 +72,13 @@ export default function ImageUpload({
       {preview && (
         <button
           type="button"
-          className="cta cta-ghost"
+          className="cta cta-ghost with-icon"
           onClick={() => {
             setPreview(null)
             onUploaded(null)
           }}
         >
+          <LuTrash2 aria-hidden />
           Remove image
         </button>
       )}

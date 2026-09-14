@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../api/client'
-import { Empty, EntityRow, Loading, SectionHead } from '../components/bits'
+import { Empty, EntityRow, Loading, Section, SectionHead, StaggerList } from '../components/bits'
 import DmCreateBar from '../components/DmCreateBar'
 
 /** Bestiary and factions — the shared pool of what the party knows. */
@@ -24,25 +24,25 @@ export default function CodexPage() {
       </div>
 
       <div className="stack gap-16">
-        <section className="stack gap-8">
+        <Section className="stack gap-8">
           <SectionHead label="Bestiary" note={`${monsters.data?.length ?? 0} entries`} />
-          <div>
+          <StaggerList>
             {monsters.data?.map((entity) => (
               <EntityRow key={entity.id} entity={entity} portraitSize={52} />
             ))}
-          </div>
+          </StaggerList>
           {monsters.data?.length === 0 && <Empty>Nothing catalogued yet</Empty>}
-        </section>
+        </Section>
 
-        <section className="stack gap-8">
+        <Section className="stack gap-8">
           <SectionHead label="Factions" note={`${factions.data?.length ?? 0} known`} />
-          <div>
+          <StaggerList>
             {factions.data?.map((entity) => (
               <EntityRow key={entity.id} entity={entity} portraitSize={44} />
             ))}
-          </div>
+          </StaggerList>
           {factions.data?.length === 0 && <Empty>No factions recorded yet</Empty>}
-        </section>
+        </Section>
 
         <DmCreateBar types={['monster', 'faction']} />
       </div>

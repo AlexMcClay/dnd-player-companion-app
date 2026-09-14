@@ -4,6 +4,20 @@
  * "spells" later means adding a template here — no migration, no API change.
  */
 
+import type { IconType } from 'react-icons'
+import {
+  LuBookOpen,
+  LuCircleHelp,
+  LuFlag,
+  LuFlaskConical,
+  LuHammer,
+  LuPackage,
+  LuSearch,
+  LuSkull,
+  LuUser,
+  LuUsers,
+} from 'react-icons/lu'
+
 export type FieldKind = 'text' | 'number' | 'boolean' | 'ingredients'
 
 export interface FieldDef {
@@ -17,6 +31,7 @@ export interface EntityTemplate {
   type: string
   label: string
   plural: string
+  icon: IconType
   /** Word shown in an empty image box. */
   portraitWord: string
   /** width / height of the hero image on the detail page. */
@@ -31,6 +46,7 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
     type: 'player',
     label: 'Player',
     plural: 'Players',
+    icon: LuUser,
     portraitWord: 'Portrait',
     heroAspect: '4 / 5',
     fields: [
@@ -43,6 +59,7 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
     type: 'npc',
     label: 'NPC',
     plural: 'NPCs',
+    icon: LuUsers,
     portraitWord: 'Portrait',
     heroAspect: '4 / 3',
     fields: [
@@ -56,6 +73,7 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
     type: 'faction',
     label: 'Faction',
     plural: 'Factions',
+    icon: LuFlag,
     portraitWord: 'Crest',
     heroAspect: '1 / 1',
     fields: [
@@ -68,6 +86,7 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
     type: 'monster',
     label: 'Monster',
     plural: 'Bestiary',
+    icon: LuSkull,
     portraitWord: 'Beast plate',
     heroAspect: '3 / 2',
     fields: [
@@ -80,6 +99,7 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
     type: 'item',
     label: 'Item',
     plural: 'Items',
+    icon: LuPackage,
     portraitWord: 'Item art',
     heroAspect: '3 / 2',
     ownable: true,
@@ -94,6 +114,7 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
     type: 'recipe',
     label: 'Recipe',
     plural: 'Crafting',
+    icon: LuFlaskConical,
     portraitWord: 'Item art',
     heroAspect: '3 / 2',
     fields: [
@@ -114,6 +135,7 @@ export function templateFor(type: string): EntityTemplate {
       type,
       label: type,
       plural: type,
+      icon: LuCircleHelp,
       portraitWord: 'Image',
       heroAspect: '3 / 2',
       fields: [],
@@ -125,13 +147,14 @@ export function templateFor(type: string): EntityTemplate {
 export interface TabDef {
   path: string
   label: string
+  icon: IconType
   types: string[]
 }
 
 export const TABS: TabDef[] = [
-  { path: '/party', label: 'Party', types: ['player', 'npc'] },
-  { path: '/codex', label: 'Codex', types: ['faction', 'monster'] },
-  { path: '/items', label: 'Items', types: ['item'] },
-  { path: '/craft', label: 'Craft', types: ['recipe'] },
-  { path: '/search', label: 'Search', types: [] },
+  { path: '/party', label: 'Party', icon: LuUsers, types: ['player', 'npc'] },
+  { path: '/codex', label: 'Codex', icon: LuBookOpen, types: ['faction', 'monster'] },
+  { path: '/items', label: 'Items', icon: LuPackage, types: ['item'] },
+  { path: '/craft', label: 'Craft', icon: LuHammer, types: ['recipe'] },
+  { path: '/search', label: 'Search', icon: LuSearch, types: [] },
 ]
