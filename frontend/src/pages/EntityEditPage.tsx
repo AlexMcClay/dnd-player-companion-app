@@ -17,7 +17,7 @@ import IngredientsEditor from '../components/IngredientsEditor'
 import { Empty, Loading, PageHead } from '../components/bits'
 import { Cta, ctaClass, Field, inputClass, textareaClass } from '../components/ui'
 import { useIsDm } from '../lib/identity'
-import { templateFor } from '../templates'
+import { KNOWLEDGE_HELP, templateFor } from '../templates'
 
 const RichEditor = lazy(() => import('../editor/RichEditor'))
 
@@ -39,12 +39,6 @@ const BLANK = (type: string): Draft => ({
   knowledge: 'unknown',
   data: {},
 })
-
-const KNOWLEDGE_HELP: Record<Knowledge, string> = {
-  unknown: 'Unknown — hidden from players',
-  rumoured: 'Rumoured — visible, flagged',
-  known: 'Known — fully visible',
-}
 
 const LABEL = 'type-lab'
 

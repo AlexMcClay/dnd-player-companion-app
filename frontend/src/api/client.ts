@@ -1,4 +1,6 @@
 import type {
+  Archive,
+  ArchivePreview,
   DdbPartySnapshot,
   DdbSnapshot,
   Entity,
@@ -6,6 +8,8 @@ import type {
   EntitySummary,
   Holding,
   HoldingInput,
+  ImportRequest,
+  ImportResult,
   Note,
   NoteInput,
   NotePlacement,
@@ -13,27 +17,35 @@ import type {
 } from '@codex/shared'
 import { getDmKey, getPlayerId } from '../lib/identity'
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+/** Who the caller claims to be. Separate so a non-JSON response can reuse it. */
+function authHeaders(): Record<string, string> {
   const dmKey = getDmKey()
   const playerId = getPlayerId()
+  return {
+    ...(dmKey ? { 'x-dm-key': dmKey } : {}),
+    ...(playerId ? { 'x-player-id': playerId } : {}),
+  }
+}
 
+async function fail(res: Response): Promise<never> {
+  const message = await res
+    .json()
+    .then((b: { error?: string }) => b.error)
+    .catch(() => null)
+  throw new Error(message ?? `${res.status} ${res.statusText}`)
+}
+
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`/api${path}`, {
     ...init,
     headers: {
       ...(init.body ? { 'Content-Type': 'application/json' } : {}),
-      ...(dmKey ? { 'x-dm-key': dmKey } : {}),
-      ...(playerId ? { 'x-player-id': playerId } : {}),
+      ...authHeaders(),
       ...init.headers,
     },
   })
 
-  if (!res.ok) {
-    const message = await res
-      .json()
-      .then((b: { error?: string }) => b.error)
-      .catch(() => null)
-    throw new Error(message ?? `${res.status} ${res.statusText}`)
-  }
+  if (!res.ok) await fail(res)
 
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T)
 }
@@ -136,6 +148,32 @@ export const api = {
 
   syncDdbParty(): Promise<DdbPartySnapshot> {
     return request<DdbPartySnapshot>('/ddb/party/sync', { method: 'POST' })
+  },
+
+  /**
+   * The whole database as a file. Not through `request`, which parses JSON —
+   * this stays a blob so the browser saves the bytes the server sent, including
+   * its formatting.
+   */
+  async exportBackup(): Promise<Blob> {
+    const res = await fetch('/api/backup/export', { headers: authHeaders() })
+    if (!res.ok) await fail(res)
+    return res.blob()
+  },
+
+  /** What an import would do, without doing any of it. */
+  previewImport(archive: Archive): Promise<ArchivePreview> {
+    return request<ArchivePreview>('/backup/preview', {
+      method: 'POST',
+      body: JSON.stringify({ archive }),
+    })
+  },
+
+  applyImport(body: ImportRequest): Promise<ImportResult> {
+    return request<ImportResult>('/backup/import', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
   },
 
   verifyDmKey(key: string): Promise<boolean> {

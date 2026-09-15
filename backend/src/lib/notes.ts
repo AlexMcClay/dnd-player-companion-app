@@ -1,5 +1,23 @@
 import { Prisma } from '@prisma/client'
+import type { NotePlacement, NoteVisibility } from '@codex/shared'
 import { knowledgeFilter } from './knowledge.js'
+
+/**
+ * Mirrors the CHECK constraints in the notes migration, so a bad request reads
+ * as a 400 rather than a 500 from Postgres.
+ */
+export function checkShape(
+  placement: NotePlacement,
+  subjectId: string | null,
+  visibility: NoteVisibility,
+): string | null {
+  if (placement === 'entry' && !subjectId) return 'An entry note needs a subject'
+  if (placement !== 'entry' && subjectId) return 'Only entry notes may have a subject'
+  if (placement === 'party' && visibility === 'private') {
+    return 'Party board notes are always shared'
+  }
+  return null
+}
 
 /**
  * The one place the app decides which notes a viewer may read. Two independent

@@ -2,6 +2,7 @@ import cors from 'cors'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import { env } from './env.js'
 import { attachIdentity } from './middleware/identity.js'
+import { backupRouter } from './routes/backup.js'
 import { ddbRouter } from './routes/ddb.js'
 import { entitiesRouter } from './routes/entities.js'
 import { holdingsRouter } from './routes/holdings.js'
@@ -11,8 +12,15 @@ import { uploadsRouter } from './routes/uploads.js'
 const app = express()
 
 app.use(cors())
-app.use(express.json({ limit: '1mb' }))
+// Identity is read from headers alone, so it can be settled before any body is.
 app.use(attachIdentity)
+
+// Ahead of the app-wide limit on purpose: a backup is the one request that is
+// legitimately large, and it brings its own parser. Everything below stays
+// capped at a size no note or entry has any business exceeding.
+app.use('/api/backup', backupRouter)
+
+app.use(express.json({ limit: '1mb' }))
 
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, dm: req.isDm, playerId: req.playerId })
@@ -34,6 +42,12 @@ app.use((_req, res) => {
 })
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  // A body over the parser's limit is the caller's problem, not ours, and
+  // "Internal error" is a bad thing to tell someone restoring a large backup.
+  if ((err as { type?: string } | null)?.type === 'entity.too.large') {
+    res.status(413).json({ error: 'That is too large to send in one request' })
+    return
+  }
   console.error(err)
   res.status(500).json({ error: 'Internal error' })
 })

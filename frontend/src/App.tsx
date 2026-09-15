@@ -7,6 +7,7 @@ import { EASE, pageVariants } from './lib/motion'
 import { useNavDirection } from './lib/useSwipeNav'
 import CodexPage from './pages/CodexPage'
 import DdbPartyPage from './pages/DdbPartyPage'
+import DmPage from './pages/DmPage'
 import CraftPage from './pages/CraftPage'
 import EntityDetailPage from './pages/EntityDetailPage'
 import EntityEditPage from './pages/EntityEditPage'
@@ -68,6 +69,9 @@ export default function App() {
               <Route path="/items" element={<Navigate to="/party" replace />} />
               <Route path="/craft" element={<CraftPage />} />
               <Route path="/search" element={<SearchPage />} />
+              {/* DM-only, and gated by the page itself rather than the route:
+                  every other route here is public too. */}
+              <Route path="/dm" element={<DmPage />} />
               <Route path="/e/:id" element={<EntityDetailPage />} />
               <Route path="/e/:id/edit" element={<EntityEditPage />} />
               <Route path="/new" element={<EntityEditPage />} />

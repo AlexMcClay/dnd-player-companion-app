@@ -4,7 +4,19 @@
  * "spells" later means adding a template here — no migration, no API change.
  */
 
+import type { Knowledge } from '@codex/shared'
 import type { IconType } from 'react-icons'
+
+/**
+ * What each knowledge state means, in the DM's terms. Lives here beside the
+ * templates because the entry form and the AI import guide both describe it,
+ * and two wordings would eventually disagree.
+ */
+export const KNOWLEDGE_HELP: Record<Knowledge, string> = {
+  unknown: 'Unknown — hidden from players',
+  rumoured: 'Rumoured — visible, flagged',
+  known: 'Known — fully visible',
+}
 import {
   LuBookOpen,
   LuCircleHelp,

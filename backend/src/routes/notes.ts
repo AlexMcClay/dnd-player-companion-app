@@ -8,7 +8,7 @@ import {
   type NoteVisibility,
 } from '@codex/shared'
 import { knowledgeFilter } from '../lib/knowledge.js'
-import { canModify, noteVisibility } from '../lib/notes.js'
+import { canModify, checkShape, noteVisibility } from '../lib/notes.js'
 import { prisma } from '../lib/prisma.js'
 import { serializeNote } from '../lib/serialize.js'
 import { requireActor } from '../middleware/identity.js'
@@ -73,15 +73,6 @@ function parseInput(body: unknown, partial: boolean): NoteInput | string {
   return out as NoteInput
 }
 
-/** Mirrors the CHECK constraints, so a bad request reads as 400 not 500. */
-function checkShape(placement: NotePlacement, subjectId: string | null, visibility: NoteVisibility) {
-  if (placement === 'entry' && !subjectId) return 'An entry note needs a subject'
-  if (placement !== 'entry' && subjectId) return 'Only entry notes may have a subject'
-  if (placement === 'party' && visibility === 'private') {
-    return 'Party board notes are always shared'
-  }
-  return null
-}
 
 // GET /api/notes?subject=&placement=&author=
 notesRouter.get('/', async (req, res, next) => {

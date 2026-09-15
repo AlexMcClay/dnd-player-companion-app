@@ -214,6 +214,141 @@ export interface ApiError {
   error: string
 }
 
+/* ── backup archive ─────────────────────────────────────────────────── */
+
+/**
+ * One format serves two jobs: the DM's backup, and a batch of entries written
+ * by an AI from session notes. That is why every cross-reference is an entity
+ * **name** rather than an id — the same way the seed, `[[wiki-links]]` and
+ * recipe reagents already refer to things, and the only way an AI can write a
+ * reference at all.
+ *
+ * An export carries ids as well, so restoring into the same database matches
+ * rows exactly rather than by name.
+ */
+export const ARCHIVE_FORMAT = 'codex-archive'
+export const ARCHIVE_VERSION = 1
+
+export interface ArchiveEntity {
+  id?: string
+  type: string
+  name: string
+  summary?: string | null
+  bodyMd?: string | null
+  data?: EntityData
+  imageKey?: string | null
+  tags?: string[]
+  knowledge?: Knowledge
+  createdAt?: string
+  updatedAt?: string
+  /**
+   * Items only. Shorthand for one holding of this item, so a batch can say
+   * "and the party has two of these" without a separate array. Lifted into
+   * `holdings` before anything is planned.
+   */
+  holding?: { quantity?: number; owner?: string | null; note?: string | null }
+}
+
+export interface ArchiveHolding {
+  id?: string
+  /** Item name. */
+  item: string
+  /** Player name. Null or omitted means the party stash. */
+  owner?: string | null
+  quantity?: number
+  note?: string | null
+}
+
+export interface ArchiveNote {
+  id?: string
+  /** Player name. */
+  author: string
+  /** Entity name for an entry note; null otherwise. */
+  subject?: string | null
+  placement: NotePlacement
+  visibility?: NoteVisibility
+  title?: string | null
+  bodyMd: string
+  createdAt?: string
+}
+
+export interface ArchiveDdbSnapshot extends Omit<DdbSnapshot, 'playerId'> {
+  /** Player name. */
+  player: string
+}
+
+export interface Archive {
+  format: typeof ARCHIVE_FORMAT
+  version: typeof ARCHIVE_VERSION
+  exportedAt?: string
+  entities: ArchiveEntity[]
+  holdings?: ArchiveHolding[]
+  notes?: ArchiveNote[]
+  ddb?: { snapshots?: ArchiveDdbSnapshot[]; party?: DdbPartySnapshot | null }
+}
+
+/** What to do with a record that already exists. Anything unlisted is skipped. */
+export type ArchiveResolution = 'skip' | 'replace'
+
+/** A problem with one record, located by a path into the archive. */
+export interface ArchiveIssue {
+  /** `entities[3].type` */
+  path: string
+  message: string
+}
+
+export interface ArchiveConflict {
+  /**
+   * Echoed back in `resolutions`. Built from the *existing* row's id, so a
+   * preview cannot be applied against a database that has moved on.
+   */
+  key: string
+  path: string
+  /** `npc · Krag Bronzebeard` */
+  label: string
+  /**
+   * Fields present in the archive whose value differs, with `data.level` for a
+   * key inside `data`. Empty means the record is already identical.
+   */
+  changed: string[]
+  existing: Record<string, unknown>
+  incoming: Record<string, unknown>
+}
+
+export interface ArchiveKindPlan {
+  create: number
+  conflicts: ArchiveConflict[]
+}
+
+export interface ArchivePreview {
+  entities: ArchiveKindPlan
+  holdings: ArchiveKindPlan
+  notes: ArchiveKindPlan
+  ddb: ArchiveKindPlan
+  /** Blocking: the import refuses while any of these exist. */
+  errors: ArchiveIssue[]
+  /** Advisory: renames that break links, images not carried, fields ignored. */
+  warnings: ArchiveIssue[]
+}
+
+export interface ImportRequest {
+  archive: Archive
+  resolutions: Record<string, ArchiveResolution>
+}
+
+export interface ImportCounts {
+  created: number
+  replaced: number
+  skipped: number
+}
+
+export interface ImportResult {
+  entities: ImportCounts
+  holdings: ImportCounts
+  notes: ImportCounts
+  ddb: ImportCounts
+}
+
 /** Shape of `data` for recipes. Rendered by the recipe template. */
 export interface RecipeIngredient {
   name: string

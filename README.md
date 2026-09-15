@@ -98,6 +98,34 @@ Tap **Locked** in the top right and enter `DM_KEY`. That reveals sealed entries 
 turns on every create/edit/delete control. The key is checked server-side on every
 write — hiding the buttons is a convenience, not the protection.
 
+### DM tools
+
+The DM panel has a **DM tools** link, to `/dm`. Three things live there.
+
+**Backup** downloads the whole database as one JSON file — every entry, stack,
+note and D&D Beyond mirror. Pictures are not in it; they live in object storage
+and nothing here deletes them.
+
+**Import** takes that file back, or a batch written by hand or by an AI. It is
+additive and it never deletes. Anything already there is listed first with the
+fields that differ, and the DM says Keep or Replace per row, or for a whole
+kind at once. A replace is a PUT, not a swap: fields the file leaves out are
+untouched and `data` is merged key by key, so a batch that mentions a character
+in passing cannot blank the fields a D&D Beyond sync wrote. Restoring an export
+over the database it came from therefore reports every row as identical and
+changes nothing.
+
+Entries are matched by `id` first, then by `type` plus name, case-insensitively
+— the same way `[[links]]`, recipe reagents and the seed already refer to
+things. That is also why every cross-reference in the file is a *name*: an AI
+can write one, and a person can read it.
+
+**Writing entries with an AI** generates the instructions to paste into a chat
+above your session notes. They are built from the running app — the field
+vocabulary each type actually renders, and the names of every campaign entry
+that exists — so what comes back links to `[[Red Larch]]` instead of inventing
+a second one. `frontend/src/lib/aiGuide.ts`.
+
 ## D&D Beyond
 
 A character with a `ddbCharacterId` set — the number in its D&D Beyond URL — can
@@ -286,6 +314,9 @@ API returns a ready-to-use `imageUrl`.
 | `POST /api/ddb/:playerId/sync` | The DM, or the player whose character it is |
 | `POST /api/uploads/presign` | DM only |
 | `POST /api/dm/verify` | Checks a passphrase before the UI stores it |
+| `GET /api/backup/export` | DM only. The whole database as one JSON file. |
+| `POST /api/backup/preview` | DM only. What an import would do, without doing it. |
+| `POST /api/backup/import` | DM only. Adds, and replaces only what the DM ticked. |
 
 Authoring the catalogue is the DM's. Moving things around in it is everyone's.
 

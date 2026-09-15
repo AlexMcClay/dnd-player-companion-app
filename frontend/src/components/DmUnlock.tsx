@@ -1,7 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { LuLock, LuLockOpen, LuTriangleAlert } from 'react-icons/lu'
+import { LuLock, LuLockOpen, LuTriangleAlert, LuWrench } from 'react-icons/lu'
+import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import { setDmKey, useIsDm } from '../lib/identity'
 import { SPRING } from '../lib/motion'
@@ -65,6 +66,10 @@ export default function DmUnlock({ onClose }: { onClose: () => void }) {
               You can see sealed entries and edit anything. Lock up before handing the phone to a
               player.
             </p>
+            <Link to="/dm" className={ctaClass('ghost')} onClick={onClose}>
+              <LuWrench aria-hidden />
+              DM tools
+            </Link>
             <Cta tone="danger" onClick={lock}>
               <LuLock aria-hidden />
               Lock

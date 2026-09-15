@@ -7,6 +7,7 @@
     "dev": "tsx watch --env-file=../.env src/index.ts",
     "start": "tsx --env-file=../.env src/index.ts",
     "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/**/*.test.ts",
     "db:migrate": "dotenv -e ../.env -- prisma migrate deploy",
     "db:reset": "dotenv -e ../.env -- prisma migrate reset --force",
     "db:seed": "tsx --env-file=../.env prisma/seed.ts",
