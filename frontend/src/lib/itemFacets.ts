@@ -1,115 +1,164 @@
 import type { EntitySummary } from '@codex/shared'
 
 /**
- * Splitting the item codex into the party's own things and the SRD reference,
- * and faceting the reference by category and rarity.
+ * Sorting the item codex into categories you can pick from, and keeping the
+ * party's own things at the top of whichever category they land in.
  *
- * Pure on purpose — no React, no hooks — so both the codex and the add-item
- * picker share one definition of what a "weapon" is, and so this can be checked
- * against the real corpus without a browser.
+ * Pure on purpose — no React, no hooks — so the codex and the add-item picker
+ * share one definition of what a weapon is, and so this can be checked against
+ * the real corpus without a browser.
  */
 
-/* ── shelves ──────────────────────────────────────────────────────── */
+/* ── whose item is it ─────────────────────────────────────────────── */
 
 /**
  * The tag `db:seed:srd` puts on everything it seeds. Anything without it was
- * written for this campaign, which makes the split self-maintaining: an item the
- * DM creates lands on the campaign shelf without anyone remembering to mark it.
+ * written for this campaign, which makes the distinction self-maintaining: an
+ * item the DM creates counts as the party's without anyone marking it.
+ *
+ * This is a property of a row, not a place. Campaign items live in the same
+ * categories as everything else — they are only sorted and marked.
  */
 export const REFERENCE_TAG = 'srd'
 
-export type Shelf = 'campaign' | 'reference'
-
-export const SHELVES: readonly Shelf[] = ['campaign', 'reference']
-
-export function isShelf(value: string | null): value is Shelf {
-  return value !== null && (SHELVES as readonly string[]).includes(value)
+export function isReference(entity: EntitySummary): boolean {
+  return entity.tags.includes(REFERENCE_TAG)
 }
 
-export function shelfOf(entity: EntitySummary): Shelf {
-  return entity.tags.includes(REFERENCE_TAG) ? 'reference' : 'campaign'
+/**
+ * The party's own things first, everything else after.
+ *
+ * A stable partition rather than a comparator with a name tiebreak: `sort` is
+ * stable, so each half keeps the order it arrived in. Alphabetical input stays
+ * alphabetical; rank-ordered input stays rank-ordered.
+ *
+ * Do not use this on search results — see the note where the codex calls it.
+ */
+export function campaignFirst(items: EntitySummary[]): EntitySummary[] {
+  return [...items].sort((a, b) => Number(isReference(a)) - Number(isReference(b)))
 }
 
 /* ── categories ───────────────────────────────────────────────────── */
 
-export const CATEGORY_GROUPS = [
-  'weapon',
+export const CATEGORIES = [
+  'weapons',
   'armour',
   'gear',
-  'magic',
-  'wondrous',
   'tools',
+  'consumables',
+  'wondrous',
+  'implements',
+  'reagents',
+  'treasure',
   'mounts',
-  'other',
+  'misc',
 ] as const
 
-export type CategoryGroup = (typeof CATEGORY_GROUPS)[number]
+export type Category = (typeof CATEGORIES)[number]
 
-export const GROUP_LABEL: Record<CategoryGroup, string> = {
-  weapon: 'Weapons',
+export const CATEGORY_LABEL: Record<Category, string> = {
+  weapons: 'Weapons',
   armour: 'Armour',
   gear: 'Gear',
-  magic: 'Magic',
-  wondrous: 'Wondrous',
   tools: 'Tools',
+  consumables: 'Consumables',
+  wondrous: 'Wondrous',
+  implements: 'Rings & Wands',
+  reagents: 'Reagents',
+  treasure: 'Treasure',
   mounts: 'Mounts',
-  other: 'Other',
+  misc: 'Misc',
+}
+
+export const CATEGORY_BLURB: Record<Category, string> = {
+  weapons: 'Mundane and magic alike',
+  armour: 'Worn protection and shields',
+  gear: 'Everything a pack holds',
+  tools: 'Kits and instruments',
+  consumables: 'Potions, scrolls and poisons',
+  wondrous: 'Cloaks, boots, figurines and stranger things',
+  implements: 'Rings, wands, staves and rods',
+  reagents: 'Harvested parts and crafting stock',
+  treasure: 'Gems, art and heraldry',
+  mounts: 'Beasts, carts and boats',
+  misc: 'Papers, maps and oddments',
 }
 
 /**
- * `data.category` is free text, so this maps the values the SRD actually uses
- * and lets everything else fall to `other`.
+ * `data.category` is free text, so this maps the values the corpus actually
+ * uses and lets anything else fall to `misc`.
  *
- * A default of `gear` would be tidier and wrong: 12 of the 14 campaign items use
- * a category the SRD never does — Crafting material, Gemstone, Document, Poison,
- * Heraldry — and quietly filing them under Gear would claim a precision this
- * does not have. `other` says "uncategorised" honestly.
+ * Note what is deliberately *not* here: magic weapons and magic armour carry
+ * `category: Weapon`/`Armor`, so 64 of them land in Weapons and Armour rather
+ * than in a magic bucket. That is why "Magic" is split into Wondrous and Rings
+ * & Wands — no tile then claims to hold every magic item, which would be a lie.
  */
-const CATEGORY_MAP: Readonly<Record<string, CategoryGroup>> = Object.freeze({
-  'martial melee': 'weapon',
-  'martial ranged': 'weapon',
-  'simple melee': 'weapon',
-  'simple ranged': 'weapon',
-  weapon: 'weapon',
-  ammunition: 'weapon',
+const CATEGORY_MAP: Readonly<Record<string, Category>> = Object.freeze({
+  weapon: 'weapons',
+  'martial melee': 'weapons',
+  'martial ranged': 'weapons',
+  'simple melee': 'weapons',
+  'simple ranged': 'weapons',
+  ammunition: 'weapons',
 
   // The SRD files armour by weight, with no "Armor" on the light/medium/heavy
   // rows themselves, so these three are categories rather than a property.
+  armor: 'armour',
+  armour: 'armour',
+  shield: 'armour',
   light: 'armour',
   medium: 'armour',
   heavy: 'armour',
-  shield: 'armour',
-  armor: 'armour',
-  armour: 'armour',
 
   'standard gear': 'gear',
-  'adventuring gear': 'gear',
   'equipment packs': 'gear',
   'arcane foci': 'gear',
   'druidic foci': 'gear',
   'holy symbols': 'gear',
 
-  potion: 'magic',
-  scroll: 'magic',
-  ring: 'magic',
-  rod: 'magic',
-  staff: 'magic',
-  wand: 'magic',
-
-  'wondrous items': 'wondrous',
-  'wondrous item': 'wondrous',
-
   tools: 'tools',
   kits: 'tools',
 
+  potion: 'consumables',
+  scroll: 'consumables',
+  poison: 'consumables',
+
+  'wondrous items': 'wondrous',
+  // Singular, and not a typo to tidy away: it is how the campaign seed writes
+  // it, and the Carved Obsidian Token is the only item using it.
+  'wondrous item': 'wondrous',
+
+  ring: 'implements',
+  wand: 'implements',
+  staff: 'implements',
+  rod: 'implements',
+
+  'crafting material': 'reagents',
+
+  gemstone: 'treasure',
+  heraldry: 'treasure',
+
   'mounts and vehicles': 'mounts',
+
+  document: 'misc',
 })
 
-export function groupOf(entity: EntitySummary): CategoryGroup {
+export function categoryOf(entity: EntitySummary): Category {
   const raw = String((entity.data as Record<string, unknown>)?.category ?? '')
     .trim()
     .toLowerCase()
-  return CATEGORY_MAP[raw] ?? 'other'
+  return CATEGORY_MAP[raw] ?? 'misc'
+}
+
+export function isCategory(value: string | null): value is Category {
+  return value !== null && (CATEGORIES as readonly string[]).includes(value)
+}
+
+/** How many items sit in each category, for the tiles. */
+export function categoryCounts(items: EntitySummary[]): Record<Category, number> {
+  const counts = Object.fromEntries(CATEGORIES.map((c) => [c, 0])) as Record<Category, number>
+  for (const item of items) counts[categoryOf(item)] += 1
+  return counts
 }
 
 /* ── rarity ───────────────────────────────────────────────────────── */
@@ -142,27 +191,23 @@ export function rarityOf(entity: EntitySummary): Rarity | null {
 /* ── filtering ────────────────────────────────────────────────────── */
 
 export interface ItemFilter {
-  group: CategoryGroup | null
+  category: Category | null
   rarity: Rarity | null
 }
 
-export const NO_FILTER: ItemFilter = { group: null, rarity: null }
-
-export function isFiltered(filter: ItemFilter): boolean {
-  return filter.group !== null || filter.rarity !== null
-}
+export const NO_FILTER: ItemFilter = { category: null, rarity: null }
 
 /** Both axes are independent, so they combine with AND. */
 export function filterItems(items: EntitySummary[], filter: ItemFilter): EntitySummary[] {
   return items.filter(
     (item) =>
-      (filter.group === null || groupOf(item) === filter.group) &&
+      (filter.category === null || categoryOf(item) === filter.category) &&
       (filter.rarity === null || rarityOf(item) === filter.rarity),
   )
 }
 
 export interface FacetCounts {
-  groups: Record<CategoryGroup, number>
+  categories: Record<Category, number>
   rarities: Record<Rarity, number>
   /** How many rows the current filter actually yields. */
   total: number
@@ -178,27 +223,24 @@ export interface FacetCounts {
  * clicked this" — count with everything applied and every unselected chip reads
  * zero, so there is no way to see where to go next.
  *
- * Always call this with the same pool the list is drawn from, search results
- * included. A chip reading "Rare 119" that yields 4 rows is worse than no chip.
+ * Always call this with the same pool the list is drawn from. A chip reading
+ * "Rare 119" that yields four rows is worse than no chip.
  */
 export function facetCounts(pool: EntitySummary[], filter: ItemFilter): FacetCounts {
-  const groups = Object.fromEntries(CATEGORY_GROUPS.map((g) => [g, 0])) as Record<
-    CategoryGroup,
-    number
-  >
+  const categories = Object.fromEntries(CATEGORIES.map((c) => [c, 0])) as Record<Category, number>
   const rarities = Object.fromEntries(RARITIES.map((r) => [r, 0])) as Record<Rarity, number>
   let hasRarities = false
 
   for (const item of pool) {
-    const group = groupOf(item)
+    const category = categoryOf(item)
     const rarity = rarityOf(item)
     if (rarity !== null) hasRarities = true
 
-    if (filter.rarity === null || rarity === filter.rarity) groups[group] += 1
-    if (rarity !== null && (filter.group === null || group === filter.group)) {
+    if (filter.rarity === null || rarity === filter.rarity) categories[category] += 1
+    if (rarity !== null && (filter.category === null || category === filter.category)) {
       rarities[rarity] += 1
     }
   }
 
-  return { groups, rarities, total: filterItems(pool, filter).length, hasRarities }
+  return { categories, rarities, total: filterItems(pool, filter).length, hasRarities }
 }

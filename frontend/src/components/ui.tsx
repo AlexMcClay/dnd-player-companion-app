@@ -60,6 +60,41 @@ export function PillButton({
   )
 }
 
+/**
+ * A filter chip: a label, how many rows it would yield, and whether it is on.
+ *
+ * An empty chip goes dead rather than disappearing — a bar that reflows on
+ * every keystroke during a search is worse to use than a dim chip.
+ */
+export function Chip({
+  label,
+  count,
+  selected,
+  onClick,
+}: {
+  label: string
+  count: number
+  selected: boolean
+  onClick: () => void
+}) {
+  const empty = count === 0 && !selected
+
+  return (
+    <PillButton
+      tone={selected ? 'solid' : 'neutral'}
+      disabled={empty}
+      aria-pressed={selected}
+      className={cx(empty && 'opacity-45')}
+      onClick={onClick}
+    >
+      {label}
+      <span className={cx('tabular-nums', selected ? 'opacity-70' : 'text-ink-faint')}>
+        {count}
+      </span>
+    </PillButton>
+  )
+}
+
 /* ── buttons ──────────────────────────────────────────────────────── */
 
 export type CtaTone = 'primary' | 'ghost' | 'danger'

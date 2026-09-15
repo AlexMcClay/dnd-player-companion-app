@@ -7,8 +7,15 @@ import { StaggerList } from './bits'
  * Below this many rows, rendering them all is cheaper than virtualising and
  * keeps the staggered entry animation. Above it, the SRD item repository is
  * hundreds of rows and the DOM cost stops being free.
+ *
+ * Set above the largest item category that is not Wondrous (Gear, 105). The
+ * threshold swaps the whole subtree — StaggerList for WindowVirtual — so a list
+ * that crosses it *remounts*: the stagger replays and the virtualiser
+ * remeasures. At 40 that happened while typing, because several categories sit
+ * either side of it. Only one list in the app is now big enough to virtualise,
+ * which is the point: it is a cost, not a feature.
  */
-const VIRTUALISE_ABOVE = 40
+const VIRTUALISE_ABOVE = 120
 
 /** Rows vary (a plain entity row, a holding row that wraps), so this is a hint. */
 const ESTIMATED_ROW = 74

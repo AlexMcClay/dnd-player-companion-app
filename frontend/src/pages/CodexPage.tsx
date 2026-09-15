@@ -1,12 +1,29 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import type { EntitySummary } from '@codex/shared'
 import { motion } from 'framer-motion'
-import { useMemo, type ReactNode } from 'react'
-import { LuChevronLeft, LuChevronRight, LuLibrary, LuSearch, LuX } from 'react-icons/lu'
+import { useEffect, useMemo, type ReactNode } from 'react'
+import type { IconType } from 'react-icons'
+import {
+  LuBackpack,
+  LuBoxes,
+  LuCaravan,
+  LuChevronLeft,
+  LuChevronRight,
+  LuFlaskRound,
+  LuGem,
+  LuSearch,
+  LuShield,
+  LuSparkles,
+  LuSprout,
+  LuSwords,
+  LuWand,
+  LuWrench,
+  LuX,
+} from 'react-icons/lu'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import DmCreateBar from '../components/DmCreateBar'
-import ItemFilterBar from '../components/ItemFilterBar'
+import { RarityChips } from '../components/ItemFilterBar'
 import {
   Empty,
   EntityRow,
@@ -17,20 +34,24 @@ import {
   StaggerList,
 } from '../components/bits'
 import VirtualList from '../components/VirtualList'
-import { cx, inputClass, panelClass, rowClass } from '../components/ui'
+import { cx, inputClass, panelClass } from '../components/ui'
 import {
-  filterItems,
-  isShelf,
-  shelfOf,
-  type CategoryGroup,
+  CATEGORIES,
+  CATEGORY_BLURB,
+  CATEGORY_LABEL,
+  campaignFirst,
+  categoryCounts,
+  categoryOf,
+  isCategory,
+  isReference,
+  rarityOf,
+  RARITIES,
+  type Category,
   type ItemFilter,
   type Rarity,
-  type Shelf,
-  CATEGORY_GROUPS,
-  NO_FILTER,
-  RARITIES,
 } from '../lib/itemFacets'
 import { rowVariants, SPRING } from '../lib/motion'
+import { tokenMatch } from '../lib/textMatch'
 import { useAllEntities, useAllItems } from '../lib/useAllEntities'
 import { useDebounced } from '../lib/useDebounced'
 import { CODEX_TYPES, templateFor } from '../templates'
@@ -42,15 +63,25 @@ const BLURB: Record<CodexType, string> = {
   faction: 'Who holds power, and how they feel about you',
   location: 'Countries, cities, districts and the odd inn',
   monster: 'What you have fought, and what you learned',
-  item: 'What the party has actually found',
+  item: 'Weapons, gear, reagents and everything else',
+}
+
+const CATEGORY_ICON: Record<Category, IconType> = {
+  weapons: LuSwords,
+  armour: LuShield,
+  gear: LuBackpack,
+  tools: LuWrench,
+  consumables: LuFlaskRound,
+  wondrous: LuSparkles,
+  implements: LuWand,
+  reagents: LuSprout,
+  treasure: LuGem,
+  mounts: LuCaravan,
+  misc: LuBoxes,
 }
 
 function isCodexType(value: string | null): value is CodexType {
   return value !== null && (CODEX_TYPES as readonly string[]).includes(value)
-}
-
-function isGroup(value: string | null): value is CategoryGroup {
-  return value !== null && (CATEGORY_GROUPS as readonly string[]).includes(value)
 }
 
 function isRarity(value: string | null): value is Rarity {
@@ -58,9 +89,25 @@ function isRarity(value: string | null): value is Rarity {
 }
 
 /**
- * The shared pool of knowledge. Choose a kind from the grid, then browse or
- * search within it. Everything — kind, shelf, query, filters — lives in the URL,
- * so back works and any view can be shared.
+ * How deep in the codex a set of params sits.
+ *
+ * Replace-vs-push is decided by comparing depths, not by which params changed.
+ * Keyed on params it goes wrong the moment a param becomes a view discriminator:
+ * the first keystroke at grid level changes the view but not the group, so it
+ * would replace, and back would leave the codex entirely rather than returning
+ * to the grid.
+ */
+function depthOf(group: CodexType | null, category: Category | null, q: string): number {
+  if (!group) return 0
+  if (group !== 'item') return 1
+  if (category) return 2
+  return q ? 2 : 1
+}
+
+/**
+ * The shared pool of knowledge. Pick a kind, then — for items, which run to
+ * hundreds — a category. Everything lives in the URL, so back works and any
+ * view can be shared.
  */
 export default function CodexPage() {
   const [params, setParams] = useSearchParams()
@@ -68,60 +115,51 @@ export default function CodexPage() {
   const groupParam = params.get('group')
   const group = isCodexType(groupParam) ? groupParam : null
 
-  const shelfParam = params.get('shelf')
-  const shelf: Shelf = isShelf(shelfParam) ? shelfParam : 'campaign'
+  const catParam = params.get('cat')
+  const category = isCategory(catParam) ? catParam : null
+
+  const rarityParam = params.get('rarity')
+  const rarity = isRarity(rarityParam) ? rarityParam : null
 
   const q = params.get('q') ?? ''
-  const catParam = params.get('cat')
-  const rarityParam = params.get('rarity')
-  const filter: ItemFilter = {
-    group: isGroup(catParam) ? catParam : null,
-    rarity: isRarity(rarityParam) ? rarityParam : null,
-  }
 
   interface Nav {
     group: CodexType | null
-    shelf: Shelf
+    category: Category | null
+    rarity: Rarity | null
     q: string
-    filter: ItemFilter
   }
 
   function open(next: Partial<Nav>) {
-    const merged: Nav = { group, shelf, q, filter, ...next }
+    const merged: Nav = { group, category, rarity, q, ...next }
     const out = new URLSearchParams()
     if (merged.group) out.set('group', merged.group)
-    // 'campaign' is the default, so it stays out of the URL.
-    if (merged.shelf === 'reference') out.set('shelf', 'reference')
+    if (merged.category) out.set('cat', merged.category)
+    if (merged.rarity) out.set('rarity', merged.rarity)
     if (merged.q) out.set('q', merged.q)
-    if (merged.filter.group) out.set('cat', merged.filter.group)
-    if (merged.filter.rarity) out.set('rarity', merged.filter.rarity)
 
-    // Typing and toggling a chip replace; changing shelf or kind pushes, so
-    // stepping into the reference is something back can step out of.
-    const sameView = merged.group === group && merged.shelf === shelf
-    setParams(out, { replace: sameView })
+    // Going deeper pushes; staying level or stepping back replaces, so the
+    // history stack never grows by browsing sideways.
+    const to = depthOf(merged.group, merged.category, merged.q)
+    const from = depthOf(group, category, q)
+    setParams(out, { replace: to <= from })
   }
 
-  if (!group) return <TypeGrid onPick={(type) => open({ group: type, q: '', filter: NO_FILTER })} />
+  if (!group) return <TypeGrid onPick={(type) => open({ group: type, q: '', category: null })} />
 
   if (group === 'item') {
     return (
-      <ItemShelf
-        shelf={shelf}
+      <Items
+        category={category}
+        rarity={rarity}
         q={q}
-        filter={filter}
         onQuery={(next) => open({ q: next })}
-        onFilter={(next) => {
-          // The virtualiser will happily leave you stranded in blank space when
-          // 598 rows become 12.
-          window.scrollTo({ top: 0 })
-          open({ filter: next })
-        }}
-        onShelf={(next) => open({ shelf: next, q: '', filter: NO_FILTER })}
+        onCategory={(next) => open({ category: next, rarity: null, q: '' })}
+        onRarity={(next) => open({ rarity: next })}
         onBack={() =>
-          shelf === 'reference'
-            ? open({ shelf: 'campaign', q: '', filter: NO_FILTER })
-            : open({ group: null, q: '', filter: NO_FILTER })
+          category || q
+            ? open({ category: null, rarity: null, q: '' })
+            : open({ group: null, q: '' })
         }
       />
     )
@@ -140,14 +178,7 @@ export default function CodexPage() {
 /** Landing view: one card per kind, with how many entries it holds. */
 function TypeGrid({ onPick }: { onPick: (type: CodexType) => void }) {
   const all = useAllEntities()
-
   const rows = all.data ?? []
-  const countOf = (type: CodexType) => rows.filter((entity) => entity.type === type).length
-  // The Items tile counts the campaign shelf, because that is where it lands.
-  const referenceCount = rows.filter(
-    (entity) => entity.type === 'item' && shelfOf(entity) === 'reference',
-  ).length
-  const campaignItems = countOf('item') - referenceCount
 
   return (
     <>
@@ -162,30 +193,15 @@ function TypeGrid({ onPick }: { onPick: (type: CodexType) => void }) {
         <StaggerList className="grid grid-cols-2 gap-3">
           {CODEX_TYPES.map((type) => {
             const template = templateFor(type)
-            const Icon = template.icon
-            const isItem = type === 'item'
             return (
-              <motion.button
+              <Tile
                 key={type}
-                type="button"
-                className={panelClass('flex cursor-pointer flex-col items-start gap-2 text-left')}
-                variants={rowVariants}
-                whileTap={{ scale: 0.96 }}
-                transition={SPRING}
+                icon={template.icon}
+                label={template.plural}
+                count={rows.filter((entity) => entity.type === type).length}
+                blurb={BLURB[type]}
                 onClick={() => onPick(type)}
-              >
-                <span className="flex w-full items-center justify-between gap-2">
-                  <Icon className="size-5 text-gold" aria-hidden />
-                  <span className="type-meta">{isItem ? campaignItems : countOf(type)}</span>
-                </span>
-                <span className="type-name">{template.plural}</span>
-                <span className="type-meta leading-relaxed normal-case tracking-normal">
-                  {BLURB[type]}
-                </span>
-                {isItem && referenceCount > 0 && (
-                  <span className="type-meta text-ink-muted">+{referenceCount} reference</span>
-                )}
-              </motion.button>
+              />
             )
           })}
         </StaggerList>
@@ -198,11 +214,43 @@ function TypeGrid({ onPick }: { onPick: (type: CodexType) => void }) {
   )
 }
 
+/** One card in either grid. */
+function Tile({
+  icon: Icon,
+  label,
+  count,
+  blurb,
+  onClick,
+}: {
+  icon: IconType
+  label: string
+  count: number
+  blurb: string
+  onClick: () => void
+}) {
+  return (
+    <motion.button
+      type="button"
+      className={panelClass('flex cursor-pointer flex-col items-start gap-2 text-left')}
+      variants={rowVariants}
+      whileTap={{ scale: 0.96 }}
+      transition={SPRING}
+      onClick={onClick}
+    >
+      <span className="flex w-full items-center justify-between gap-2">
+        <Icon className="size-5 text-gold" aria-hidden />
+        <span className="type-meta">{count}</span>
+      </span>
+      <span className="type-name">{label}</span>
+      <span className="type-meta leading-relaxed normal-case tracking-normal">{blurb}</span>
+    </motion.button>
+  )
+}
+
 /** Back link, title and search box — the chrome every browse view shares. */
 function BrowseHead({
   back,
   title,
-  subtitle,
   q,
   placeholder,
   onQuery,
@@ -210,7 +258,6 @@ function BrowseHead({
 }: {
   back: { label: string; onClick: () => void }
   title: string
-  subtitle?: ReactNode
   q: string
   placeholder: string
   onQuery: (next: string) => void
@@ -230,7 +277,6 @@ function BrowseHead({
       </motion.button>
 
       <h1 className="type-title m-0">{title}</h1>
-      {subtitle && <div className="type-meta">{subtitle}</div>}
 
       <div className="relative flex items-center">
         <LuSearch
@@ -262,10 +308,10 @@ function BrowseHead({
 }
 
 /**
- * Server-side search for one kind, debounced.
+ * Server-side search across one kind, debounced.
  *
  * Kept server-side because it matches body text, which the list payload does not
- * carry — a client-side filter could only ever see names and summaries.
+ * carry — a client-side filter can only ever see names and summaries.
  */
 function useSearch(type: CodexType, q: string) {
   const debounced = useDebounced(q)
@@ -278,7 +324,7 @@ function useSearch(type: CodexType, q: string) {
   return { ...query, settling: q !== debounced }
 }
 
-/** One kind, searchable. Everything except items, which have shelves. */
+/** One kind, searchable. Everything except items, which have categories. */
 function GroupList({
   group,
   q,
@@ -307,7 +353,10 @@ function GroupList({
 
       <div className="flex flex-col gap-4">
         <Section className="flex flex-col gap-2">
-          <SectionHead label={q ? 'Matches' : BLURB[group]} note={busy ? undefined : `${rows.length}`} />
+          <SectionHead
+            label={q ? 'Matches' : BLURB[group]}
+            note={busy ? undefined : `${rows.length}`}
+          />
 
           {entries.isLoading ? (
             <Loading />
@@ -331,131 +380,243 @@ function GroupList({
 }
 
 /**
- * Items, split in two.
+ * Items: a category grid, then one category's rows.
  *
- * The campaign shelf is what the party has actually found — a dozen or so
- * things, each of which means something. The reference shelf is the SRD: six
- * hundred rows nobody browses, only looks up. They were one list, and the dozen
- * drowned in the six hundred.
+ * The party's own items are not kept apart — they sit in whichever category they
+ * belong to, sorted to the top and marked with a gold edge. Reagents, Treasure
+ * and Misc happen to be entirely campaign items, so three tiles are the party's
+ * without anything being filtered.
  */
-function ItemShelf({
-  shelf,
+function Items({
+  category,
+  rarity,
   q,
-  filter,
   onQuery,
-  onFilter,
-  onShelf,
+  onCategory,
+  onRarity,
   onBack,
 }: {
-  shelf: Shelf
+  category: Category | null
+  rarity: Rarity | null
   q: string
-  filter: ItemFilter
   onQuery: (next: string) => void
-  onFilter: (next: ItemFilter) => void
-  onShelf: (next: Shelf) => void
+  onCategory: (next: Category | null) => void
+  onRarity: (next: Rarity | null) => void
   onBack: () => void
 }) {
   const { items, isLoading } = useAllItems()
-  const search = useSearch('item', q)
   const searching = q.trim().length > 0
 
-  const counts = useMemo(
-    () => ({
-      campaign: items.filter((item) => shelfOf(item) === 'campaign').length,
-      reference: items.filter((item) => shelfOf(item) === 'reference').length,
-    }),
-    [items],
-  )
+  // Only the cross-category search hits the server; inside a category the
+  // cached pool is small enough to filter here, and must be — see below.
+  const search = useSearch('item', category ? '' : q)
 
-  // Searching goes to the server (it reads body text); browsing reads the list
-  // already in cache. Either way the shelf predicate is the same one.
-  const pool = useMemo(() => {
-    const source: EntitySummary[] = searching ? (search.data ?? []) : items
-    return source.filter((item) => item.type === 'item' && shelfOf(item) === shelf)
-  }, [searching, search.data, items, shelf])
+  const counts = useMemo(() => categoryCounts(items), [items])
 
-  const reference = shelf === 'reference'
-  // Facets are the reference shelf's problem. On the campaign shelf they would
-  // slice a dozen rows into ones and twos, and most would land in "Other" —
-  // 11 of the 14 use a category the SRD taxonomy has no word for.
-  const rows = reference ? filterItems(pool, filter) : pool
+  // Changing category is navigation now, so the list starts at the top.
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+  }, [category])
 
-  const busy = (searching ? search.isLoading : isLoading) || search.settling
+  if (!category) {
+    return (
+      <ItemGrid
+        counts={counts}
+        q={q}
+        search={search}
+        loading={isLoading}
+        onQuery={onQuery}
+        onCategory={onCategory}
+        onBack={onBack}
+      />
+    )
+  }
+
+  const pool = items.filter((item) => categoryOf(item) === category)
+  const filter: ItemFilter = { category: null, rarity }
+
+  /*
+    Client-side, and deliberately not the server search narrowed down. The
+    server caps at 200 rows by rank, and common words genuinely reach it — "a",
+    "the", "magic", "you", "gp" and "item" each return exactly 200 — so
+    filtering that result to one category silently drops real matches and shows
+    "Nothing matching", which is a confident lie. The pool here is at most a
+    couple of hundred rows already in cache.
+  */
+  const named = searching ? pool.filter((item) => tokenMatch(item.name, q)) : pool
+  const rows = campaignFirst(rarity ? named.filter((item) => rarityOf(item) === rarity) : named)
+
+  // Where the party's own items stop and the reference begins: ordering made
+  // visible, one hairline, no headings. Marked by id rather than index so the
+  // virtual list does not have to hand positions back out.
+  const own = rows.filter((item) => !isReference(item))
+  const lastOwnId = own.length > 0 && own.length < rows.length ? own[own.length - 1]!.id : null
 
   return (
     <>
       <BrowseHead
-        back={{
-          label: reference ? 'Campaign items' : 'All of the codex',
-          onClick: onBack,
-        }}
-        title={reference ? 'Rules reference' : 'Items'}
-        subtitle={reference ? 'Every item in the SRD' : undefined}
+        back={{ label: 'All items', onClick: onBack }}
+        title={CATEGORY_LABEL[category]}
         q={q}
-        placeholder={reference ? 'Search the reference…' : 'Search the party’s items…'}
+        placeholder={`Search ${CATEGORY_LABEL[category].toLowerCase()}…`}
         onQuery={onQuery}
       >
-        {reference && <ItemFilterBar pool={pool} value={filter} onChange={onFilter} />}
+        <RarityChips
+          pool={pool}
+          value={filter}
+          onChange={(next) => onRarity(next.rarity)}
+        />
       </BrowseHead>
 
       <div className="flex flex-col gap-4">
         <Section className="flex flex-col gap-2">
           <SectionHead
-            label={searching ? 'Matches' : reference ? 'Reference' : BLURB.item}
-            note={busy ? undefined : `${rows.length}`}
+            label={searching ? 'Matches' : CATEGORY_BLURB[category]}
+            note={`${rows.length}`}
           />
 
-          {busy && rows.length === 0 ? (
+          {isLoading ? (
             <Loading />
           ) : (
             <VirtualList
               items={rows}
               getKey={(entity) => entity.id}
-              renderItem={(entity) => <EntityRow entity={entity} portraitSize={48} />}
+              renderItem={(entity) => (
+                <>
+                  <EntityRow entity={entity} portraitSize={48} marked={!isReference(entity)} />
+                  {entity.id === lastOwnId && <div className="my-1 h-px bg-line" />}
+                </>
+              )}
             />
           )}
 
-          {!busy && rows.length === 0 && (
+          {!isLoading && rows.length === 0 && (
             <Empty>
-              {searching
-                ? `Nothing matching "${q}"`
-                : reference
-                  ? 'Nothing matches those filters'
-                  : 'The party has not found anything yet'}
+              {searching ? `No ${CATEGORY_LABEL[category].toLowerCase()} match "${q}"` : 'Nothing here yet'}
             </Empty>
+          )}
+
+          {/*
+            The way out of a wrong guess. Searching inside a category cannot see
+            body text or other categories, so without this a miss is
+            indistinguishable from "it does not exist".
+          */}
+          {searching && (
+            <motion.button
+              type="button"
+              className="type-meta flex cursor-pointer items-center justify-center gap-1.5 py-2 text-gold"
+              whileTap={{ scale: 0.98 }}
+              transition={SPRING}
+              onClick={() => onCategory(null)}
+            >
+              Search all items for “{q}”
+              <LuChevronRight className="size-3.5" aria-hidden />
+            </motion.button>
           )}
         </Section>
 
-        {!reference && (
-          <>
-            <DmCreateBar path="/codex" only={['item']} />
-
-            {/*
-              The doorway. Deliberately at the bottom and understated: the
-              reference is what you step into when the campaign shelf did not
-              have what you wanted, not the thing you came here for.
-            */}
-            <motion.button
-              type="button"
-              className={cx(rowClass, 'cursor-pointer border-t border-line pt-3.5')}
-              whileTap={{ scale: 0.99 }}
-              transition={SPRING}
-              onClick={() => onShelf('reference')}
-            >
-              <span className="grid size-9 shrink-0 place-items-center border border-gold-dim bg-gold-tint text-gold">
-                <LuLibrary className="size-4" aria-hidden />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="type-name block">Rules reference</span>
-                <span className="type-meta mt-0.75 block">
-                  {counts.reference} SRD entries · weapons, armour, gear, magic
-                </span>
-              </span>
-              <LuChevronRight className="size-4 shrink-0 text-ink-faint" aria-hidden />
-            </motion.button>
-          </>
-        )}
+        <DmCreateBar path="/codex" only={['item']} />
       </div>
+    </>
+  )
+}
+
+/** The category tiles, or — when searching — results from across all of them. */
+function ItemGrid({
+  counts,
+  q,
+  search,
+  loading,
+  onQuery,
+  onCategory,
+  onBack,
+}: {
+  counts: Record<Category, number>
+  q: string
+  search: ReturnType<typeof useSearch>
+  loading: boolean
+  onQuery: (next: string) => void
+  onCategory: (next: Category) => void
+  onBack: () => void
+}) {
+  const searching = q.trim().length > 0
+  const rows = search.data ?? []
+
+  // Grouped by category so a hit says which drawer it lives in. Relevance is
+  // kept within each group; campaignFirst is deliberately not applied, because
+  // floating an owned item above a better-matching one reads as broken.
+  const grouped = useMemo(() => {
+    const byCategory = new Map<Category, EntitySummary[]>()
+    for (const row of rows) {
+      const key = categoryOf(row)
+      const bucket = byCategory.get(key)
+      if (bucket) bucket.push(row)
+      else byCategory.set(key, [row])
+    }
+    return CATEGORIES.filter((c) => byCategory.has(c)).map((c) => ({
+      category: c,
+      rows: byCategory.get(c) ?? [],
+    }))
+  }, [rows])
+
+  return (
+    <>
+      <BrowseHead
+        back={{ label: 'All of the codex', onClick: onBack }}
+        title="Items"
+        q={q}
+        placeholder="Search every item…"
+        onQuery={onQuery}
+      />
+
+      {searching ? (
+        <div className="flex flex-col gap-4">
+          {search.isLoading ? (
+            <Loading />
+          ) : (
+            grouped.map(({ category, rows: found }) => (
+              <Section key={category} className="flex flex-col gap-2">
+                <SectionHead label={CATEGORY_LABEL[category]} note={`${found.length}`} />
+                <StaggerList>
+                  {found.map((entity) => (
+                    <EntityRow
+                      key={entity.id}
+                      entity={entity}
+                      portraitSize={48}
+                      marked={!isReference(entity)}
+                    />
+                  ))}
+                </StaggerList>
+              </Section>
+            ))
+          )}
+
+          {!search.isLoading && !search.settling && rows.length === 0 && (
+            <Empty>Nothing matching “{q}”</Empty>
+          )}
+        </div>
+      ) : loading ? (
+        <Loading />
+      ) : (
+        <>
+          <StaggerList className="grid grid-cols-2 gap-3">
+            {CATEGORIES.filter((category) => counts[category] > 0).map((category) => (
+              <Tile
+                key={category}
+                icon={CATEGORY_ICON[category]}
+                label={CATEGORY_LABEL[category]}
+                count={counts[category]}
+                blurb={CATEGORY_BLURB[category]}
+                onClick={() => onCategory(category)}
+              />
+            ))}
+          </StaggerList>
+
+          <div className="mt-4">
+            <DmCreateBar path="/codex" only={['item']} />
+          </div>
+        </>
+      )}
     </>
   )
 }

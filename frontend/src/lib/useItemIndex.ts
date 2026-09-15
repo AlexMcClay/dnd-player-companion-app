@@ -25,9 +25,9 @@ function singular(name: string): string {
 export type ResolveItem = (item: Pick<DdbItem, 'name' | 'type'>) => string | undefined
 
 export function useItemIndex(): ResolveItem {
-  // The whole item list, both shelves. The codex splits campaign items from the
-  // SRD reference for browsing; matching must not, or a D&D Beyond longsword
-  // would stop resolving.
+  // Every item, uncategorised. The codex sorts items into categories to browse
+  // them; matching must not care, or a D&D Beyond longsword would stop
+  // resolving the moment someone recategorised weapons.
   const { items } = useAllItems()
 
   return useMemo(() => {

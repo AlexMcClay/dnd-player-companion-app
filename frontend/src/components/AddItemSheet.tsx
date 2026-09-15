@@ -3,12 +3,12 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useMemo, useRef, useState } from 'react'
 import { LuPackage, LuPlus, LuSearch } from 'react-icons/lu'
 import { api } from '../api/client'
-import { filterItems, NO_FILTER, shelfOf, type ItemFilter, type Shelf } from '../lib/itemFacets'
+import { campaignFirst, filterItems, isReference, NO_FILTER, type ItemFilter } from '../lib/itemFacets'
 import { rowVariants, SPRING } from '../lib/motion'
 import { tokenMatch } from '../lib/textMatch'
 import { useAllItems } from '../lib/useAllEntities'
 import { Empty, Loading, Portrait } from './bits'
-import ItemFilterBar, { ShelfChips } from './ItemFilterBar'
+import ItemFilterBar from './ItemFilterBar'
 import VirtualList from './VirtualList'
 import { cx, ctaClass, inputClass, panelClass, rowClass } from './ui'
 
@@ -61,7 +61,6 @@ function Picker({
   const queryClient = useQueryClient()
   const scrollRef = useRef<HTMLDivElement>(null)
   const [query, setQuery] = useState('')
-  const [shelf, setShelf] = useState<Shelf>('campaign')
   const [filter, setFilter] = useState<ItemFilter>(NO_FILTER)
   const [error, setError] = useState<string | null>(null)
 
@@ -76,16 +75,7 @@ function Picker({
     onError: (err: Error) => setError(err.message),
   })
 
-  const counts = useMemo(
-    () => ({
-      campaign: items.filter((item) => shelfOf(item) === 'campaign').length,
-      reference: items.filter((item) => shelfOf(item) === 'reference').length,
-    }),
-    [items],
-  )
-
   const needle = query.trim()
-  const pool = useMemo(() => items.filter((item) => shelfOf(item) === shelf), [items, shelf])
 
   /*
     Name-only, client-side, unlike the codex — and deliberately so. By the time
@@ -95,11 +85,15 @@ function Picker({
     Token-AND rather than a substring test, because the books write names
     back-to-front: "Rope, hempen" and "Potion of Healing" both fail `includes`
     for the "hempen rope" and "potion healing" someone actually types.
+
+    The party's own items lead. There is no relevance order to destroy here —
+    a token match is a yes or no — and the commonest reason to open this is
+    something the party just found.
   */
   const matches = useMemo(() => {
-    const named = needle ? pool.filter((item) => tokenMatch(item.name, needle)) : pool
-    return shelf === 'reference' ? filterItems(named, filter) : named
-  }, [pool, needle, shelf, filter])
+    const named = needle ? items.filter((item) => tokenMatch(item.name, needle)) : items
+    return campaignFirst(filterItems(named, filter))
+  }, [items, needle, filter])
 
   return (
     <motion.div
@@ -138,37 +132,21 @@ function Picker({
         </div>
 
         {/*
-          A drill-down does not fit a panel capped at 80vh, and adding "Rope,
-          hempen" to the stash needs the reference constantly — so the shelf is
-          two chips here rather than a door. Same split, same default.
+          Chips rather than the codex's category grid: a panel capped at 80vh
+          has no room for a grid, and you usually know the name of what you are
+          adding, so search is the first tool here and the chips only narrow.
         */}
-        <ShelfChips
-          value={shelf}
-          counts={counts}
+        <ItemFilterBar
+          pool={items}
+          value={filter}
           onChange={(next) => {
-            setShelf(next)
-            setFilter(NO_FILTER)
+            setFilter(next)
             scrollRef.current?.scrollTo({ top: 0 })
           }}
         />
 
-        {shelf === 'reference' && (
-          <ItemFilterBar
-            pool={pool}
-            value={filter}
-            onChange={(next) => {
-              setFilter(next)
-              scrollRef.current?.scrollTo({ top: 0 })
-            }}
-          />
-        )}
-
         {isLoading && <Loading />}
-        {!isLoading && matches.length === 0 && (
-          <Empty>
-            {needle ? 'Nothing matches' : 'The repository is empty — the DM adds items to it'}
-          </Empty>
-        )}
+        {!isLoading && matches.length === 0 && <Empty>Nothing matches</Empty>}
 
         {/* The repository is hundreds of items, so this list scrolls itself
             and only renders what is on screen. */}
@@ -190,7 +168,9 @@ function Picker({
               >
                 <Portrait entity={item} size={36} />
                 <div className="min-w-0 flex-1">
-                  <div className="type-name truncate">{item.name}</div>
+                  <div className={cx('type-name truncate', !isReference(item) && 'text-gold')}>
+                    {item.name}
+                  </div>
                   {item.summary && <div className="type-meta mt-0.5 truncate">{item.summary}</div>}
                 </div>
                 <LuPlus className="size-4 shrink-0 text-gold" aria-hidden />

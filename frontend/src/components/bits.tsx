@@ -140,15 +140,33 @@ export function EntityRow({
   entity,
   portraitSize = 46,
   right,
+  marked = false,
 }: {
   entity: EntitySummary
   portraitSize?: number
   right?: ReactNode
+  /**
+   * Draws a gold rule down the left edge: this row is the party's own, not
+   * reference material.
+   *
+   * Passed in, never worked out from the entity here. This row renders every
+   * list in the app, and no NPC carries the `srd` tag — inferring it would gold
+   * every NPC, faction and location in the codex.
+   *
+   * Left edge rather than a badge on the right because the right is already the
+   * knowledge pill, and in a sealed-heavy list every row there is a grey pill at
+   * 55% opacity, where gold would simply not be seen.
+   */
+  marked?: boolean
 }) {
   return (
     <MotionLink
       to={`/e/${entity.id}`}
-      className={cx(rowClass, entity.knowledge === 'unknown' && 'opacity-55')}
+      className={cx(
+        rowClass,
+        entity.knowledge === 'unknown' && 'opacity-55',
+        marked && 'border-l-2 border-l-gold pl-2.5',
+      )}
       variants={rowVariants}
       whileTap={{ scale: 0.985, backgroundColor: 'rgba(236,230,220,0.04)' }}
       transition={SPRING}
