@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { DdbItem } from '@codex/shared'
-import { useAllEntities } from './useAllEntities'
+import { normalise } from './textMatch'
+import { useAllItems } from './useAllEntities'
 
 /**
  * Matches a D&D Beyond item name to a codex item, so a row in the mirror can
@@ -16,15 +17,6 @@ import { useAllEntities } from './useAllEntities'
  * 80 items.
  */
 
-/** "Oil (flask)" -> "oil". Drops a parenthetical qualifier and punctuation. */
-function normalise(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/\s*\(.*?\)\s*/g, ' ')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-}
-
 /** "arrows" -> "arrow". Naive on purpose; only ever a last resort. */
 function singular(name: string): string {
   return name.replace(/s$/, '')
@@ -33,15 +25,17 @@ function singular(name: string): string {
 export type ResolveItem = (item: Pick<DdbItem, 'name' | 'type'>) => string | undefined
 
 export function useItemIndex(): ResolveItem {
-  const { data } = useAllEntities()
+  // The whole item list, both shelves. The codex splits campaign items from the
+  // SRD reference for browsing; matching must not, or a D&D Beyond longsword
+  // would stop resolving.
+  const { items } = useAllItems()
 
   return useMemo(() => {
     const exact = new Map<string, string>()
     const loose = new Map<string, string>()
     const stems = new Map<string, string>()
 
-    for (const entity of data ?? []) {
-      if (entity.type !== 'item') continue
+    for (const entity of items) {
       // First one wins, so an earlier (alphabetically) entry is stable rather
       // than depending on iteration order changing under us.
       const name = entity.name.toLowerCase()
@@ -74,5 +68,5 @@ export function useItemIndex(): ResolveItem {
 
       return undefined
     }
-  }, [data])
+  }, [items])
 }

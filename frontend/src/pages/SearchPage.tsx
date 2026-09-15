@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { LuSearch, LuX } from 'react-icons/lu'
 import { useSearchParams } from 'react-router-dom'
 import { ENTITY_TYPES } from '@codex/shared'
@@ -13,6 +13,7 @@ import {
   StaggerList,
 } from '../components/bits'
 import { cx, inputClass, PillButton } from '../components/ui'
+import { useDebounced } from '../lib/useDebounced'
 import { templateFor } from '../templates'
 
 export default function SearchPage() {
@@ -20,10 +21,13 @@ export default function SearchPage() {
   const q = params.get('q') ?? ''
   const tag = params.get('tag') ?? ''
 
+  // The box and the URL keep up per keystroke; only the request waits.
+  const debouncedQ = useDebounced(q)
   const results = useQuery({
-    queryKey: ['entities', 'search', { q, tag }],
-    queryFn: () => api.listEntities({ q: q || undefined, tag: tag || undefined }),
-    enabled: q.trim().length > 0 || tag.length > 0,
+    queryKey: ['entities', 'search', { q: debouncedQ, tag }],
+    queryFn: () => api.listEntities({ q: debouncedQ || undefined, tag: tag || undefined }),
+    enabled: debouncedQ.trim().length > 0 || tag.length > 0,
+    placeholderData: keepPreviousData,
   })
 
   function update(next: { q?: string; tag?: string }) {

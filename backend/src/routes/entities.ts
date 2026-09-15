@@ -85,7 +85,13 @@ function parseInput(body: unknown, partial: boolean): EntityInput | string {
  *
  * A sequential scan is fine at the size a campaign reaches.
  */
-async function searchIds(q: string, isDm: boolean): Promise<string[]> {
+/*
+ * `type` narrows inside this query rather than only in the caller's filter,
+ * because the LIMIT applies to *this* result: searching every kind and
+ * narrowing afterwards spends the budget on kinds the caller never asked for,
+ * and can return nothing when matches exist.
+ */
+async function searchIds(q: string, isDm: boolean, type: string | null): Promise<string[]> {
   const like = `%${q}%`
   const rows = await prisma.$queryRaw<Array<{ id: string }>>`
     SELECT id
@@ -98,6 +104,7 @@ async function searchIds(q: string, isDm: boolean): Promise<string[]> {
         OR array_to_string(tags, ' ') ILIKE ${like}
       )
       AND ${knowledgeSql(isDm)}
+      AND ${type === null ? Prisma.sql`TRUE` : Prisma.sql`type = ${type}`}
     ORDER BY ts_rank(search, plainto_tsquery('english', ${q})) DESC, name ASC
     LIMIT 200
   `
@@ -110,12 +117,13 @@ entitiesRouter.get('/', async (req, res, next) => {
     const { type, q, tag } = req.query
     const where: Prisma.EntityWhereInput = { ...knowledgeFilter(req.isDm) }
 
-    if (typeof type === 'string' && type) where.type = type
+    const onlyType = typeof type === 'string' && type ? type : null
+    if (onlyType) where.type = onlyType
     if (typeof tag === 'string' && tag) where.tags = { has: tag }
 
     let rankedIds: string[] | null = null
     if (typeof q === 'string' && q.trim()) {
-      rankedIds = await searchIds(q.trim(), req.isDm)
+      rankedIds = await searchIds(q.trim(), req.isDm, onlyType)
       if (rankedIds.length === 0) {
         res.json([])
         return
