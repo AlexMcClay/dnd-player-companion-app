@@ -14,6 +14,26 @@ function tabIndex(pathname: string): number {
 }
 
 /**
+ * Whether a gesture came from something that should navigate.
+ *
+ * A mouse drag across a paragraph easily passes the distance threshold below, so
+ * without this, selecting text on a desktop navigates away on mouse-up. Framer
+ * is not at fault: its pan listeners are registered `{ passive: true }` and so
+ * cannot block selection — it is this handler acting on the result.
+ *
+ * Gated on the pointer rather than on a breakpoint, so a laptop with a
+ * touchscreen gets both behaviours right: a finger swipes, its mouse does not.
+ *
+ * Framer types the argument `MouseEvent | TouchEvent | PointerEvent`, so the
+ * property has to be tested for rather than assumed.
+ */
+export function isSwipePointer(event: unknown): boolean {
+  if (typeof event !== 'object' || event === null || !('pointerType' in event)) return false
+  const kind = (event as PointerEvent).pointerType
+  return kind === 'touch' || kind === 'pen'
+}
+
+/**
  * Horizontal swipe between tabs, and swipe-right-to-go-back everywhere else.
  *
  * Uses framer's pan handler rather than `drag`, so nothing moves under the
@@ -24,7 +44,10 @@ export function useSwipeNav() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  return function onPanEnd(_event: unknown, info: PanInfo) {
+  return function onPanEnd(event: unknown, info: PanInfo) {
+    // A mouse is here to select text, not to navigate.
+    if (!isSwipePointer(event)) return
+
     const { offset, velocity } = info
 
     // Vertical intent always wins — a swipe must never hijack a scroll.

@@ -25,5 +25,7 @@ export function useMediaQuery(query: string): boolean {
   )
 }
 
-/** Tailwind's `md` breakpoint, so JS and CSS cannot drift apart. */
+/** Tailwind's own breakpoints, so JS and CSS cannot drift apart. */
 export const MD = '(min-width: 48rem)'
+/** 1024px — the narrowest width with room for the side rail beside the content. */
+export const LG = '(min-width: 64rem)'
