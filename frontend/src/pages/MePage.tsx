@@ -21,10 +21,19 @@ import Markdown from '../components/Markdown'
 import NoteComposer from '../components/NoteComposer'
 import NoteList from '../components/NoteList'
 import WikiText from '../components/WikiText'
-import { Empty, Loading, PageHead, Portrait, Section, StaggerList } from '../components/bits'
+import {
+  Empty,
+  Loading,
+  PageHead,
+  Portrait,
+  Section,
+  SectionHead,
+  StaggerList,
+} from '../components/bits'
 import { ctaClass, panelClass, twoUpClass } from '../components/ui'
 import { usePlayerId } from '../lib/identity'
 import { SPRING } from '../lib/motion'
+import { firstNameOf } from '../lib/names'
 import { templateFor } from '../templates'
 
 /** Your own character: who you are and what you are carrying. Notes land here next. */
@@ -72,37 +81,29 @@ function MyCharacter({ playerId }: { playerId: string }) {
         <SpecPanel character={character} template={template} />
 
         <Section className="flex flex-col gap-2">
-          <div className="flex items-baseline justify-between gap-2.5">
-            <span className="type-lab flex items-center gap-1.75">
-              <LuScrollText aria-hidden />
-              About {character.name.split(' ')[0] ?? character.name}
-            </span>
-            <span className="type-meta">Yours to write</span>
-          </div>
+          <SectionHead
+            icon={LuScrollText}
+            label={`About ${firstNameOf(character.name)}`}
+            note="Yours to write"
+          />
           <CharacterBody character={character} />
         </Section>
 
         <Section className="flex flex-col gap-2">
-          <div className="flex items-baseline justify-between gap-2.5">
-            <span className="type-lab flex items-center gap-1.75">
-              <LuLink aria-hidden />
-              D&amp;D Beyond
-            </span>
-            <span className="type-meta">Mirror — kept apart from the app's items</span>
-          </div>
+          <SectionHead
+            icon={LuLink}
+            label="D&D Beyond"
+            note="Mirror — kept apart from the app's items"
+          />
           <DdbPanel playerId={character.id} characterName={character.name} />
         </Section>
 
         <Section className="flex flex-col gap-2">
-          <div className="flex items-baseline justify-between gap-2.5">
-            <span className="type-lab flex items-center gap-1.75">
-              <LuBackpack aria-hidden />
-              Carrying
-            </span>
-            <span className="type-meta">
-              {stacks.length} entries · {total} items
-            </span>
-          </div>
+          <SectionHead
+            icon={LuBackpack}
+            label="Carrying"
+            note={`${stacks.length} entries · ${total} items`}
+          />
 
           {carried.isLoading ? (
             <Loading />
@@ -124,13 +125,11 @@ function MyCharacter({ playerId }: { playerId: string }) {
         </Section>
 
         <Section className="flex flex-col gap-2">
-          <div className="flex items-baseline justify-between gap-2.5">
-            <span className="type-lab flex items-center gap-1.75">
-              <LuNotebookPen aria-hidden />
-              My vault
-            </span>
-            <span className="type-meta">Private unless you share it</span>
-          </div>
+          <SectionHead
+            icon={LuNotebookPen}
+            label="My vault"
+            note="Private unless you share it"
+          />
           <NoteList
             placement="vault"
             author="me"

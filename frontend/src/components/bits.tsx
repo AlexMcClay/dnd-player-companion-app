@@ -1,6 +1,7 @@
 import { motion, type Variants } from 'framer-motion'
 import { Children, useMemo, type CSSProperties, type ReactNode } from 'react'
 import type { EntitySummary, Knowledge } from '@codex/shared'
+import type { IconType } from 'react-icons'
 import { LuEyeOff, LuLoader, LuSparkles, LuTag } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
 import { rowVariants, SPRING } from '../lib/motion'
@@ -191,10 +192,28 @@ export function PageHead({ children }: { children: ReactNode }) {
   )
 }
 
-export function SectionHead({ label, note }: { label: string; note?: string }) {
+/**
+ * The label above a block.
+ *
+ * `icon` is optional: the sections a character has on both the Me tab and their
+ * own page carry one, so the two read as the same thing seen twice, while the
+ * generic entry sections stay plain.
+ */
+export function SectionHead({
+  icon: Icon,
+  label,
+  note,
+}: {
+  icon?: IconType
+  label: string
+  note?: ReactNode
+}) {
   return (
     <div className="flex items-baseline justify-between gap-2.5">
-      <span className="type-lab">{label}</span>
+      <span className="type-lab flex items-center gap-1.75">
+        {Icon && <Icon aria-hidden />}
+        {label}
+      </span>
       {note && <span className="type-meta">{note}</span>}
     </div>
   )

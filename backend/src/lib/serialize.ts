@@ -41,6 +41,19 @@ function avatarFrom(data: unknown): string | null {
   return typeof url === 'string' && url ? url : null
 }
 
+/**
+ * The one answer to "what does this entry look like", so every surface agrees.
+ *
+ * An uploaded portrait always wins over the synced avatar. This is a function
+ * rather than a line repeated per serialiser because it was not: note bylines
+ * resolved the key alone, so a character who had synced from D&D Beyond but
+ * never had a portrait uploaded appeared everywhere in the app except on the
+ * notes they wrote.
+ */
+function portraitUrl(row: { imageKey: string | null; data: unknown }): string | null {
+  return publicUrlFor(row.imageKey) ?? avatarFrom(row.data)
+}
+
 export function serializeEntitySummary(row: Omit<PrismaEntity, 'bodyMd'>): EntitySummary {
   return {
     id: row.id,
@@ -49,8 +62,7 @@ export function serializeEntitySummary(row: Omit<PrismaEntity, 'bodyMd'>): Entit
     summary: row.summary,
     data: (row.data ?? {}) as EntityData,
     imageKey: row.imageKey,
-    // An uploaded portrait always wins over the synced avatar.
-    imageUrl: publicUrlFor(row.imageKey) ?? avatarFrom(row.data),
+    imageUrl: portraitUrl(row),
     tags: row.tags,
     knowledge: row.knowledge as Knowledge,
     createdAt: row.createdAt.toISOString(),
@@ -75,7 +87,7 @@ export function serializeNote(row: PrismaNote & { author: PrismaEntity }): Note 
     author: {
       id: row.author.id,
       name: row.author.name,
-      imageUrl: publicUrlFor(row.author.imageKey),
+      imageUrl: portraitUrl(row.author),
     },
     subjectId: row.subjectId,
     placement: row.placement as NotePlacement,

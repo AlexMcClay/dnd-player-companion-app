@@ -1,10 +1,21 @@
 import { useQuery } from '@tanstack/react-query'
 import type { Entity, RecipeData } from '@codex/shared'
 import { motion } from 'framer-motion'
-import { LuCheck, LuChevronLeft, LuPencil, LuX } from 'react-icons/lu'
+import { useState } from 'react'
+import {
+  LuBackpack,
+  LuCheck,
+  LuChevronLeft,
+  LuExpand,
+  LuLink,
+  LuPencil,
+  LuScrollText,
+  LuX,
+} from 'react-icons/lu'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import DdbPanel from '../components/DdbPanel'
+import Lightbox from '../components/Lightbox'
 import Markdown from '../components/Markdown'
 import NoteCard from '../components/NoteCard'
 import NoteList from '../components/NoteList'
@@ -21,8 +32,9 @@ import {
   TagChips,
 } from '../components/bits'
 import { cx, panelClass, Pill, rowClass, Sealed, twoUpClass } from '../components/ui'
-import { useIsDm } from '../lib/identity'
+import { useIsDm, usePlayerId } from '../lib/identity'
 import { rowVariants, SPRING } from '../lib/motion'
+import { firstNameOf } from '../lib/names'
 import { reagentStatus, stockFor } from '../lib/recipes'
 import { templateFor } from '../templates'
 
@@ -115,16 +127,25 @@ export default function EntityDetailPage() {
 
         {e.type === 'item' && <Holders itemId={e.id} />}
 
+        {/*
+          A character's description gets the same framed section it has on the
+          Me tab, rather than the bare prose block every other kind of entry
+          uses. Unlabelled it read as page furniture — you could not tell it was
+          the thing its player wrote about themselves.
+        */}
+        {e.type === 'player' && <About entity={e} />}
+
         {e.type === 'player' && (
           <Section className="flex flex-col gap-2">
-            <SectionHead label="D&D Beyond" note="Their sheet, mirrored" />
+            <SectionHead icon={LuLink} label="D&D Beyond" note="Their sheet, mirrored" />
             <DdbPanel playerId={e.id} characterName={e.name} />
           </Section>
         )}
 
         {e.type === 'player' && <Carrying playerId={e.id} />}
 
-        {e.bodyMd && (
+        {/* Characters had theirs above, in a labelled section of its own. */}
+        {e.bodyMd && e.type !== 'player' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -155,7 +176,7 @@ export default function EntityDetailPage() {
         {e.type === 'player' && (
           <Section className="flex flex-col gap-2">
             <SectionHead
-              label={`${e.name.split(' ')[0] ?? e.name}'s public notes`}
+              label={`${firstNameOf(e.name)}'s public notes`}
               note="From their vault"
             />
             <PublicVault playerId={e.id} />
@@ -186,6 +207,7 @@ export default function EntityDetailPage() {
  */
 function Hero({ entity, tall }: { entity: Entity; tall: boolean }) {
   const template = templateFor(entity.type)
+  const [zoomed, setZoomed] = useState(false)
 
   // Nothing to preserve, so the placeholder keeps the template's shape and the
   // fixed column it used to have.
@@ -203,38 +225,92 @@ function Hero({ entity, tall }: { entity: Entity; tall: boolean }) {
   }
 
   return (
-    <motion.div
-      // self-start keeps the frame hugging the image; stretched by the column
-      // it would grow bars down the sides again. The width cap stops a
-      // panoramic map from squeezing the title into a gutter.
-      // Centred on a phone, where the frame sits alone above the title and an
-      // off-centre hug reads as a mistake; from md up it is one of two columns,
-      // so it hugs the left edge instead and shares the row with the title.
-      //
-      // Either way it never stretches — stretched by the column it would grow
-      // bars down the sides, which is the thing being fixed.
-      //
-      // min-h so the frame does not start at zero height and shove the title
-      // down when the image lands — we have no intrinsic size to reserve, since
-      // the API carries a URL and nothing else.
-      className="port-fill max-w-full min-h-25 shrink-0 self-center border border-line md:max-w-[58%] md:self-start"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.32 }}
-    >
-      <motion.img
+    <>
+      <motion.button
+        type="button"
+        aria-label={`View ${entity.name} full screen`}
+        onClick={() => setZoomed(true)}
+        // self-start keeps the frame hugging the image; stretched by the column
+        // it would grow bars down the sides again. The width cap stops a
+        // panoramic map from squeezing the title into a gutter.
+        // Centred on a phone, where the frame sits alone above the title and an
+        // off-centre hug reads as a mistake; from md up it is one of two columns,
+        // so it hugs the left edge instead and shares the row with the title.
+        //
+        // Either way it never stretches — stretched by the column it would grow
+        // bars down the sides, which is the thing being fixed.
+        //
+        // min-h so the frame does not start at zero height and shove the title
+        // down when the image lands — we have no intrinsic size to reserve, since
+        // the API carries a URL and nothing else.
+        className="group port-fill relative max-w-full min-h-25 shrink-0 cursor-zoom-in self-center border border-line md:max-w-[58%] md:self-start"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32 }}
+      >
+        <motion.img
+          src={entity.imageUrl}
+          alt={entity.name}
+          // No object-fit: the image is the only child, so it sets the frame's
+          // size rather than being fitted into one. Height bounds it normally;
+          // max-w-full takes over for anything very wide, and because only
+          // max-* are set the other axis follows on its own and the aspect holds.
+          className="block h-auto max-h-70 w-auto max-w-full md:max-h-80"
+          initial={{ opacity: 0, scale: 1.04 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.35 }}
+        />
+        {/* Only a hint, and only where there is a pointer to hover with — on a
+            phone the picture being tappable is the expectation anyway. */}
+        <span className="pointer-events-none absolute right-1.5 bottom-1.5 hidden size-7 place-items-center border border-line bg-tabbar text-ink-soft opacity-0 transition-opacity group-hover:opacity-100 md:grid [&>svg]:size-3.5">
+          <LuExpand aria-hidden />
+        </span>
+      </motion.button>
+
+      <Lightbox
         src={entity.imageUrl}
         alt={entity.name}
-        // No object-fit: the image is the only child, so it sets the frame's
-        // size rather than being fitted into one. Height bounds it normally;
-        // max-w-full takes over for anything very wide, and because only
-        // max-* are set the other axis follows on its own and the aspect holds.
-        className="block h-auto max-h-70 w-auto max-w-full md:max-h-80"
-        initial={{ opacity: 0, scale: 1.04 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.35 }}
+        open={zoomed}
+        onClose={() => setZoomed(false)}
       />
-    </motion.div>
+    </>
+  )
+}
+
+/**
+ * A character's own description, laid out exactly as it is on the Me tab.
+ *
+ * Read-only here even on your own character: writing it belongs to one place,
+ * and the note says which. Whoever is looking, this is the block their player
+ * wrote — labelling it is the whole point.
+ */
+function About({ entity }: { entity: Entity }) {
+  const playerId = usePlayerId()
+  const mine = playerId === entity.id
+
+  return (
+    <Section className="flex flex-col gap-2">
+      <SectionHead
+        icon={LuScrollText}
+        label={`About ${firstNameOf(entity.name)}`}
+        note={
+          mine ? (
+            <Link to="/me" className="text-gold">
+              Yours to write →
+            </Link>
+          ) : (
+            'In their own words'
+          )
+        }
+      />
+      {entity.bodyMd ? (
+        <div className="md:max-w-[72ch]">
+          <Markdown source={entity.bodyMd} />
+        </div>
+      ) : (
+        <Empty>Nothing written yet</Empty>
+      )}
+    </Section>
   )
 }
 
@@ -416,7 +492,7 @@ function Carrying({ playerId }: { playerId: string }) {
 
   return (
     <Section className="flex flex-col gap-2">
-      <SectionHead label="Carrying" note={`${stacks.length} entries`} />
+      <SectionHead icon={LuBackpack} label="Carrying" note={`${stacks.length} entries`} />
       <StaggerList className={twoUpClass}>
         {stacks.map((holding) => (
           <motion.div key={holding.id} variants={rowVariants}>
