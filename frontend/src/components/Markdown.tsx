@@ -1,40 +1,23 @@
 import DOMPurify from 'dompurify'
-import { marked } from 'marked'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useNameIndex } from '../lib/useNameIndex'
-import { resolveWikiName, WIKI_LINK } from '../lib/wikiLinks'
-
-marked.setOptions({ gfm: true, breaks: true })
-
-function escapeHtml(value: string): string {
-  return value.replace(
-    /[&<>"']/g,
-    (c) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string,
-  )
-}
+import { wikiMarkedFor } from '../lib/wikiMarked'
 
 /**
- * Renders DM-authored markdown, resolving `[[Name]]` against the entities the
- * viewer can see. A link to something they have not learned about yet renders
- * as plain dimmed text rather than a dead link.
+ * Renders markdown, resolving `[[Name]]` against the entities the viewer can
+ * see. A link to something they have not learned about yet renders as plain
+ * dimmed text rather than a dead link.
+ *
+ * Links are a marked token rather than a pre-pass over the source, so one
+ * inside a code span stays code — see `lib/wikiMarked.ts`.
  */
 export default function Markdown({ source }: { source: string }) {
   const index = useNameIndex()
   const navigate = useNavigate()
 
   const html = useMemo(() => {
-    const withLinks = source.replace(WIKI_LINK, (_match, rawName: string, rawLabel?: string) => {
-      const name = rawName.trim()
-      const label = escapeHtml((rawLabel ?? name).trim())
-      const id = resolveWikiName(name, index)
-      return id
-        ? `<a class="wikilink" href="/e/${id}">${label}</a>`
-        : `<span class="wikilink-dead">${label}</span>`
-    })
-
-    const raw = marked.parse(withLinks, { async: false })
+    const raw = wikiMarkedFor(index).parse(source, { async: false })
     return DOMPurify.sanitize(raw)
       .replaceAll('<table>', '<div class="md-table-wrap"><table>')
       .replaceAll('</table>', '</table></div>')
