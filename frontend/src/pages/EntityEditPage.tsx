@@ -8,8 +8,8 @@ import {
   type RecipeIngredient,
 } from '@codex/shared'
 import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
-import { LuSave, LuTrash2, LuTriangleAlert, LuX } from 'react-icons/lu'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { LuCode, LuPenLine, LuSave, LuTrash2, LuTriangleAlert, LuX } from 'react-icons/lu'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import ImageUpload from '../components/ImageUpload'
@@ -18,6 +18,8 @@ import { Empty, Loading, PageHead } from '../components/bits'
 import { Cta, ctaClass, Field, inputClass, textareaClass } from '../components/ui'
 import { useIsDm } from '../lib/identity'
 import { templateFor } from '../templates'
+
+const RichEditor = lazy(() => import('../editor/RichEditor'))
 
 type Draft = Required<Pick<EntityInput, 'type' | 'name' | 'knowledge'>> & {
   summary: string
@@ -62,6 +64,7 @@ export default function EntityEditPage() {
 
   const [draft, setDraft] = useState<Draft>(() => BLANK(params.get('type') ?? 'npc'))
   const [error, setError] = useState<string | null>(null)
+  const [sourceMode, setSourceMode] = useState(false)
 
   useEffect(() => {
     const e = existing.data
@@ -105,6 +108,16 @@ export default function EntityEditPage() {
   function setData(key: string, value: unknown) {
     setDraft((d) => ({ ...d, data: { ...d.data, [key]: value } }))
   }
+
+  const bodyTextarea = (
+    <textarea
+      className={textareaClass}
+      rows={10}
+      value={draft.bodyMd}
+      placeholder={'Markdown. Link other entries with [[Their Name]].'}
+      onChange={(e) => setDraft((d) => ({ ...d, bodyMd: e.target.value }))}
+    />
+  )
 
   function submit(event: React.FormEvent) {
     event.preventDefault()
@@ -241,15 +254,36 @@ export default function EntityEditPage() {
           />
         </Field>
 
-        <Field label={<span className={LABEL}>Body</span>}>
-          <textarea
-            className={textareaClass}
-            rows={10}
-            value={draft.bodyMd}
-            placeholder={'Markdown. Link other entries with [[Their Name]].'}
-            onChange={(e) => setDraft((d) => ({ ...d, bodyMd: e.target.value }))}
-          />
-        </Field>
+        {/*
+          Not a <Field>: that wraps its child in a <label>, and clicking a label
+          does not reliably focus a contenteditable the way it focuses an input.
+        */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className={LABEL}>Body</span>
+            <button
+              type="button"
+              className="type-meta flex cursor-pointer items-center gap-1 text-ink-faint"
+              onClick={() => setSourceMode((on) => !on)}
+            >
+              {sourceMode ? <LuPenLine aria-hidden /> : <LuCode aria-hidden />}
+              {sourceMode ? 'Rich text' : 'Markdown'}
+            </button>
+          </div>
+
+          {sourceMode ? (
+            bodyTextarea
+          ) : (
+            <Suspense fallback={bodyTextarea}>
+              <RichEditor
+                value={draft.bodyMd}
+                onChange={(bodyMd) => setDraft((d) => ({ ...d, bodyMd }))}
+                placeholder="Markdown. Type @ to link another entry."
+                onUnrepresentable={() => setSourceMode(true)}
+              />
+            </Suspense>
+          )}
+        </div>
 
         {error && (
           <motion.div

@@ -93,6 +93,47 @@
   [role='button'] {
     -webkit-tap-highlight-color: transparent;
   }
+
+  /*
+   * Scrollbars, which the OS otherwise draws as a bright slab against a
+   * near-black page. Both syntaxes: the standard properties are what Firefox
+   * honours, the -webkit- pseudo-elements are what Chrome and Safari honour,
+   * and neither browser understands the other's.
+   *
+   * Applied to every element rather than just the page, so a panel that scrolls
+   * its own content — the item picker, a code block, the mention list — matches.
+   */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-ink-muted) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-ink-ghost);
+    /* Inset via a transparent border so the thumb reads as narrower than the
+       track it sits in, instead of filling the gutter edge to edge. */
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-ink-muted);
+  }
+
+  /* The little square where a vertical and horizontal bar meet. */
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
 }
 
 /* ── type scale ───────────────────────────────────────────────────── */
@@ -384,6 +425,148 @@
 
   .md-table-wrap {
     overflow-x: auto;
+  }
+
+  /* ── the editor ───────────────────────────────────────────────── */
+  /*
+   * A scaled-up cousin of `.md`, not a reuse of it.
+   *
+   * Safari zooms the viewport for any focusable element under 16px, and `.md`
+   * is 13.5px body with 9.5px headings. So the editor is deliberately not
+   * pixel-WYSIWYG: same shapes and colours, readable sizes. A 9.5px gold label
+   * is unusable as an editing target anyway.
+   */
+  .md-edit {
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--color-ink);
+  }
+
+  .md-edit p {
+    margin: 0 0 8px;
+  }
+
+  .md-edit > *:last-child {
+    margin-bottom: 0;
+  }
+
+  .md-edit h1,
+  .md-edit h2,
+  .md-edit h3,
+  .md-edit h4,
+  .md-edit h5,
+  .md-edit h6 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 14px 0 6px;
+    color: var(--color-gold);
+  }
+
+  .md-edit h1 {
+    font-size: 22px;
+  }
+
+  .md-edit h2 {
+    font-size: 19px;
+  }
+
+  .md-edit h3,
+  .md-edit h4,
+  .md-edit h5,
+  .md-edit h6 {
+    font-size: 17px;
+  }
+
+  .md-edit ul {
+    margin: 0 0 8px;
+    padding-left: 20px;
+    list-style: disc;
+  }
+
+  .md-edit ol {
+    margin: 0 0 8px;
+    padding-left: 22px;
+    list-style: decimal;
+  }
+
+  .md-edit li {
+    margin-bottom: 2px;
+  }
+
+  .md-edit li::marker {
+    color: var(--color-gold-dim);
+  }
+
+  .md-edit ul[data-type='taskList'] {
+    list-style: none;
+    padding-left: 2px;
+  }
+
+  .md-edit ul[data-type='taskList'] li {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+  }
+
+  .md-edit ul[data-type='taskList'] li > div {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .md-edit input[type='checkbox'] {
+    margin-top: 5px;
+    accent-color: var(--color-gold);
+  }
+
+  .md-edit blockquote {
+    margin: 0 0 8px;
+    padding-left: 12px;
+    border-left: 2px solid var(--color-gold-dim);
+    color: var(--color-ink-soft);
+    font-style: italic;
+  }
+
+  .md-edit code {
+    background: var(--color-ink-tint);
+    border: 1px solid var(--color-line-soft);
+    padding: 1px 4px;
+    font-size: 15px;
+  }
+
+  .md-edit pre {
+    background: var(--color-ink-tint);
+    border: 1px solid var(--color-line-soft);
+    padding: 9px 11px;
+    margin: 0 0 8px;
+    overflow-x: auto;
+  }
+
+  .md-edit pre code {
+    background: none;
+    border: 0;
+    padding: 0;
+  }
+
+  .md-edit a {
+    color: var(--color-gold);
+  }
+
+  /* A wiki-link is one object: the caret steps over it, never into it. */
+  .md-edit [data-wiki-link] {
+    color: var(--color-gold);
+    background: var(--color-gold-tint);
+    padding: 0 3px;
+    white-space: nowrap;
+  }
+
+  /* Tiptap's own placeholder, which only shows on an empty first line. */
+  .md-edit p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    color: var(--color-ink-muted);
   }
 
   .wikilink {

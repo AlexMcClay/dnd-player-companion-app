@@ -27,6 +27,19 @@ function tabIndex(pathname: string): number {
  * Framer types the argument `MouseEvent | TouchEvent | PointerEvent`, so the
  * property has to be tested for rather than assumed.
  */
+/**
+ * True while the focus is somewhere the user is composing.
+ *
+ * A horizontal drag across text in an editor — selecting a word, or just
+ * missing — would otherwise navigate to another tab and take the unsaved draft
+ * with it.
+ */
+export function isEditing(): boolean {
+  const el = document.activeElement
+  if (!(el instanceof HTMLElement)) return false
+  return el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)
+}
+
 export function isSwipePointer(event: unknown): boolean {
   if (typeof event !== 'object' || event === null || !('pointerType' in event)) return false
   const kind = (event as PointerEvent).pointerType
@@ -47,6 +60,9 @@ export function useSwipeNav() {
   return function onPanEnd(event: unknown, info: PanInfo) {
     // A mouse is here to select text, not to navigate.
     if (!isSwipePointer(event)) return
+    // Nor is a finger dragging inside something being written in. Losing an
+    // unsaved note to a stray horizontal drag is the worst outcome available.
+    if (isEditing()) return
 
     const { offset, velocity } = info
 

@@ -1,15 +1,25 @@
 import { motion } from 'framer-motion'
 import type { NoteVisibility } from '@codex/shared'
-import { useState } from 'react'
-import { LuEyeOff, LuSend, LuUsers, LuX } from 'react-icons/lu'
+import { lazy, Suspense, useState } from 'react'
+import { LuCode, LuEyeOff, LuPenLine, LuSend, LuUsers, LuX } from 'react-icons/lu'
 import { SPRING } from '../lib/motion'
 import { Cta, ctaClass, cx, inputClass, PillButton, textareaClass } from './ui'
+
+/**
+ * Tiptap and ProseMirror roughly double the app's JavaScript, so the editor is
+ * its own chunk. While it loads the user gets the plain textarea and can start
+ * typing immediately — the fallback is the source mode they can switch to
+ * anyway, not a spinner.
+ */
+const RichEditor = lazy(() => import('../editor/RichEditor'))
 
 export interface NoteDraft {
   title: string | null
   bodyMd: string
   visibility: NoteVisibility
 }
+
+type Mode = 'rich' | 'source'
 
 /**
  * Writes and edits a note. Used inline on an entry, in the vault and on the
@@ -20,7 +30,7 @@ export default function NoteComposer({
   withTitle = false,
   withVisibility = true,
   submitLabel = 'Post',
-  placeholder = 'Write a note. Link an entry with [[Their Name]].',
+  placeholder = 'Write a note. Type @ to link an entry.',
   busy = false,
   error,
   onSubmit,
@@ -41,6 +51,7 @@ export default function NoteComposer({
   const [title, setTitle] = useState(initial?.title ?? '')
   const [bodyMd, setBodyMd] = useState(initial?.bodyMd ?? '')
   const [visibility, setVisibility] = useState<NoteVisibility>(initial?.visibility ?? 'shared')
+  const [mode, setMode] = useState<Mode>('rich')
 
   const empty = bodyMd.trim().length === 0
 
@@ -49,6 +60,15 @@ export default function NoteComposer({
     if (empty) return
     onSubmit({ title: title.trim() || null, bodyMd: bodyMd.trim(), visibility })
   }
+
+  const textarea = (
+    <textarea
+      className={cx(textareaClass, 'min-h-24')}
+      value={bodyMd}
+      placeholder={placeholder}
+      onChange={(e) => setBodyMd(e.target.value)}
+    />
+  )
 
   return (
     <form className="flex flex-col gap-2" onSubmit={submit}>
@@ -61,31 +81,51 @@ export default function NoteComposer({
         />
       )}
 
-      <textarea
-        className={cx(textareaClass, 'min-h-24')}
-        value={bodyMd}
-        placeholder={placeholder}
-        onChange={(e) => setBodyMd(e.target.value)}
-      />
-
-      {withVisibility && (
-        <div className="flex flex-wrap gap-1.75">
-          <PillButton
-            tone={visibility === 'shared' ? 'solid' : 'neutral'}
-            onClick={() => setVisibility('shared')}
-          >
-            <LuUsers aria-hidden />
-            Shared
-          </PillButton>
-          <PillButton
-            tone={visibility === 'private' ? 'solid' : 'neutral'}
-            onClick={() => setVisibility('private')}
-          >
-            <LuEyeOff aria-hidden />
-            Private
-          </PillButton>
-        </div>
+      {mode === 'source' ? (
+        textarea
+      ) : (
+        <Suspense fallback={textarea}>
+          <RichEditor
+            value={bodyMd}
+            onChange={setBodyMd}
+            placeholder={placeholder}
+            // Falls back rather than silently dropping a table or an image the
+            // editor's schema cannot hold.
+            onUnrepresentable={() => setMode('source')}
+          />
+        </Suspense>
       )}
+
+      <div className="flex flex-wrap items-center gap-1.75">
+        {withVisibility && (
+          <>
+            <PillButton
+              tone={visibility === 'shared' ? 'solid' : 'neutral'}
+              onClick={() => setVisibility('shared')}
+            >
+              <LuUsers aria-hidden />
+              Shared
+            </PillButton>
+            <PillButton
+              tone={visibility === 'private' ? 'solid' : 'neutral'}
+              onClick={() => setVisibility('private')}
+            >
+              <LuEyeOff aria-hidden />
+              Private
+            </PillButton>
+          </>
+        )}
+
+        <PillButton
+          tone="neutral"
+          className="ml-auto"
+          aria-pressed={mode === 'source'}
+          onClick={() => setMode(mode === 'rich' ? 'source' : 'rich')}
+        >
+          {mode === 'rich' ? <LuCode aria-hidden /> : <LuPenLine aria-hidden />}
+          {mode === 'rich' ? 'Markdown' : 'Rich text'}
+        </PillButton>
+      </div>
 
       {error && <div className="type-meta text-danger">{error}</div>}
 

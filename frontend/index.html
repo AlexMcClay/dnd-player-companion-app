@@ -2,7 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- interactive-widget lets Android shrink the layout viewport when the
+         keyboard opens, so the editor toolbar is not hidden behind it. iOS
+         ignores it and is handled from visualViewport in JS. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
     <!-- Phone browser chrome. Must track --color-ground or the notch area
          sits in a different colour from the page under it. -->
     <meta name="theme-color" content="#141414" />

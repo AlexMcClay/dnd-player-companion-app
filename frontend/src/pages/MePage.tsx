@@ -173,7 +173,7 @@ function CharacterBody({ character }: { character: Entity }) {
         initial={{ bodyMd: character.bodyMd ?? '' }}
         withVisibility={false}
         submitLabel="Save"
-        placeholder={'Who are they? Markdown works, and [[The Gutted Lamp]] links an entry.'}
+        placeholder={'Who are they? Type @ to link an entry.'}
         busy={save.isPending}
         error={error}
         onSubmit={(draft) => save.mutate(draft.bodyMd)}
