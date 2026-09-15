@@ -277,6 +277,28 @@
 }
 
 /**
+ * The height of the app itself — and, installed, a guard against iOS changing
+ * its mind about how tall the window is.
+ *
+ * iOS hands out two viewport sizes and picks between them on whether the page
+ * scrolls: the whole screen when it does, and the screen less the home
+ * indicator when it does not. Moving from a long page to a short one therefore
+ * resizes the window, and everything anchored to it twitches on the way.
+ *
+ * A page kept a single pixel taller than the *larger* of the two always
+ * scrolls, so the choice never comes up. It has to be `lvh` and not `svh`: one
+ * pixel over the smaller size would scroll, be given the larger size, stop
+ * scrolling, and be taken back again, over and over.
+ */
+@utility app-height {
+  min-height: 100%;
+
+  @media (display-mode: standalone) {
+    min-height: calc(100lvh + 1px);
+  }
+}
+
+/**
  * Keeps the header out from under the clock.
  *
  * Installed on iOS the app is genuinely full-screen — `viewport-fit=cover` plus

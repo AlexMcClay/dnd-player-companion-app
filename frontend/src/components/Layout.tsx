@@ -35,7 +35,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const wide = useMediaQuery(LG)
 
   return (
-    <div className="app-ground flex min-h-full flex-col lg:flex-row">
+    <div className="app-ground app-height flex flex-col lg:flex-row">
       {wide && <SideRail />}
 
       <div className="flex min-w-0 flex-1 flex-col">
