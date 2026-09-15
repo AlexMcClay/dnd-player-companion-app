@@ -246,22 +246,34 @@
 }
 
 /**
- * Carries the bar's colour on down past its own box.
+ * Pins the tab bar to the bottom of the *screen*, not of the viewport.
  *
- * Installed on iOS a `position: fixed` element anchors to the viewport
- * *without* the home-indicator strip while the page is too short to scroll, and
- * to the whole screen once it does — so the same bar sits flush on a long page
- * and floats above a band of ground on a short one. This fills that band.
+ * Installed on iOS those are not the same thing. Measured on an iPhone with a
+ * 844pt screen and a 47pt home indicator: a page long enough to scroll gets a
+ * viewport of 844, and a page that fits gets 797 — iOS keeps the indicator
+ * strip for itself when there is nothing to scroll. A bar at `bottom: 0` is
+ * flush in the first case and 47pt short in the second, which is why this only
+ * ever showed up on the sparse pages.
  *
- * The offset and the spread have to match. A shadow offset 999px down with no
- * spread is a copy of the bar drawn 999px below it, which is nowhere at all;
- * inflating it by the same amount pulls the top edge back to the bar's own top,
- * so what actually paints is a slab running from the bar downwards. It sits
- * behind the bar's background, costs no layout, and is off-screen on every
- * device that does not have this problem.
+ * `100%` on an offset resolves against the containing block's height, which for
+ * a fixed element is that same varying viewport; `100lvh` is always the whole
+ * screen. Subtract them and the result is zero whenever they agree and exactly
+ * the shortfall when they do not. The bar's padding then hangs below the
+ * viewport, where it cannot be painted by the page — which is why `body` is the
+ * bar's colour rather than the ground's, so what iOS paints there matches.
+ *
+ * Only when installed. In a browser `100lvh` means the viewport with the
+ * toolbars retracted, which is *larger* than the one in front of you, so the
+ * same subtraction comes out negative and pushes the bar down behind the
+ * browser's own controls. The quirk being corrected only exists in standalone,
+ * so the correction lives there and everywhere else keeps a plain `bottom: 0`.
  */
-@utility bottom-skirt {
-  box-shadow: 0 999px 0 999px var(--color-tabbar);
+@utility bottom-screen {
+  bottom: 0;
+
+  @media (display-mode: standalone) {
+    bottom: calc(100% - 100lvh);
+  }
 }
 
 /**
