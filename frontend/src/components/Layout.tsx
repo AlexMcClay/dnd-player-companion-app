@@ -13,6 +13,7 @@ import { TABS } from '../templates'
 import { CharacterSwitcherPortal } from './CharacterPicker'
 import DmUnlock from './DmUnlock'
 import OfflineBar from './OfflineBar'
+import ViewportProbe from './ViewportProbe'
 import { Portrait } from './bits'
 import { cx, PillButton } from './ui'
 
@@ -66,6 +67,8 @@ export default function Layout({ children }: { children: ReactNode }) {
           {/* Inside the sticky header so a notice cannot scroll away from the
               thing it is describing. */}
           <OfflineBar />
+          {/* TEMPORARY — remove with ViewportProbe.tsx. */}
+          <ViewportProbe />
         </header>
 
         {/*
@@ -101,6 +104,7 @@ function BottomBar() {
   return (
     // Columns derived from TABS so adding a tab cannot silently wreck the bar.
     <nav
+      data-probe="tabbar"
       className="safe-bottom bottom-skirt fixed inset-x-0 bottom-0 z-20 grid border-t border-line bg-tabbar"
       style={{ gridTemplateColumns: `repeat(${TABS.length}, minmax(0, 1fr))` }}
     >
