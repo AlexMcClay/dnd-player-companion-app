@@ -15,6 +15,9 @@ import {
   type ArchiveEntity,
   type ArchiveHolding,
   type ArchiveNote,
+  type ClearResult,
+  type ClearScope,
+  type DbStats,
   type DdbClass,
   type DdbCurrencies,
   type DdbItem,
@@ -140,6 +143,57 @@ export async function exportArchive(): Promise<Archive> {
         : null,
     },
   }
+}
+
+export async function dbStats(): Promise<DbStats> {
+  const [entities, srd, holdings, notes, ddbSnapshots, party] = await Promise.all([
+    prisma.entity.count(),
+    prisma.entity.count({ where: { tags: { has: 'srd' } } }),
+    prisma.holding.count(),
+    prisma.note.count(),
+    prisma.ddbSnapshot.count(),
+    prisma.ddbPartySnapshot.count(),
+  ])
+  return {
+    entities,
+    srd,
+    campaign: entities - srd,
+    holdings,
+    notes,
+    ddbSnapshots,
+    ddbParty: party > 0,
+  }
+}
+
+/**
+ * Empties the database, all of it or all but the reference library.
+ *
+ * Every delete is spelled out rather than left to the cascades. They would do
+ * most of it — holdings, notes and sheets all hang off an entity and go when it
+ * does — but two things do not follow: the party's D&D Beyond mirror belongs to
+ * no entity at all, and on the `campaign` scope the SRD entries survive, so a
+ * stack of SRD potions sitting in the party stash has nothing to cascade from.
+ * Those are exactly the rows that would be left behind by a wipe that trusted
+ * the foreign keys, and they are campaign content either way.
+ */
+export async function clearDatabase(scope: ClearScope): Promise<ClearResult> {
+  return prisma.$transaction(async (tx) => {
+    const notes = await tx.note.deleteMany()
+    const holdings = await tx.holding.deleteMany()
+    const ddbSnapshots = await tx.ddbSnapshot.deleteMany()
+    await tx.ddbPartySnapshot.deleteMany()
+
+    const entities = await tx.entity.deleteMany(
+      scope === 'all' ? undefined : { where: { NOT: { tags: { has: 'srd' } } } },
+    )
+
+    return {
+      entities: entities.count,
+      holdings: holdings.count,
+      notes: notes.count,
+      ddbSnapshots: ddbSnapshots.count,
+    }
+  })
 }
 
 /**

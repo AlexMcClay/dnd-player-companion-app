@@ -349,6 +349,43 @@ export interface ImportResult {
   ddb: ImportCounts
 }
 
+/** What is in the database right now, for the DM's own screen. */
+export interface DbStats {
+  entities: number
+  /** Entries tagged `srd` — the reference library, not this campaign. */
+  srd: number
+  /** Everything else: the campaign as it has actually been written. */
+  campaign: number
+  holdings: number
+  notes: number
+  ddbSnapshots: number
+  ddbParty: boolean
+}
+
+/**
+ * How much of the database to throw away.
+ *  - all: every row, the SRD library included
+ *  - campaign: everything except entries tagged `srd`, so the item library
+ *    survives and only this campaign's content goes
+ */
+export const CLEAR_SCOPES = ['all', 'campaign'] as const
+export type ClearScope = (typeof CLEAR_SCOPES)[number]
+
+/** `confirm` must be CLEAR_PHRASE. Deleting everything should take intent. */
+export const CLEAR_PHRASE = 'CLEAR'
+
+export interface ClearRequest {
+  scope: ClearScope
+  confirm: string
+}
+
+export interface ClearResult {
+  entities: number
+  holdings: number
+  notes: number
+  ddbSnapshots: number
+}
+
 /** Shape of `data` for recipes. Rendered by the recipe template. */
 export interface RecipeIngredient {
   name: string

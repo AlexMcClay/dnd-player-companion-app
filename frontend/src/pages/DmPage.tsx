@@ -6,7 +6,7 @@
  * the bar for four players who can never use it — so it is reached from the DM
  * panel in the header instead.
  */
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useMemo, useState } from 'react'
 import {
@@ -14,23 +14,27 @@ import {
   LuClipboardCopy,
   LuDownload,
   LuSparkles,
+  LuTrash2,
   LuTriangleAlert,
   LuUpload,
 } from 'react-icons/lu'
 import {
   ARCHIVE_FORMAT,
+  CLEAR_PHRASE,
   type Archive,
   type ArchivePreview,
   type ArchiveResolution,
+  type ClearResult,
+  type ClearScope,
   type ImportResult,
 } from '@codex/shared'
 import { api } from '../api/client'
 import ImportPreview from '../components/ImportPreview'
 import { Empty, PageHead, Section } from '../components/bits'
-import { Cta, ctaClass, cx, textareaClass } from '../components/ui'
+import { Cta, ctaClass, cx, inputClass, PillButton, textareaClass } from '../components/ui'
 import { buildAiGuide } from '../lib/aiGuide'
 import { downloadBlob } from '../lib/download'
-import { useIsDm } from '../lib/identity'
+import { setPlayerId, useIsDm } from '../lib/identity'
 import { useAllEntities } from '../lib/useAllEntities'
 
 export default function DmPage() {
@@ -49,11 +53,155 @@ function Tools() {
       <BackupSection />
       <ImportSection />
       <GuideSection />
+      <ClearSection />
     </div>
   )
 }
 
+/* ── clearing out ─────────────────────────────────────────────────── */
+
+/**
+ * The one thing in the app that destroys data outright.
+ *
+ * Everything guarding it is deliberate: the real counts rather than a vague
+ * warning, a backup offered in the same breath, and a phrase to type so it
+ * cannot happen by brushing against a button. There is no undo behind this —
+ * the backup is the undo.
+ */
+function ClearSection() {
+  const queryClient = useQueryClient()
+  const [scope, setScope] = useState<ClearScope>('campaign')
+  const [typed, setTyped] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState<ClearResult | null>(null)
+
+  const stats = useQuery({ queryKey: ['dbStats'], queryFn: () => api.dbStats() })
+  const s = stats.data
+
+  const going =
+    s === undefined
+      ? null
+      : {
+          entities: scope === 'all' ? s.entities : s.campaign,
+          holdings: s.holdings,
+          notes: s.notes,
+          sheets: s.ddbSnapshots,
+        }
+
+  async function clear() {
+    setBusy(true)
+    setError(null)
+    try {
+      const result = await api.clearDatabase({ scope, confirm: CLEAR_PHRASE })
+      setDone(result)
+      setTyped('')
+      // The character in this browser was very likely one of the rows that just
+      // went, and a stored id pointing at nothing makes every write fail with
+      // "unknown character" rather than asking who you are.
+      setPlayerId(null)
+      await queryClient.invalidateQueries()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not clear the database')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Section className="flex flex-col gap-2.5 border border-danger-line p-3">
+      <span className="type-lab text-danger">Clear the database</span>
+      <p className="type-body m-0">
+        Deletes entries, everything held, every note and the D&amp;D Beyond mirrors. There is no
+        undo — take a backup first and this is reversible; skip it and it is not.
+      </p>
+
+      <div className="flex flex-wrap items-center gap-1.5">
+        <PillButton
+          tone={scope === 'campaign' ? 'solid' : 'neutral'}
+          aria-pressed={scope === 'campaign'}
+          onClick={() => setScope('campaign')}
+        >
+          Keep the item library
+        </PillButton>
+        <PillButton
+          tone={scope === 'all' ? 'solid' : 'neutral'}
+          aria-pressed={scope === 'all'}
+          onClick={() => setScope('all')}
+        >
+          Everything
+        </PillButton>
+      </div>
+
+      {going && (
+        <p className="type-meta m-0 text-ink-dim">
+          {scope === 'campaign' ? (
+            <>
+              Deletes <b className="text-danger">{going.entities}</b> campaign entries and keeps the{' '}
+              {s?.srd} SRD items.
+            </>
+          ) : (
+            <>
+              Deletes <b className="text-danger">all {going.entities}</b> entries, the SRD library
+              included. Restore it afterwards with <code>npm run db:seed:srd</code>.
+            </>
+          )}{' '}
+          Also {going.holdings} held stacks, {going.notes} notes and {going.sheets} synced sheets.
+        </p>
+      )}
+
+      <Cta
+        tone="ghost"
+        disabled={busy}
+        onClick={() =>
+          void downloadBackup().catch((err: unknown) =>
+            setError(err instanceof Error ? err.message : 'Could not build a backup'),
+          )
+        }
+      >
+        <LuDownload aria-hidden />
+        Download a backup first
+      </Cta>
+
+      <input
+        className={inputClass}
+        value={typed}
+        placeholder={`Type ${CLEAR_PHRASE} to confirm`}
+        aria-label={`Type ${CLEAR_PHRASE} to confirm`}
+        autoCapitalize="characters"
+        autoCorrect="off"
+        spellCheck={false}
+        onChange={(event) => setTyped(event.target.value)}
+      />
+
+      <Cta tone="danger" disabled={busy || typed.trim() !== CLEAR_PHRASE} onClick={() => void clear()}>
+        <LuTrash2 aria-hidden />
+        {busy ? 'Clearing…' : scope === 'all' ? 'Delete everything' : 'Delete campaign content'}
+      </Cta>
+
+      {error && <ErrorLine>{error}</ErrorLine>}
+      {done && (
+        <motion.div
+          className="type-body flex items-start gap-1.75 border border-line p-2.75 text-ink-dim"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <LuCheck className="mt-0.5 shrink-0" aria-hidden />
+          Removed {done.entities} entries, {done.holdings} stacks, {done.notes} notes and{' '}
+          {done.ddbSnapshots} sheets. Pick a character again from the Party tab.
+        </motion.div>
+      )}
+    </Section>
+  )
+}
+
 /* ── export ───────────────────────────────────────────────────────── */
+
+/** Shared by the backup section and the offer to take one before wiping. */
+async function downloadBackup(): Promise<void> {
+  const blob = await api.exportBackup()
+  downloadBlob(blob, `codex-backup-${new Date().toISOString().slice(0, 10)}.json`)
+}
 
 function BackupSection() {
   const [busy, setBusy] = useState(false)
@@ -63,9 +211,7 @@ function BackupSection() {
     setBusy(true)
     setError(null)
     try {
-      const blob = await api.exportBackup()
-      const date = new Date().toISOString().slice(0, 10)
-      downloadBlob(blob, `codex-backup-${date}.json`)
+      await downloadBackup()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not build a backup')
     } finally {

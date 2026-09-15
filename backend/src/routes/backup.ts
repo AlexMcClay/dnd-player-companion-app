@@ -7,9 +7,20 @@
  * overwrite what it is told to overwrite — it never deletes.
  */
 import express, { Router } from 'express'
-import { type ArchiveResolution } from '@codex/shared'
+import {
+  CLEAR_PHRASE,
+  CLEAR_SCOPES,
+  type ArchiveResolution,
+  type ClearScope,
+} from '@codex/shared'
 import { normalizeArchive, planArchive } from '../lib/archive.js'
-import { applyPlan, exportArchive, loadSnapshot } from '../lib/archiveDb.js'
+import {
+  applyPlan,
+  clearDatabase,
+  dbStats,
+  exportArchive,
+  loadSnapshot,
+} from '../lib/archiveDb.js'
 import { prisma } from '../lib/prisma.js'
 import { requireDm } from '../middleware/identity.js'
 
@@ -48,6 +59,37 @@ backupRouter.get('/export', async (_req, res, next) => {
     res.setHeader('Content-Type', 'application/json; charset=utf-8')
     res.setHeader('Content-Disposition', `attachment; filename="codex-backup-${date}.json"`)
     res.send(JSON.stringify(archive, null, 2))
+  } catch (err) {
+    next(err)
+  }
+})
+
+// GET /api/backup/stats — what is in there, for the DM's own screen.
+backupRouter.get('/stats', async (_req, res, next) => {
+  try {
+    res.json(await dbStats())
+  } catch (err) {
+    next(err)
+  }
+})
+
+// DELETE /api/backup — empties it. The one irreversible thing in the app.
+backupRouter.delete('/', async (req, res, next) => {
+  try {
+    const body = req.body as { scope?: unknown; confirm?: unknown } | null
+
+    if (!CLEAR_SCOPES.includes(body?.scope as ClearScope)) {
+      res.status(400).json({ error: `scope must be one of ${CLEAR_SCOPES.join(', ')}` })
+      return
+    }
+    // Not security — the DM key is that. This is so a mistyped request from a
+    // REST client or a stray script cannot empty a campaign by accident.
+    if (body?.confirm !== CLEAR_PHRASE) {
+      res.status(400).json({ error: `confirm must be "${CLEAR_PHRASE}"` })
+      return
+    }
+
+    res.json(await clearDatabase(body.scope as ClearScope))
   } catch (err) {
     next(err)
   }

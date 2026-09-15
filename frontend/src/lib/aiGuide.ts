@@ -9,6 +9,13 @@
  */
 import { ENTITY_TYPES, KNOWLEDGE_STATES, type EntitySummary } from '@codex/shared'
 import { KNOWLEDGE_HELP, TEMPLATES, templateFor } from '../templates'
+import {
+  CATEGORIES,
+  CATEGORY_BLURB,
+  CATEGORY_LABEL,
+  CATEGORY_TERMS,
+  RARITIES,
+} from './itemFacets'
 
 /** Entries from the SRD library are not campaign knowledge and would bury the list. */
 function isCampaign(entity: EntitySummary): boolean {
@@ -58,6 +65,17 @@ export function buildAiGuide(entities: EntitySummary[]): string {
   const knowledge = KNOWLEDGE_STATES.map((state) => `- \`"${state}"\` — ${KNOWLEDGE_HELP[state]}`).join(
     '\n',
   )
+
+  // Built from the same map the codex files items with, so the guide cannot
+  // promise a category the app does not actually recognise.
+  const categories = CATEGORIES.map((category) => {
+    const terms = CATEGORY_TERMS[category]
+    const accepted =
+      terms.length > 0
+        ? terms.map((term) => `\`"${term}"\``).join(', ')
+        : '_anything unrecognised ends up here_'
+    return `- **${CATEGORY_LABEL[category]}** — ${CATEGORY_BLURB[category]}\n  ${accepted}`
+  }).join('\n')
 
   return `# Writing entries for my D&D campaign codex
 
@@ -171,6 +189,22 @@ if my notes clearly contain a player's own log.
 ## Fields
 
 ${vocab}
+
+## Filing items in the codex
+
+The item codex is a grid of categories, and an item is filed by its
+\`data.category\`, matched case-insensitively against the list below. **Anything
+it does not recognise is filed under Misc**, so use one of these spellings or
+the item will be hard to find.
+
+${categories}
+
+Note a magic sword is still \`"Weapon"\` and enchanted plate is still \`"Armor"\` —
+being magical is what \`rarity\` is for, not the category.
+
+\`data.rarity\` is matched against exactly: ${RARITIES.join(', ')}. Anything else
+counts as having no rarity at all, which is correct for ordinary gear — leave
+the field out entirely for those rather than inventing a value.
 
 ## Rules
 

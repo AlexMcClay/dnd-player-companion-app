@@ -143,6 +143,28 @@ const CATEGORY_MAP: Readonly<Record<string, Category>> = Object.freeze({
   document: 'misc',
 })
 
+/**
+ * The `data.category` spellings that land in each category, derived from the
+ * map above so the two cannot drift.
+ *
+ * Exists for the AI import guide: `data.category` is free text and anything
+ * unrecognised falls to Misc, so whoever is writing new items needs to be told
+ * which words actually sort. `misc` lists only `document` because everything
+ * else reaches it by not matching.
+ */
+function buildTerms(): Record<Category, string[]> {
+  const out = Object.fromEntries(CATEGORIES.map((c) => [c, [] as string[]])) as Record<
+    Category,
+    string[]
+  >
+  for (const [term, category] of Object.entries(CATEGORY_MAP)) out[category].push(term)
+  return out
+}
+
+export const CATEGORY_TERMS: Readonly<Record<Category, readonly string[]>> = Object.freeze(
+  buildTerms(),
+)
+
 export function categoryOf(entity: EntitySummary): Category {
   const raw = String((entity.data as Record<string, unknown>)?.category ?? '')
     .trim()

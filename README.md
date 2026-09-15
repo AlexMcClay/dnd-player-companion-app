@@ -150,6 +150,15 @@ Entries are matched by `id` first, then by `type` plus name, case-insensitively
 things. That is also why every cross-reference in the file is a *name*: an AI
 can write one, and a person can read it.
 
+**Clear the database** starts a fresh campaign. Two scopes: *keep the item
+library* deletes everything except entries tagged `srd`, which is what you want
+between campaigns; *everything* takes the SRD library too, and
+`npm run db:seed:srd` puts it back. Either way holdings, notes and the D&D
+Beyond mirrors go — including a party-stash stack of an SRD item, which no
+cascade would have caught. It shows the real counts before you commit, offers a
+backup in the same breath, and needs the word `CLEAR` typed. There is no undo;
+the backup is the undo.
+
 **Writing entries with an AI** generates the instructions to paste into a chat
 above your session notes. They are built from the running app — the field
 vocabulary each type actually renders, and the names of every campaign entry
@@ -347,6 +356,8 @@ API returns a ready-to-use `imageUrl`.
 | `GET /api/backup/export` | DM only. The whole database as one JSON file. |
 | `POST /api/backup/preview` | DM only. What an import would do, without doing it. |
 | `POST /api/backup/import` | DM only. Adds, and replaces only what the DM ticked. |
+| `GET /api/backup/stats` | DM only. Row counts, split into SRD and campaign. |
+| `DELETE /api/backup` | DM only. Empties it. Needs `{ scope, confirm: "CLEAR" }`. |
 
 Authoring the catalogue is the DM's. Moving things around in it is everyone's.
 

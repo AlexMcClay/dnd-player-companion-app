@@ -1,6 +1,9 @@
 import type {
   Archive,
   ArchivePreview,
+  ClearRequest,
+  ClearResult,
+  DbStats,
   DdbPartySnapshot,
   DdbSnapshot,
   Entity,
@@ -192,6 +195,15 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(body),
     })
+  },
+
+  /** Row counts, so the DM can see what a wipe would actually destroy. */
+  dbStats(): Promise<DbStats> {
+    return request<DbStats>('/backup/stats')
+  },
+
+  clearDatabase(body: ClearRequest): Promise<ClearResult> {
+    return request<ClearResult>('/backup', { method: 'DELETE', body: JSON.stringify(body) })
   },
 
   verifyDmKey(key: string): Promise<boolean> {
