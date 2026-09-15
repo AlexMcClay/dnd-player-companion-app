@@ -153,7 +153,9 @@ function BottomBar() {
  */
 function SideRail() {
   return (
-    <nav className="safe-top sticky top-0 flex h-screen w-56 shrink-0 flex-col gap-1 border-r border-line bg-tabbar px-3 py-5">
+    // The inset is added to the rail's own padding rather than set as it:
+    // `safe-top` alone resolves to 0 on a desktop and takes the padding with it.
+    <nav className="sticky top-0 flex h-screen w-56 shrink-0 flex-col gap-1 border-r border-line bg-tabbar px-3 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-5">
       <span className="type-lab mb-4 px-2">Dessarin Valley</span>
 
       {TABS.map((tab) => {
