@@ -75,9 +75,20 @@
     color-scheme: dark;
   }
 
+  /*
+   * Deliberately the tab bar's colour and not the ground's.
+   *
+   * Installed on iOS the page can come up short of the physical screen — these
+   * three are `height: 100%`, and that resolves against the safe-area viewport
+   * rather than the display — and iOS fills whatever is left over with the
+   * body's background colour. That strip is along the bottom edge, directly
+   * under the tab bar, so it has to be the bar's colour or the bar appears to
+   * float above a band of page. Nothing else shows this: `.app-ground` covers
+   * the whole of the app you can actually see.
+   */
   body {
     margin: 0;
-    background: var(--color-ground);
+    background: var(--color-tabbar);
     color: var(--color-ink);
     font-family: var(--font-sans);
     font-size: 14px;
@@ -232,6 +243,32 @@
 /** Lets the tab bar sit above the home indicator. */
 @utility safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/**
+ * Carries the bar's colour on down past its own box.
+ *
+ * The companion to the body colour above, for the case where the gap under the
+ * bar is inside the page rather than outside it — a fixed element anchors to
+ * the initial containing block, which installed on iOS is not always the whole
+ * screen. A shadow costs no layout and falls off the bottom of the screen
+ * everywhere it is not needed, which is everywhere but there.
+ */
+@utility bottom-skirt {
+  box-shadow: 0 999px 0 var(--color-tabbar);
+}
+
+/**
+ * Keeps the header out from under the clock.
+ *
+ * Installed on iOS the app is genuinely full-screen — `viewport-fit=cover` plus
+ * a translucent status bar means the page starts at the physical top of the
+ * display, with the time and battery drawn over it. This reserves that strip so
+ * the header's own background fills it and nothing lands underneath. It is zero
+ * in a browser tab and on anything without a notch.
+ */
+@utility safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* ── markdown ─────────────────────────────────────────────────────── */

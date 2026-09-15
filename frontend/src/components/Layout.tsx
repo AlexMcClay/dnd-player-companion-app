@@ -39,7 +39,9 @@ export default function Layout({ children }: { children: ReactNode }) {
       {wide && <SideRail />}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 border-b border-line bg-topbar">
+        {/* safe-top: installed on iOS the page runs under the clock and the
+            battery, so the header reserves that strip and fills it. */}
+        <header className="safe-top sticky top-0 z-20 border-b border-line bg-topbar">
           <div className="mx-auto flex max-w-195 items-center justify-between gap-2 px-4.5 py-2.5">
             {/*
               The rail carries the name on wide screens. Kept as an invisible
@@ -99,7 +101,7 @@ function BottomBar() {
   return (
     // Columns derived from TABS so adding a tab cannot silently wreck the bar.
     <nav
-      className="safe-bottom fixed inset-x-0 bottom-0 z-20 grid border-t border-line bg-tabbar"
+      className="safe-bottom bottom-skirt fixed inset-x-0 bottom-0 z-20 grid border-t border-line bg-tabbar"
       style={{ gridTemplateColumns: `repeat(${TABS.length}, minmax(0, 1fr))` }}
     >
       {TABS.map((tab) => {
@@ -151,7 +153,7 @@ function BottomBar() {
  */
 function SideRail() {
   return (
-    <nav className="sticky top-0 flex h-screen w-56 shrink-0 flex-col gap-1 border-r border-line bg-tabbar px-3 py-5">
+    <nav className="safe-top sticky top-0 flex h-screen w-56 shrink-0 flex-col gap-1 border-r border-line bg-tabbar px-3 py-5">
       <span className="type-lab mb-4 px-2">Dessarin Valley</span>
 
       {TABS.map((tab) => {
