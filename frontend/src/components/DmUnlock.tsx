@@ -21,7 +21,18 @@ export default function DmUnlock({ onClose }: { onClose: () => void }) {
     setError(null)
     // Verified server-side first so a typo doesn't leave the UI in a state
     // where every write silently 401s.
-    const ok = await api.verifyDmKey(value).catch(() => false)
+    //
+    // A rejection is reported as itself rather than folded into "not accepted":
+    // being offline and being wrong are different problems, and telling someone
+    // their correct passphrase was refused sends them looking in the wrong place.
+    let ok = false
+    try {
+      ok = await api.verifyDmKey(value)
+    } catch (err) {
+      setChecking(false)
+      setError(err instanceof Error ? err.message : 'Could not reach the server.')
+      return
+    }
     setChecking(false)
     if (!ok) {
       setError('That passphrase was not accepted.')
@@ -35,6 +46,10 @@ export default function DmUnlock({ onClose }: { onClose: () => void }) {
   function lock() {
     setDmKey(null)
     void queryClient.invalidateQueries()
+    // "Lock up before handing the phone to a player" has to be true of what is
+    // stored offline as well as what is on screen — the service worker keeps a
+    // copy of everything the DM read, sealed entries included.
+    navigator.serviceWorker?.controller?.postMessage({ type: 'FORGET_DM' })
     onClose()
   }
 

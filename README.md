@@ -98,6 +98,36 @@ Tap **Locked** in the top right and enter `DM_KEY`. That reveals sealed entries 
 turns on every create/edit/delete control. The key is checked server-side on every
 write — hiding the buttons is a convenience, not the protection.
 
+## Installing it
+
+It is a PWA: open the site and the browser offers to install it — "Add to Home
+Screen" on a phone, an icon in the address bar on a desktop. It then launches
+from the home screen with no browser chrome.
+
+**Browsing works without a connection.** Anything already loaded — entries,
+items, the bestiary, notes, the pictures you have looked at — is served from
+the device. Writing needs the network and says so rather than hanging; a bar
+under the header appears while you are offline.
+
+> **This needs HTTPS.** Browsers refuse to register a service worker outside a
+> secure context, so a LAN address like `http://192.168.1.20:5173` will never
+> install. `localhost` counts as secure, so `npm run build && npx vite preview`
+> is how you test it on this machine; anywhere else needs the real domain.
+
+Two things worth knowing:
+
+- Cached data belongs to whoever was signed in when it was cached. The service
+  worker keys it by the `x-player-id` and `x-dm-key` headers, so passing the
+  phone to another player does not show them the last person's vault — and
+  locking DM mode deletes the sealed entries cached while it was unlocked.
+- **On iOS the installed app gets its own storage**, separate from Safari. The
+  chosen character and the DM passphrase live in that storage, so the first
+  launch after installing asks again even though Safari already knows. It is
+  once, and nothing is lost.
+
+Deploying a new build does not disturb anyone mid-session: an open app offers a
+**"new version is ready"** strip and only reloads when someone taps it.
+
 ### DM tools
 
 The DM panel has a **DM tools** link, to `/dm`. Three things live there.

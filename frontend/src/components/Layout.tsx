@@ -12,6 +12,7 @@ import { useSwipeNav } from '../lib/useSwipeNav'
 import { TABS } from '../templates'
 import { CharacterSwitcherPortal } from './CharacterPicker'
 import DmUnlock from './DmUnlock'
+import OfflineBar from './OfflineBar'
 import { Portrait } from './bits'
 import { cx, PillButton } from './ui'
 
@@ -59,6 +60,10 @@ export default function Layout({ children }: { children: ReactNode }) {
               </PillButton>
             </div>
           </div>
+
+          {/* Inside the sticky header so a notice cannot scroll away from the
+              thing it is describing. */}
+          <OfflineBar />
         </header>
 
         {/*

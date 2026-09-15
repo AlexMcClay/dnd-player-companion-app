@@ -27,6 +27,19 @@ function authHeaders(): Record<string, string> {
   }
 }
 
+/**
+ * Refuses anything that cannot possibly work without a connection.
+ *
+ * Reads are left alone on purpose — those go to the service worker, which may
+ * well have the answer. This is for the writes, so they fail immediately with
+ * something true instead of hanging or, worse, reporting the wrong reason: the
+ * DM unlock ends in `.catch(() => false)`, which without this says "that
+ * passphrase was not accepted" to someone who typed it correctly.
+ */
+function assertOnline(): void {
+  if (!navigator.onLine) throw new Error("You're offline — this needs a connection")
+}
+
 async function fail(res: Response): Promise<never> {
   const message = await res
     .json()
@@ -36,6 +49,8 @@ async function fail(res: Response): Promise<never> {
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  if (init.method && init.method !== 'GET') assertOnline()
+
   const res = await fetch(`/api${path}`, {
     ...init,
     headers: {
@@ -156,7 +171,10 @@ export const api = {
    * its formatting.
    */
   async exportBackup(): Promise<Blob> {
-    const res = await fetch('/api/backup/export', { headers: authHeaders() })
+    // A GET, but never answer it from a cache: a backup has to be what the
+    // database holds now, not what this device happened to see last.
+    assertOnline()
+    const res = await fetch('/api/backup/export', { headers: authHeaders(), cache: 'no-store' })
     if (!res.ok) await fail(res)
     return res.blob()
   },
@@ -177,6 +195,10 @@ export const api = {
   },
 
   verifyDmKey(key: string): Promise<boolean> {
+    // Throws rather than resolving false when there is no connection, so the
+    // caller can tell "wrong passphrase" from "no network" — they look
+    // identical from a rejected fetch, and only one of them is the user's fault.
+    assertOnline()
     return fetch('/api/dm/verify', { method: 'POST', headers: { 'x-dm-key': key } }).then(
       (r) => r.ok,
     )

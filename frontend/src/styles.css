@@ -68,6 +68,13 @@
     height: 100%;
   }
 
+  /* The app is dark, unconditionally. Saying so lets the browser draw the
+     things the page cannot reach — form controls, the overscroll gutter, the
+     spinner in a date field — in matching colours instead of light ones. */
+  html {
+    color-scheme: dark;
+  }
+
   body {
     margin: 0;
     background: var(--color-ground);
