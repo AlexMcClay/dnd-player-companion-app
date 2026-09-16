@@ -60,7 +60,8 @@ export function Portrait({
   )
 }
 
-const KNOWLEDGE_LABEL: Record<Knowledge, string> = {
+/** Exported so the DM's inline switch labels its buttons the same way. */
+export const KNOWLEDGE_LABEL: Record<Knowledge, string> = {
   known: 'Known',
   rumoured: 'Rumoured',
   unknown: 'Sealed',

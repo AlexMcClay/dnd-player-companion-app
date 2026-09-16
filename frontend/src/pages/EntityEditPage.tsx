@@ -75,21 +75,34 @@ export default function EntityEditPage() {
     })
   }, [existing.data])
 
+  /*
+    Both handlers navigate *before* invalidating, and neither awaits it.
+
+    A bare `invalidateQueries()` refetches every active query, and awaiting it
+    holds the form on screen until they all settle. After a delete that set
+    still includes this page's own `['entity', id]`, which now 404s and retries
+    — so the form sat there for seconds looking like the delete had failed.
+  */
   const save = useMutation({
     mutationFn: (input: EntityInput) =>
       id ? api.updateEntity(id, input) : api.createEntity(input),
-    onSuccess: async (saved) => {
-      await queryClient.invalidateQueries()
+    onSuccess: (saved) => {
+      // The response is what GET returns, so the entry draws with the new
+      // values immediately instead of flashing the stale ones.
+      queryClient.setQueryData(['entity', saved.id], saved)
       navigate(`/e/${saved.id}`, { replace: true })
+      void queryClient.invalidateQueries()
     },
     onError: (err: Error) => setError(err.message),
   })
 
   const remove = useMutation({
     mutationFn: () => api.deleteEntity(id!),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries()
-      navigate('/party', { replace: true })
+    onSuccess: () => {
+      // Dropped rather than invalidated: refetching a deleted id only 404s.
+      queryClient.removeQueries({ queryKey: ['entity', id] })
+      navigate('/codex', { replace: true })
+      void queryClient.invalidateQueries()
     },
     onError: (err: Error) => setError(err.message),
   })

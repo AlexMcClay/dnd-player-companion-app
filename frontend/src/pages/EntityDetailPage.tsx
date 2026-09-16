@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
-import type { Entity, RecipeData } from '@codex/shared'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { KNOWLEDGE_STATES, type Entity, type EntityInput, type RecipeData } from '@codex/shared'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import {
@@ -18,10 +18,12 @@ import DdbPanel from '../components/DdbPanel'
 import Lightbox from '../components/Lightbox'
 import Markdown from '../components/Markdown'
 import NoteCard from '../components/NoteCard'
+import NoteComposer from '../components/NoteComposer'
 import NoteList from '../components/NoteList'
 import WikiText from '../components/WikiText'
 import {
   Empty,
+  KNOWLEDGE_LABEL,
   KnowledgePill,
   Loading,
   PageHead,
@@ -31,7 +33,7 @@ import {
   StaggerList,
   TagChips,
 } from '../components/bits'
-import { cx, panelClass, Pill, rowClass, Sealed, twoUpClass } from '../components/ui'
+import { cx, panelClass, Pill, PillButton, rowClass, Sealed, twoUpClass } from '../components/ui'
 import { useIsDm, usePlayerId } from '../lib/identity'
 import { rowVariants, SPRING } from '../lib/motion'
 import { firstNameOf } from '../lib/names'
@@ -107,7 +109,7 @@ export default function EntityDetailPage() {
                 <TypeIcon aria-hidden />
                 {template.label}
               </Pill>
-              <KnowledgePill knowledge={e.knowledge} />
+              {isDm ? <KnowledgeSwitch entity={e} /> : <KnowledgePill knowledge={e.knowledge} />}
             </div>
           </div>
         </div>
@@ -145,19 +147,7 @@ export default function EntityDetailPage() {
         {e.type === 'player' && <Carrying playerId={e.id} />}
 
         {/* Characters had theirs above, in a labelled section of its own. */}
-        {e.bodyMd && e.type !== 'player' && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.06 }}
-          >
-            {/* A 740px line of 13.5px prose is roughly 110 characters, which is
-                well past where the eye loses its place returning to the left. */}
-            <div className="md:max-w-[72ch]">
-              <Markdown source={e.bodyMd} />
-            </div>
-          </motion.div>
-        )}
+        {e.type !== 'player' && <Body entity={e} />}
 
         <Section className="flex flex-col gap-2">
           <SectionHead label={`Notes about ${e.name}`} />
@@ -191,6 +181,138 @@ export default function EntityDetailPage() {
         )}
       </div>
     </>
+  )
+}
+
+/**
+ * One field of an entry, changed from the entry itself.
+ *
+ * The PUT route takes a partial body and answers with the whole entry, so the
+ * response goes straight into the cache and the page redraws without a refetch.
+ * Lists elsewhere show the name, the summary and the knowledge pill, so they
+ * are invalidated too — unawaited, because nothing here waits on them.
+ */
+function useEntityPatch(id: string, onDone?: () => void) {
+  const queryClient = useQueryClient()
+  const [error, setError] = useState<string | null>(null)
+
+  const patch = useMutation({
+    mutationFn: (input: Partial<EntityInput>) => api.updateEntity(id, input),
+    onSuccess: (saved) => {
+      queryClient.setQueryData(['entity', id], saved)
+      void queryClient.invalidateQueries({ queryKey: ['entities'] })
+      setError(null)
+      onDone?.()
+    },
+    onError: (err: Error) => setError(err.message),
+  })
+
+  return { patch, error, clearError: () => setError(null) }
+}
+
+/**
+ * The DM's three-way knowledge switch, in place of the pill a player sees.
+ *
+ * Mid-scene the party learns things faster than a trip through the edit form
+ * allows, and this is the one field that decides whether an entry exists at all
+ * for them — so it is one tap from the entry itself.
+ */
+function KnowledgeSwitch({ entity }: { entity: Entity }) {
+  const { patch, error } = useEntityPatch(entity.id)
+
+  return (
+    <>
+      {KNOWLEDGE_STATES.map((state) => {
+        const current = entity.knowledge === state
+        return (
+          <PillButton
+            key={state}
+            tone={current ? 'solid' : 'neutral'}
+            aria-pressed={current}
+            disabled={patch.isPending}
+            className={cx(patch.isPending && 'opacity-60')}
+            onClick={() => {
+              if (!current) patch.mutate({ knowledge: state })
+            }}
+          >
+            {KNOWLEDGE_LABEL[state]}
+          </PillButton>
+        )
+      })}
+      {/* basis-full so the message takes its own line rather than squeezing
+          in beside the third pill. */}
+      {error && <div className="type-meta basis-full text-danger">{error}</div>}
+    </>
+  )
+}
+
+/**
+ * The entry's prose, and for the DM a way to change it without the edit form.
+ *
+ * Same composer a player writes their character with on the Me tab, so the
+ * `@`-mention linking and the markdown toggle come along. Emptying a body still
+ * belongs to the full form — the composer will not submit nothing.
+ */
+function Body({ entity }: { entity: Entity }) {
+  const isDm = useIsDm()
+  const [editing, setEditing] = useState(false)
+  const { patch, error, clearError } = useEntityPatch(entity.id, () => setEditing(false))
+
+  if (!entity.bodyMd && !isDm) return null
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.06 }}
+    >
+      {/*
+        A 740px line of 13.5px prose is roughly 110 characters, which is well
+        past where the eye loses its place returning to the left — so reading is
+        capped at a measure.
+
+        Writing is not. The measure exists for the reader; imposed on the editor
+        it just leaves the toolbar and the Save button stranded in the left half
+        of the page with dead space beside them.
+      */}
+      <div className={cx('flex flex-col gap-2', !editing && 'md:max-w-[72ch]')}>
+        {editing ? (
+          <NoteComposer
+            initial={{ bodyMd: entity.bodyMd ?? '' }}
+            withVisibility={false}
+            submitLabel="Save"
+            placeholder="Markdown. Type @ to link another entry."
+            busy={patch.isPending}
+            error={error}
+            onSubmit={(draft) => patch.mutate({ bodyMd: draft.bodyMd })}
+            onCancel={() => {
+              setEditing(false)
+              clearError()
+            }}
+          />
+        ) : (
+          <>
+            {entity.bodyMd ? (
+              <Markdown source={entity.bodyMd} />
+            ) : (
+              <Empty>Nothing written yet</Empty>
+            )}
+            {isDm && (
+              <motion.button
+                type="button"
+                className={cx(ICON_BTN, 'self-start text-gold')}
+                whileTap={{ scale: 0.92 }}
+                transition={SPRING}
+                onClick={() => setEditing(true)}
+              >
+                <LuPencil aria-hidden />
+                {entity.bodyMd ? 'Edit body' : 'Write something'}
+              </motion.button>
+            )}
+          </>
+        )}
+      </div>
+    </motion.div>
   )
 }
 
