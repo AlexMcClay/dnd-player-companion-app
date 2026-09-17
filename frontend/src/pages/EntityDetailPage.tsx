@@ -332,11 +332,17 @@ function Hero({ entity, tall }: { entity: Entity; tall: boolean }) {
   const template = templateFor(entity.type)
   const isDm = useIsDm()
   const [zoomed, setZoomed] = useState(false)
+  // Art that will not load falls back to the placeholder, exactly as an entry
+  // with no art at all does — see the note on Portrait. Decided before the
+  // layout is chosen, so the frame takes the placeholder's fixed column rather
+  // than hugging an image that is never going to arrive.
+  const [brokenUrl, setBrokenUrl] = useState<string | null>(null)
+  const src = entity.imageUrl && entity.imageUrl !== brokenUrl ? entity.imageUrl : null
 
   // The sizing that used to sit on the frame itself now sits on the column that
   // holds it, so the DM's swap button lines up under the art rather than beside
   // it. What the frame does inside that column is unchanged.
-  const column = entity.imageUrl
+  const column = src
     ? // self-start keeps the frame hugging the image; stretched by the column it
       // would grow bars down the sides again. The width cap stops a panoramic
       // map from squeezing the title into a gutter.
@@ -350,7 +356,7 @@ function Hero({ entity, tall }: { entity: Entity; tall: boolean }) {
 
   return (
     <div className={cx('flex min-w-0 flex-col gap-1.5', column)}>
-      {entity.imageUrl ? (
+      {src ? (
         <>
           <motion.button
             type="button"
@@ -365,8 +371,9 @@ function Hero({ entity, tall }: { entity: Entity; tall: boolean }) {
             transition={{ duration: 0.32 }}
           >
             <motion.img
-              src={entity.imageUrl}
+              src={src}
               alt={entity.name}
+              onError={() => setBrokenUrl(src)}
               // No object-fit: the image is the only child, so it sets the frame's
               // size rather than being fitted into one. Height bounds it normally;
               // max-w-full takes over for anything very wide, and because only
@@ -384,7 +391,7 @@ function Hero({ entity, tall }: { entity: Entity; tall: boolean }) {
           </motion.button>
 
           <Lightbox
-            src={entity.imageUrl}
+            src={src}
             alt={entity.name}
             open={zoomed}
             onClose={() => setZoomed(false)}

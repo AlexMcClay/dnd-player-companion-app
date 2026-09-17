@@ -17,6 +17,7 @@ export default function NoteCard({ note }: { note: Note }) {
   const isDm = useIsDm()
   const [editing, setEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [brokenUrl, setBrokenUrl] = useState<string | null>(null)
 
   const isAuthor = playerId !== null && note.authorId === playerId
   // The DM tidies up but does not rewrite — a byline you cannot trust is worse
@@ -44,11 +45,14 @@ export default function NoteCard({ note }: { note: Note }) {
   return (
     <motion.article className={panelClass('flex flex-col gap-2')} variants={rowVariants}>
       <header className="flex items-center gap-2">
-        {note.author.imageUrl ? (
+        {/* Falls back to the initial when the portrait will not load, the same
+            way it does for an author who has none — see Portrait in bits. */}
+        {note.author.imageUrl && note.author.imageUrl !== brokenUrl ? (
           <img
             src={note.author.imageUrl}
             alt=""
             className="size-7 shrink-0 rounded-full border border-line object-cover"
+            onError={() => setBrokenUrl(note.author.imageUrl)}
           />
         ) : (
           <span className="grid size-7 shrink-0 place-items-center rounded-full border border-line text-[9px] text-ink-faint">

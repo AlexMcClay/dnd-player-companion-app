@@ -1,5 +1,5 @@
 import { motion, type Variants } from 'framer-motion'
-import { Children, useMemo, type CSSProperties, type ReactNode } from 'react'
+import { Children, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import type { EntitySummary, Knowledge } from '@codex/shared'
 import type { IconType } from 'react-icons'
 import { LuEyeOff, LuLoader, LuSparkles, LuTag } from 'react-icons/lu'
@@ -10,7 +10,19 @@ import { cx, pillClass, rowClass } from './ui'
 
 const MotionLink = motion.create(Link)
 
-/** Image box. Falls back to the template's placeholder when there is no art. */
+/**
+ * Image box. Falls back to the template's placeholder when there is no art —
+ * and when the art will not load.
+ *
+ * The API only ever stores a key, and nothing guarantees the object behind it
+ * still exists: an import can carry keys from another table's bucket, a backup
+ * can be restored over a bucket that was cleared, storage can simply be
+ * unreachable. A broken-image glyph is a worse answer than the placeholder
+ * every entry without art already shows.
+ *
+ * Tracked as the URL that failed rather than a flag, so pointing the same box
+ * at a different image clears it without an effect.
+ */
 export function Portrait({
   entity,
   size,
@@ -26,6 +38,8 @@ export function Portrait({
 }) {
   const template = templateFor(entity.type)
   const Icon = template.icon
+  const [brokenUrl, setBrokenUrl] = useState<string | null>(null)
+  const src = entity.imageUrl && entity.imageUrl !== brokenUrl ? entity.imageUrl : null
   const box: CSSProperties = size
     ? { width: size, height: size, ...style }
     : { width: '100%', aspectRatio: aspect ?? '3 / 2', ...style }
@@ -38,12 +52,13 @@ export function Portrait({
       )}
       style={box}
     >
-      {entity.imageUrl ? (
+      {src ? (
         <motion.img
-          src={entity.imageUrl}
+          src={src}
           alt={entity.name}
           loading="lazy"
           className="block size-full object-cover"
+          onError={() => setBrokenUrl(src)}
           initial={{ opacity: 0, scale: 1.04 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.35 }}
