@@ -36,13 +36,25 @@ export default function IngredientsEditor({
               transition={SPRING}
             >
               <input
-                className={cx(inputClass, 'flex-1')}
+                className={cx(inputClass, 'min-w-0 flex-1')}
                 value={ingredient.name}
                 placeholder="Reagent name — matched to items by name"
                 onChange={(e) => update(index, { name: e.target.value })}
               />
+              {/*
+                Sized by flex-basis, not width.
+
+                `inputClass` already carries `w-full`, and Tailwind emits
+                `.w-full` after `.w-18`, so a `w-18` here lost and this box
+                claimed the whole row. The name beside it is `flex-1` — basis 0
+                — so it had nothing left to grow into and collapsed to nothing:
+                a field you could not click, let alone type in.
+
+                `basis-*` wins over `width` when a flex item is laid out, so the
+                size holds whatever order the two width rules land in.
+              */}
               <input
-                className={cx(inputClass, 'w-18')}
+                className={cx(inputClass, 'shrink-0 basis-18')}
                 type="number"
                 min={1}
                 value={ingredient.qty}
