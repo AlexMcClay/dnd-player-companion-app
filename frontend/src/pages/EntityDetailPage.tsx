@@ -7,6 +7,7 @@ import {
   LuCheck,
   LuChevronLeft,
   LuExpand,
+  LuImage,
   LuLink,
   LuPencil,
   LuScrollText,
@@ -329,72 +330,140 @@ function Body({ entity }: { entity: Entity }) {
  */
 function Hero({ entity, tall }: { entity: Entity; tall: boolean }) {
   const template = templateFor(entity.type)
+  const isDm = useIsDm()
   const [zoomed, setZoomed] = useState(false)
 
-  // Nothing to preserve, so the placeholder keeps the template's shape and the
-  // fixed column it used to have.
-  if (!entity.imageUrl) {
-    return (
-      <motion.div
-        className={cx('w-full md:shrink-0', tall ? 'md:w-56' : 'md:w-80')}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.32 }}
-      >
-        <Portrait entity={entity} aspect={template.heroAspect} className="max-h-65 md:max-h-none" />
-      </motion.div>
-    )
+  // The sizing that used to sit on the frame itself now sits on the column that
+  // holds it, so the DM's swap button lines up under the art rather than beside
+  // it. What the frame does inside that column is unchanged.
+  const column = entity.imageUrl
+    ? // self-start keeps the frame hugging the image; stretched by the column it
+      // would grow bars down the sides again. The width cap stops a panoramic
+      // map from squeezing the title into a gutter.
+      // Centred on a phone, where the frame sits alone above the title and an
+      // off-centre hug reads as a mistake; from md up it is one of two columns,
+      // so it hugs the left edge instead and shares the row with the title.
+      'max-w-full shrink-0 items-center self-center md:max-w-[58%] md:items-start md:self-start'
+    : // Nothing to preserve, so the placeholder keeps the template's shape and
+      // the fixed column it used to have.
+      cx('w-full md:shrink-0', tall ? 'md:w-56' : 'md:w-80')
+
+  return (
+    <div className={cx('flex min-w-0 flex-col gap-1.5', column)}>
+      {entity.imageUrl ? (
+        <>
+          <motion.button
+            type="button"
+            aria-label={`View ${entity.name} full screen`}
+            onClick={() => setZoomed(true)}
+            // min-h so the frame does not start at zero height and shove the
+            // title down when the image lands — we have no intrinsic size to
+            // reserve, since the API carries a URL and nothing else.
+            className="group port-fill relative max-w-full min-h-25 cursor-zoom-in border border-line"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.32 }}
+          >
+            <motion.img
+              src={entity.imageUrl}
+              alt={entity.name}
+              // No object-fit: the image is the only child, so it sets the frame's
+              // size rather than being fitted into one. Height bounds it normally;
+              // max-w-full takes over for anything very wide, and because only
+              // max-* are set the other axis follows on its own and the aspect holds.
+              className="block h-auto max-h-70 w-auto max-w-full md:max-h-80"
+              initial={{ opacity: 0, scale: 1.04 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.35 }}
+            />
+            {/* Only a hint, and only where there is a pointer to hover with — on a
+                phone the picture being tappable is the expectation anyway. */}
+            <span className="pointer-events-none absolute right-1.5 bottom-1.5 hidden size-7 place-items-center border border-line bg-tabbar text-ink-soft opacity-0 transition-opacity group-hover:opacity-100 md:grid [&>svg]:size-3.5">
+              <LuExpand aria-hidden />
+            </span>
+          </motion.button>
+
+          <Lightbox
+            src={entity.imageUrl}
+            alt={entity.name}
+            open={zoomed}
+            onClose={() => setZoomed(false)}
+          />
+        </>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.32 }}
+        >
+          <Portrait
+            entity={entity}
+            aspect={template.heroAspect}
+            className="max-h-65 md:max-h-none"
+          />
+        </motion.div>
+      )}
+
+      {isDm && <HeroImagePicker entity={entity} />}
+    </div>
+  )
+}
+
+/**
+ * Swap an entry's art from the entry itself.
+ *
+ * Same presign-then-PUT-to-storage path the edit form uses — the difference is
+ * that the returned key is saved immediately rather than held in a draft, so
+ * there is nothing to submit afterwards. The new `imageUrl` comes back on the
+ * saved entry, which is what redraws the frame above.
+ */
+function HeroImagePicker({ entity }: { entity: Entity }) {
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const { patch, error: saveError } = useEntityPatch(entity.id)
+
+  const busy = uploading || patch.isPending
+  const error = uploadError ?? saveError
+
+  async function pick(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    // Cleared before the await so a retry after a failure does not show the
+    // previous attempt's message while it is working.
+    setUploadError(null)
+    if (!file) return
+    setUploading(true)
+    try {
+      patch.mutate({ imageKey: await api.uploadImage(file, entity.type) })
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploading(false)
+      // Lets the same file be picked again after a failure — without this the
+      // input holds it and fires no change event.
+      event.target.value = ''
+    }
   }
 
   return (
     <>
-      <motion.button
-        type="button"
-        aria-label={`View ${entity.name} full screen`}
-        onClick={() => setZoomed(true)}
-        // self-start keeps the frame hugging the image; stretched by the column
-        // it would grow bars down the sides again. The width cap stops a
-        // panoramic map from squeezing the title into a gutter.
-        // Centred on a phone, where the frame sits alone above the title and an
-        // off-centre hug reads as a mistake; from md up it is one of two columns,
-        // so it hugs the left edge instead and shares the row with the title.
-        //
-        // Either way it never stretches — stretched by the column it would grow
-        // bars down the sides, which is the thing being fixed.
-        //
-        // min-h so the frame does not start at zero height and shove the title
-        // down when the image lands — we have no intrinsic size to reserve, since
-        // the API carries a URL and nothing else.
-        className="group port-fill relative max-w-full min-h-25 shrink-0 cursor-zoom-in self-center border border-line md:max-w-[58%] md:self-start"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.32 }}
+      <label
+        className={cx(
+          ICON_BTN,
+          'text-gold',
+          busy ? 'cursor-wait opacity-60' : 'cursor-pointer',
+        )}
       >
-        <motion.img
-          src={entity.imageUrl}
-          alt={entity.name}
-          // No object-fit: the image is the only child, so it sets the frame's
-          // size rather than being fitted into one. Height bounds it normally;
-          // max-w-full takes over for anything very wide, and because only
-          // max-* are set the other axis follows on its own and the aspect holds.
-          className="block h-auto max-h-70 w-auto max-w-full md:max-h-80"
-          initial={{ opacity: 0, scale: 1.04 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.35 }}
+        <LuImage aria-hidden />
+        {busy ? 'Uploading…' : entity.imageUrl ? 'Change image' : 'Add image'}
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
+          hidden
+          disabled={busy}
+          onChange={pick}
         />
-        {/* Only a hint, and only where there is a pointer to hover with — on a
-            phone the picture being tappable is the expectation anyway. */}
-        <span className="pointer-events-none absolute right-1.5 bottom-1.5 hidden size-7 place-items-center border border-line bg-tabbar text-ink-soft opacity-0 transition-opacity group-hover:opacity-100 md:grid [&>svg]:size-3.5">
-          <LuExpand aria-hidden />
-        </span>
-      </motion.button>
-
-      <Lightbox
-        src={entity.imageUrl}
-        alt={entity.name}
-        open={zoomed}
-        onClose={() => setZoomed(false)}
-      />
+      </label>
+      {error && <div className="type-meta text-danger">{error}</div>}
     </>
   )
 }
