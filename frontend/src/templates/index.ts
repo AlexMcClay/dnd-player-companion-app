@@ -206,6 +206,17 @@ export interface TabDef {
   label: string
   icon: IconType
   types: string[]
+  /**
+   * The search param that means "you have drilled into this tab".
+   *
+   * A tab whose sub-views live in the query string is still the same pathname,
+   * so without this a swipe back from one of them reads as being on the tab
+   * itself and lands on the neighbouring tab instead of stepping back out.
+   *
+   * Only the param that *pushes* history belongs here — a filter applied
+   * sideways with `replace` is not a level you can go back from.
+   */
+  depthParam?: string
 }
 
 export const TABS: TabDef[] = [
@@ -218,6 +229,9 @@ export const TABS: TabDef[] = [
     label: 'Codex',
     icon: LuBookOpen,
     types: ['npc', 'faction', 'location', 'monster', 'item'],
+    // A group is always set once you leave the chooser grid — including in the
+    // item categories, which sit one level below it.
+    depthParam: 'group',
   },
   { path: '/craft', label: 'Craft', icon: LuHammer, types: ['recipe'] },
   { path: '/search', label: 'Search', icon: LuSearch, types: [] },

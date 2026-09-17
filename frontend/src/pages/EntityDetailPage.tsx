@@ -1,7 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { KNOWLEDGE_STATES, type Entity, type EntityInput, type RecipeData } from '@codex/shared'
-import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  KNOWLEDGE_STATES,
+  type Entity,
+  type EntityInput,
+  type RecipeData,
+} from "@codex/shared";
+import { motion } from "framer-motion";
+import { useState } from "react";
 import {
   LuBackpack,
   LuCheck,
@@ -12,16 +17,16 @@ import {
   LuPencil,
   LuScrollText,
   LuX,
-} from 'react-icons/lu'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { api } from '../api/client'
-import DdbPanel from '../components/DdbPanel'
-import Lightbox from '../components/Lightbox'
-import Markdown from '../components/Markdown'
-import NoteCard from '../components/NoteCard'
-import NoteComposer from '../components/NoteComposer'
-import NoteList from '../components/NoteList'
-import WikiText from '../components/WikiText'
+} from "react-icons/lu";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { api } from "../api/client";
+import DdbPanel from "../components/DdbPanel";
+import Lightbox from "../components/Lightbox";
+import Markdown from "../components/Markdown";
+import NoteCard from "../components/NoteCard";
+import NoteComposer from "../components/NoteComposer";
+import NoteList from "../components/NoteList";
+import WikiText from "../components/WikiText";
 import {
   Empty,
   KNOWLEDGE_LABEL,
@@ -33,43 +38,52 @@ import {
   SectionHead,
   StaggerList,
   TagChips,
-} from '../components/bits'
-import { cx, panelClass, Pill, PillButton, rowClass, Sealed, twoUpClass } from '../components/ui'
-import { useIsDm, usePlayerId } from '../lib/identity'
-import { rowVariants, SPRING } from '../lib/motion'
-import { firstNameOf } from '../lib/names'
-import { reagentStatus, stockFor } from '../lib/recipes'
-import { templateFor } from '../templates'
+} from "../components/bits";
+import {
+  cx,
+  panelClass,
+  Pill,
+  PillButton,
+  rowClass,
+  Sealed,
+  twoUpClass,
+} from "../components/ui";
+import { useIsDm, usePlayerId } from "../lib/identity";
+import { rowVariants, SPRING } from "../lib/motion";
+import { firstNameOf } from "../lib/names";
+import { reagentStatus, stockFor } from "../lib/recipes";
+import { templateFor } from "../templates";
 
 const ICON_BTN =
-  'inline-flex cursor-pointer items-center gap-1.25 py-1 text-[9.5px] uppercase tracking-[0.13em]'
+  "inline-flex cursor-pointer items-center gap-1.25 py-1 text-[9.5px] uppercase tracking-[0.13em]";
 
 /** "4 / 5" -> 0.8, so a hero can be sized by its shape. */
 function ratioOf(aspect: string): number {
-  const [w, h] = aspect.split('/').map((part) => Number(part.trim()))
-  return w && h ? w / h : 1.5
+  const [w, h] = aspect.split("/").map((part) => Number(part.trim()));
+  return w && h ? w / h : 1.5;
 }
 
 export default function EntityDetailPage() {
-  const { id = '' } = useParams()
-  const navigate = useNavigate()
-  const isDm = useIsDm()
+  const { id = "" } = useParams();
+  const navigate = useNavigate();
+  const isDm = useIsDm();
 
   const entity = useQuery({
-    queryKey: ['entity', id],
+    queryKey: ["entity", id],
     queryFn: () => api.getEntity(id),
-  })
+  });
 
-  if (entity.isLoading) return <Loading />
-  if (entity.isError || !entity.data) return <Empty>Not found, or not yet known to the party</Empty>
+  if (entity.isLoading) return <Loading />;
+  if (entity.isError || !entity.data)
+    return <Empty>Not found, or not yet known to the party</Empty>;
 
-  const e = entity.data
-  const template = templateFor(e.type)
-  const TypeIcon = template.icon
+  const e = entity.data;
+  const template = templateFor(e.type);
+  const TypeIcon = template.icon;
   // Portrait-shaped art wants a narrow column, landscape art a wide one. Both
   // then land around 210-280px tall, so heroes stay a consistent weight on the
   // page whatever shape the template asks for.
-  const tallHero = ratioOf(template.heroAspect) < 1.2
+  const tallHero = ratioOf(template.heroAspect) < 1.2;
 
   return (
     <>
@@ -77,7 +91,7 @@ export default function EntityDetailPage() {
         <div className="flex items-center justify-between gap-2.5">
           <motion.button
             type="button"
-            className={cx(ICON_BTN, 'text-ink-faint')}
+            className={cx(ICON_BTN, "text-ink-faint")}
             onClick={() => navigate(-1)}
             whileTap={{ scale: 0.92 }}
             transition={SPRING}
@@ -87,7 +101,10 @@ export default function EntityDetailPage() {
           </motion.button>
           {isDm && (
             <motion.span whileTap={{ scale: 0.92 }} transition={SPRING}>
-              <Link to={`/e/${e.id}/edit`} className={cx(ICON_BTN, 'text-gold')}>
+              <Link
+                to={`/e/${e.id}/edit`}
+                className={cx(ICON_BTN, "text-gold")}
+              >
                 <LuPencil aria-hidden />
                 Edit
               </Link>
@@ -110,25 +127,31 @@ export default function EntityDetailPage() {
                 <TypeIcon aria-hidden />
                 {template.label}
               </Pill>
-              {isDm ? <KnowledgeSwitch entity={e} /> : <KnowledgePill knowledge={e.knowledge} />}
+              {isDm ? (
+                <KnowledgeSwitch entity={e} />
+              ) : (
+                <KnowledgePill knowledge={e.knowledge} />
+              )}
             </div>
           </div>
         </div>
       </PageHead>
 
       <div className="flex flex-col gap-4">
-        {e.knowledge === 'unknown' && (
+        {e.knowledge === "unknown" && (
           <Sealed>
             <LuX aria-hidden />
-            <span className="type-meta">Sealed — players cannot see this entry</span>
+            <span className="type-meta">
+              Sealed — players cannot see this entry
+            </span>
           </Sealed>
         )}
 
         <SpecList entity={e} />
 
-        {e.type === 'recipe' && <RecipeSheet recipe={e} />}
+        {e.type === "recipe" && <RecipeSheet recipe={e} />}
 
-        {e.type === 'item' && <Holders itemId={e.id} />}
+        {e.type === "item" && <Holders itemId={e.id} />}
 
         {/*
           A character's description gets the same framed section it has on the
@@ -136,19 +159,23 @@ export default function EntityDetailPage() {
           uses. Unlabelled it read as page furniture — you could not tell it was
           the thing its player wrote about themselves.
         */}
-        {e.type === 'player' && <About entity={e} />}
+        {e.type === "player" && <About entity={e} />}
 
-        {e.type === 'player' && (
+        {e.type === "player" && (
           <Section className="flex flex-col gap-2">
-            <SectionHead icon={LuLink} label="D&D Beyond" note="Their sheet, mirrored" />
+            <SectionHead
+              icon={LuLink}
+              label="D&D Beyond"
+              note="Their sheet, mirrored"
+            />
             <DdbPanel playerId={e.id} characterName={e.name} />
           </Section>
         )}
 
-        {e.type === 'player' && <Carrying playerId={e.id} />}
+        {e.type === "player" && <Carrying playerId={e.id} />}
 
         {/* Characters had theirs above, in a labelled section of its own. */}
-        {e.type !== 'player' && <Body entity={e} />}
+        {e.type !== "player" && <Body entity={e} />}
 
         <Section className="flex flex-col gap-2">
           <SectionHead label={`Notes about ${e.name}`} />
@@ -164,7 +191,7 @@ export default function EntityDetailPage() {
           A character's own shared vault notes, published to whoever opens their
           page. Labelled distinctly so two note blocks do not read as a bug.
         */}
-        {e.type === 'player' && (
+        {e.type === "player" && (
           <Section className="flex flex-col gap-2">
             <SectionHead
               label={`${firstNameOf(e.name)}'s public notes`}
@@ -182,7 +209,7 @@ export default function EntityDetailPage() {
         )}
       </div>
     </>
-  )
+  );
 }
 
 /**
@@ -194,21 +221,21 @@ export default function EntityDetailPage() {
  * are invalidated too — unawaited, because nothing here waits on them.
  */
 function useEntityPatch(id: string, onDone?: () => void) {
-  const queryClient = useQueryClient()
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
 
   const patch = useMutation({
     mutationFn: (input: Partial<EntityInput>) => api.updateEntity(id, input),
     onSuccess: (saved) => {
-      queryClient.setQueryData(['entity', id], saved)
-      void queryClient.invalidateQueries({ queryKey: ['entities'] })
-      setError(null)
-      onDone?.()
+      queryClient.setQueryData(["entity", id], saved);
+      void queryClient.invalidateQueries({ queryKey: ["entities"] });
+      setError(null);
+      onDone?.();
     },
     onError: (err: Error) => setError(err.message),
-  })
+  });
 
-  return { patch, error, clearError: () => setError(null) }
+  return { patch, error, clearError: () => setError(null) };
 }
 
 /**
@@ -219,32 +246,32 @@ function useEntityPatch(id: string, onDone?: () => void) {
  * for them — so it is one tap from the entry itself.
  */
 function KnowledgeSwitch({ entity }: { entity: Entity }) {
-  const { patch, error } = useEntityPatch(entity.id)
+  const { patch, error } = useEntityPatch(entity.id);
 
   return (
     <>
       {KNOWLEDGE_STATES.map((state) => {
-        const current = entity.knowledge === state
+        const current = entity.knowledge === state;
         return (
           <PillButton
             key={state}
-            tone={current ? 'solid' : 'neutral'}
+            tone={current ? "solid" : "neutral"}
             aria-pressed={current}
             disabled={patch.isPending}
-            className={cx(patch.isPending && 'opacity-60')}
+            className={cx(patch.isPending && "opacity-60")}
             onClick={() => {
-              if (!current) patch.mutate({ knowledge: state })
+              if (!current) patch.mutate({ knowledge: state });
             }}
           >
             {KNOWLEDGE_LABEL[state]}
           </PillButton>
-        )
+        );
       })}
       {/* basis-full so the message takes its own line rather than squeezing
           in beside the third pill. */}
       {error && <div className="type-meta basis-full text-danger">{error}</div>}
     </>
-  )
+  );
 }
 
 /**
@@ -255,11 +282,13 @@ function KnowledgeSwitch({ entity }: { entity: Entity }) {
  * belongs to the full form — the composer will not submit nothing.
  */
 function Body({ entity }: { entity: Entity }) {
-  const isDm = useIsDm()
-  const [editing, setEditing] = useState(false)
-  const { patch, error, clearError } = useEntityPatch(entity.id, () => setEditing(false))
+  const isDm = useIsDm();
+  const [editing, setEditing] = useState(false);
+  const { patch, error, clearError } = useEntityPatch(entity.id, () =>
+    setEditing(false),
+  );
 
-  if (!entity.bodyMd && !isDm) return null
+  if (!entity.bodyMd && !isDm) return null;
 
   return (
     <motion.div
@@ -276,10 +305,10 @@ function Body({ entity }: { entity: Entity }) {
         it just leaves the toolbar and the Save button stranded in the left half
         of the page with dead space beside them.
       */}
-      <div className={cx('flex flex-col gap-2', !editing && 'md:max-w-[72ch]')}>
+      <div className={cx("flex flex-col gap-2 w-full")}>
         {editing ? (
           <NoteComposer
-            initial={{ bodyMd: entity.bodyMd ?? '' }}
+            initial={{ bodyMd: entity.bodyMd ?? "" }}
             withVisibility={false}
             submitLabel="Save"
             placeholder="Markdown. Type @ to link another entry."
@@ -287,8 +316,8 @@ function Body({ entity }: { entity: Entity }) {
             error={error}
             onSubmit={(draft) => patch.mutate({ bodyMd: draft.bodyMd })}
             onCancel={() => {
-              setEditing(false)
-              clearError()
+              setEditing(false);
+              clearError();
             }}
           />
         ) : (
@@ -301,20 +330,20 @@ function Body({ entity }: { entity: Entity }) {
             {isDm && (
               <motion.button
                 type="button"
-                className={cx(ICON_BTN, 'self-start text-gold')}
+                className={cx(ICON_BTN, "self-start text-gold")}
                 whileTap={{ scale: 0.92 }}
                 transition={SPRING}
                 onClick={() => setEditing(true)}
               >
                 <LuPencil aria-hidden />
-                {entity.bodyMd ? 'Edit body' : 'Write something'}
+                {entity.bodyMd ? "Edit body" : "Write something"}
               </motion.button>
             )}
           </>
         )}
       </div>
     </motion.div>
-  )
+  );
 }
 
 /**
@@ -329,15 +358,16 @@ function Body({ entity }: { entity: Entity }) {
  * both: whatever its dimensions, you see the whole image.
  */
 function Hero({ entity, tall }: { entity: Entity; tall: boolean }) {
-  const template = templateFor(entity.type)
-  const isDm = useIsDm()
-  const [zoomed, setZoomed] = useState(false)
+  const template = templateFor(entity.type);
+  const isDm = useIsDm();
+  const [zoomed, setZoomed] = useState(false);
   // Art that will not load falls back to the placeholder, exactly as an entry
   // with no art at all does — see the note on Portrait. Decided before the
   // layout is chosen, so the frame takes the placeholder's fixed column rather
   // than hugging an image that is never going to arrive.
-  const [brokenUrl, setBrokenUrl] = useState<string | null>(null)
-  const src = entity.imageUrl && entity.imageUrl !== brokenUrl ? entity.imageUrl : null
+  const [brokenUrl, setBrokenUrl] = useState<string | null>(null);
+  const src =
+    entity.imageUrl && entity.imageUrl !== brokenUrl ? entity.imageUrl : null;
 
   // The sizing that used to sit on the frame itself now sits on the column that
   // holds it, so the DM's swap button lines up under the art rather than beside
@@ -349,13 +379,13 @@ function Hero({ entity, tall }: { entity: Entity; tall: boolean }) {
       // Centred on a phone, where the frame sits alone above the title and an
       // off-centre hug reads as a mistake; from md up it is one of two columns,
       // so it hugs the left edge instead and shares the row with the title.
-      'max-w-full shrink-0 items-center self-center md:max-w-[58%] md:items-start md:self-start'
+      "max-w-full shrink-0 items-center self-center md:max-w-[58%] md:items-start md:self-start"
     : // Nothing to preserve, so the placeholder keeps the template's shape and
       // the fixed column it used to have.
-      cx('w-full md:shrink-0', tall ? 'md:w-56' : 'md:w-80')
+      cx("w-full md:shrink-0", tall ? "md:w-56" : "md:w-80");
 
   return (
-    <div className={cx('flex min-w-0 flex-col gap-1.5', column)}>
+    <div className={cx("flex min-w-0 flex-col gap-1.5", column)}>
       {src ? (
         <>
           <motion.button
@@ -413,7 +443,7 @@ function Hero({ entity, tall }: { entity: Entity; tall: boolean }) {
 
       {isDm && <HeroImagePicker entity={entity} />}
     </div>
-  )
+  );
 }
 
 /**
@@ -425,29 +455,29 @@ function Hero({ entity, tall }: { entity: Entity; tall: boolean }) {
  * saved entry, which is what redraws the frame above.
  */
 function HeroImagePicker({ entity }: { entity: Entity }) {
-  const [uploading, setUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
-  const { patch, error: saveError } = useEntityPatch(entity.id)
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const { patch, error: saveError } = useEntityPatch(entity.id);
 
-  const busy = uploading || patch.isPending
-  const error = uploadError ?? saveError
+  const busy = uploading || patch.isPending;
+  const error = uploadError ?? saveError;
 
   async function pick(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
+    const file = event.target.files?.[0];
     // Cleared before the await so a retry after a failure does not show the
     // previous attempt's message while it is working.
-    setUploadError(null)
-    if (!file) return
-    setUploading(true)
+    setUploadError(null);
+    if (!file) return;
+    setUploading(true);
     try {
-      patch.mutate({ imageKey: await api.uploadImage(file, entity.type) })
+      patch.mutate({ imageKey: await api.uploadImage(file, entity.type) });
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Upload failed')
+      setUploadError(err instanceof Error ? err.message : "Upload failed");
     } finally {
-      setUploading(false)
+      setUploading(false);
       // Lets the same file be picked again after a failure — without this the
       // input holds it and fires no change event.
-      event.target.value = ''
+      event.target.value = "";
     }
   }
 
@@ -456,12 +486,12 @@ function HeroImagePicker({ entity }: { entity: Entity }) {
       <label
         className={cx(
           ICON_BTN,
-          'text-gold',
-          busy ? 'cursor-wait opacity-60' : 'cursor-pointer',
+          "text-gold",
+          busy ? "cursor-wait opacity-60" : "cursor-pointer",
         )}
       >
         <LuImage aria-hidden />
-        {busy ? 'Uploading…' : entity.imageUrl ? 'Change image' : 'Add image'}
+        {busy ? "Uploading…" : entity.imageUrl ? "Change image" : "Add image"}
         <input
           type="file"
           accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
@@ -472,7 +502,7 @@ function HeroImagePicker({ entity }: { entity: Entity }) {
       </label>
       {error && <div className="type-meta text-danger">{error}</div>}
     </>
-  )
+  );
 }
 
 /**
@@ -483,8 +513,8 @@ function HeroImagePicker({ entity }: { entity: Entity }) {
  * wrote — labelling it is the whole point.
  */
 function About({ entity }: { entity: Entity }) {
-  const playerId = usePlayerId()
-  const mine = playerId === entity.id
+  const playerId = usePlayerId();
+  const mine = playerId === entity.id;
 
   return (
     <Section className="flex flex-col gap-2">
@@ -497,7 +527,7 @@ function About({ entity }: { entity: Entity }) {
               Yours to write →
             </Link>
           ) : (
-            'In their own words'
+            "In their own words"
           )
         }
       />
@@ -509,25 +539,27 @@ function About({ entity }: { entity: Entity }) {
         <Empty>Nothing written yet</Empty>
       )}
     </Section>
-  )
+  );
 }
 
 /** Template-driven `data` fields, minus the ones with their own rendering. */
 function SpecList({ entity }: { entity: Entity }) {
-  const template = templateFor(entity.type)
+  const template = templateFor(entity.type);
   const rows = template.fields
-    .filter((field) => field.kind !== 'ingredients')
+    .filter((field) => field.kind !== "ingredients")
     .map((field) => ({ field, value: entity.data[field.key] }))
-    .filter(({ value }) => value !== undefined && value !== null && value !== '')
+    .filter(
+      ({ value }) => value !== undefined && value !== null && value !== "",
+    );
 
-  if (rows.length === 0) return null
+  if (rows.length === 0) return null;
 
   // Two label/value pairs per row on a wide screen — each pair is a few words,
   // so one per row left most of the panel empty.
   return (
     <motion.dl
       className={panelClass(
-        'm-0 grid grid-cols-[auto_1fr] gap-x-3.5 gap-y-1.5 text-[13.5px] md:grid-cols-[auto_1fr_auto_1fr] md:gap-x-6',
+        "m-0 grid grid-cols-[auto_1fr] gap-x-3.5 gap-y-1.5 text-[13.5px] md:grid-cols-[auto_1fr_auto_1fr] md:gap-x-6",
       )}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -539,11 +571,11 @@ function SpecList({ entity }: { entity: Entity }) {
           {/* min-w-0 so a long value wraps inside its 1fr track instead of
               widening it and pushing the second pair off the panel. */}
           <dd className="m-0 min-w-0">
-            {typeof value === 'boolean' ? (
+            {typeof value === "boolean" ? (
               value ? (
-                'Yes'
+                "Yes"
               ) : (
-                'No'
+                "No"
               )
             ) : (
               // Template fields are plain text, but people still write
@@ -554,47 +586,54 @@ function SpecList({ entity }: { entity: Entity }) {
         </div>
       ))}
     </motion.dl>
-  )
+  );
 }
 
 /** Reagent checklist against what the party actually holds. */
 function RecipeSheet({ recipe }: { recipe: Entity }) {
   const holdings = useQuery({
-    queryKey: ['holdings', {}],
+    queryKey: ["holdings", {}],
     queryFn: () => api.listHoldings(),
-  })
+  });
 
-  const ingredients = (recipe.data as RecipeData).ingredients ?? []
-  if (ingredients.length === 0) return null
+  const ingredients = (recipe.data as RecipeData).ingredients ?? [];
+  if (ingredients.length === 0) return null;
 
-  const status = reagentStatus(ingredients, stockFor(holdings.data ?? []))
-  const ready = status.every((r) => r.enough)
+  const status = reagentStatus(ingredients, stockFor(holdings.data ?? []));
+  const ready = status.every((r) => r.enough);
 
   return (
     <Section className="flex flex-col gap-2">
-      <SectionHead label="Reagents" note={ready ? 'All in hand' : 'Missing something'} />
+      <SectionHead
+        label="Reagents"
+        note={ready ? "All in hand" : "Missing something"}
+      />
       <StaggerList>
         {status.map((reagent) => (
-          <motion.div key={reagent.name} className={rowClass} variants={rowVariants}>
+          <motion.div
+            key={reagent.name}
+            className={rowClass}
+            variants={rowVariants}
+          >
             <span
               className={cx(
-                'grid size-5.5 shrink-0 place-items-center border [&>svg]:size-3',
+                "grid size-5.5 shrink-0 place-items-center border [&>svg]:size-3",
                 reagent.enough
-                  ? 'border-gold-dim bg-gold-tint text-gold'
-                  : 'border-line text-ink-faint',
+                  ? "border-gold-dim bg-gold-tint text-gold"
+                  : "border-line text-ink-faint",
               )}
             >
               {reagent.enough ? <LuCheck aria-hidden /> : <LuX aria-hidden />}
             </span>
             <div className="flex-1">{reagent.name}</div>
-            <span className={cx('type-meta', reagent.enough && 'text-gold')}>
+            <span className={cx("type-meta", reagent.enough && "text-gold")}>
               have {reagent.have} / {reagent.qty}
             </span>
           </motion.div>
         ))}
       </StaggerList>
     </Section>
-  )
+  );
 }
 
 /**
@@ -604,13 +643,13 @@ function RecipeSheet({ recipe }: { recipe: Entity }) {
  */
 function PublicVault({ playerId }: { playerId: string }) {
   const notes = useQuery({
-    queryKey: ['notes', { placement: 'vault', author: playerId }],
-    queryFn: () => api.listNotes({ placement: 'vault', author: playerId }),
-  })
+    queryKey: ["notes", { placement: "vault", author: playerId }],
+    queryFn: () => api.listNotes({ placement: "vault", author: playerId }),
+  });
 
-  const rows = notes.data ?? []
-  if (notes.isLoading) return <Loading />
-  if (rows.length === 0) return <Empty>Nothing shared from their vault</Empty>
+  const rows = notes.data ?? [];
+  if (notes.isLoading) return <Loading />;
+  if (rows.length === 0) return <Empty>Nothing shared from their vault</Empty>;
 
   return (
     <StaggerList>
@@ -618,7 +657,7 @@ function PublicVault({ playerId }: { playerId: string }) {
         <NoteCard key={note.id} note={note} />
       ))}
     </StaggerList>
-  )
+  );
 }
 
 /**
@@ -627,25 +666,25 @@ function PublicVault({ playerId }: { playerId: string }) {
  */
 function Holders({ itemId }: { itemId: string }) {
   const holdings = useQuery({
-    queryKey: ['holdings', { item: itemId }],
+    queryKey: ["holdings", { item: itemId }],
     queryFn: () => api.listHoldings({ item: itemId }),
-  })
+  });
 
   const players = useQuery({
-    queryKey: ['entities', { type: 'player' }],
-    queryFn: () => api.listEntities({ type: 'player' }),
-  })
+    queryKey: ["entities", { type: "player" }],
+    queryFn: () => api.listEntities({ type: "player" }),
+  });
 
-  if (holdings.isLoading) return null
+  if (holdings.isLoading) return null;
 
-  const stacks = holdings.data ?? []
-  const nameById = new Map((players.data ?? []).map((p) => [p.id, p.name]))
-  const total = stacks.reduce((sum, h) => sum + h.quantity, 0)
+  const stacks = holdings.data ?? [];
+  const nameById = new Map((players.data ?? []).map((p) => [p.id, p.name]));
+  const total = stacks.reduce((sum, h) => sum + h.quantity, 0);
 
   if (stacks.length === 0) {
     return (
       <motion.div
-        className={panelClass('flex items-center justify-between gap-2.5')}
+        className={panelClass("flex items-center justify-between gap-2.5")}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -653,7 +692,7 @@ function Holders({ itemId }: { itemId: string }) {
         <div className="type-lab">Held by</div>
         <span className="type-meta">Nobody — catalogued only</span>
       </motion.div>
-    )
+    );
   }
 
   return (
@@ -661,14 +700,18 @@ function Holders({ itemId }: { itemId: string }) {
       <SectionHead label="Held by" note={`${total} in total`} />
       <StaggerList className={twoUpClass}>
         {stacks.map((holding) => (
-          <motion.div key={holding.id} variants={rowVariants} className={rowClass}>
+          <motion.div
+            key={holding.id}
+            variants={rowVariants}
+            className={rowClass}
+          >
             <div className="flex-1">
               {holding.ownerId ? (
                 <Link to={`/e/${holding.ownerId}`} className="text-gold">
-                  {nameById.get(holding.ownerId) ?? 'A character'}
+                  {nameById.get(holding.ownerId) ?? "A character"}
                 </Link>
               ) : (
-                'Party stash'
+                "Party stash"
               )}
             </div>
             <Pill tone="neutral">×{holding.quantity}</Pill>
@@ -676,21 +719,25 @@ function Holders({ itemId }: { itemId: string }) {
         ))}
       </StaggerList>
     </Section>
-  )
+  );
 }
 
 function Carrying({ playerId }: { playerId: string }) {
   const holdings = useQuery({
-    queryKey: ['holdings', { owner: playerId }],
+    queryKey: ["holdings", { owner: playerId }],
     queryFn: () => api.listHoldings({ owner: playerId }),
-  })
+  });
 
-  const stacks = holdings.data ?? []
-  if (stacks.length === 0) return null
+  const stacks = holdings.data ?? [];
+  if (stacks.length === 0) return null;
 
   return (
     <Section className="flex flex-col gap-2">
-      <SectionHead icon={LuBackpack} label="Carrying" note={`${stacks.length} entries`} />
+      <SectionHead
+        icon={LuBackpack}
+        label="Carrying"
+        note={`${stacks.length} entries`}
+      />
       <StaggerList className={twoUpClass}>
         {stacks.map((holding) => (
           <motion.div key={holding.id} variants={rowVariants}>
@@ -703,5 +750,5 @@ function Carrying({ playerId }: { playerId: string }) {
         ))}
       </StaggerList>
     </Section>
-  )
+  );
 }

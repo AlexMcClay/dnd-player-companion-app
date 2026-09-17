@@ -1,7 +1,7 @@
 import type { PanInfo } from 'framer-motion'
 import { useRef } from 'react'
 import { useLocation, useNavigate, useNavigationType } from 'react-router-dom'
-import { TABS } from '../templates'
+import { TABS, tabFor } from '../templates'
 
 /** Past this much horizontal travel a swipe counts, regardless of speed. */
 const DISTANCE = 70
@@ -37,7 +37,16 @@ function tabIndex(pathname: string): number {
 export function isEditing(): boolean {
   const el = document.activeElement
   if (!(el instanceof HTMLElement)) return false
-  return el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)
+  if (el.isContentEditable) return true
+  /*
+    A search box is the exception: what you typed is in the URL, not in an
+    unsaved draft, so swiping away costs nothing and retyping it costs nothing
+    either. And the Search tab autofocuses its box — so treating it as composing
+    meant the keyboard held the focus and no swipe on that page did anything
+    until you happened to tap elsewhere first.
+  */
+  if (el instanceof HTMLInputElement && el.type === 'search') return false
+  return ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)
 }
 
 export function isSwipePointer(event: unknown): boolean {
@@ -73,18 +82,52 @@ export function useSwipeNav() {
     const flicked = Math.abs(velocity.x) > VELOCITY && Math.abs(offset.x) > FLICK_DISTANCE
     if (!travelled && !flicked) return
 
-    const backwards = offset.x > 0
-    const index = tabIndex(location.pathname)
-
-    if (index === -1) {
-      // A detail or edit page: swipe right goes back, nothing goes forward.
-      if (backwards) navigate(-1)
-      return
-    }
-
-    const target = TABS[backwards ? index - 1 : index + 1]
-    if (target) navigate(target.path)
+    const action = swipeTarget(location, offset.x > 0)
+    if (action === 'back') navigate(-1)
+    else if (action) navigate(action)
   }
+}
+
+/** Where a swipe lands: a path to go to, a step back, or nowhere. */
+export type SwipeAction = string | 'back' | null
+
+/**
+ * What a swipe means from here.
+ *
+ * Pure and exported so the matrix can be checked without a browser — the same
+ * reason `navDirection` below is.
+ *
+ * `key` is React Router's location key; the very first entry of a session is
+ * `'default'`, which is how a cold deep link is told apart from a view the user
+ * navigated into.
+ */
+export function swipeTarget(
+  location: { pathname: string; search: string; key: string },
+  backwards: boolean,
+): SwipeAction {
+  const tab = tabFor(location.pathname)
+
+  /*
+    The Codex keeps its depth in the query string, so a group list and the grid
+    that opened it share the pathname `/codex`. Matching on the path alone read
+    "you are on the Codex tab" from inside a group, and swiped to the
+    neighbouring tab when what the gesture meant was step back out.
+  */
+  const deeper =
+    tab?.depthParam !== undefined && new URLSearchParams(location.search).has(tab.depthParam)
+
+  if (!tab || deeper) {
+    // A detail or edit page, or a view within a tab: swipe right goes back,
+    // nothing goes forward.
+    if (!backwards) return null
+    // Except where this view *is* the first entry — a shared link opened cold,
+    // or the PWA launching straight into it. There is nothing to pop, so back
+    // means the tab it belongs to.
+    return tab && location.key === 'default' ? tab.path : 'back'
+  }
+
+  const index = TABS.indexOf(tab)
+  return TABS[backwards ? index - 1 : index + 1]?.path ?? null
 }
 
 /**
