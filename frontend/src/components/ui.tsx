@@ -13,7 +13,7 @@ export function cx(...parts: Array<string | false | null | undefined>): string {
 
 /* ── pills ────────────────────────────────────────────────────────── */
 
-export type PillTone = 'gold' | 'neutral' | 'solid'
+export type PillTone = 'gold' | 'neutral' | 'solid' | 'danger'
 
 const PILL_BASE =
   'inline-flex items-center gap-1.75 whitespace-nowrap rounded-full border px-2.5 py-1 text-[9.5px] uppercase tracking-[0.11em]'
@@ -22,6 +22,7 @@ const PILL_TONE: Record<PillTone, string> = {
   gold: 'border-gold-dim text-gold',
   neutral: 'border-line text-ink-soft',
   solid: 'border-gold bg-gold-wash text-gold',
+  danger: 'border-danger-line text-danger',
 }
 
 export function pillClass(tone: PillTone = 'gold', extra?: string): string {

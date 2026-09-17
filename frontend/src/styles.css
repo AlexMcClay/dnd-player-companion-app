@@ -632,6 +632,52 @@
     padding: 0;
   }
 
+  /*
+   * Tables in the editor.
+   *
+   * Every cell is fully boxed, where the rendered view uses only a bottom rule:
+   * reading a table you follow the rows, but editing one you have to aim at a
+   * particular cell, and an unbordered grid gives you nothing to aim at.
+   *
+   * The wrapper scrolls rather than the table shrinking, so a six-column table
+   * on a phone stays legible instead of squeezing every word onto its own line.
+   */
+  .md-edit .tableWrapper {
+    overflow-x: auto;
+    margin: 0 0 8px;
+  }
+
+  .md-edit table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+  }
+
+  .md-edit th,
+  .md-edit td {
+    border: 1px solid var(--color-line);
+    padding: 6px 8px;
+    min-width: 6em;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .md-edit th {
+    background: var(--color-ink-tint);
+    font-weight: 600;
+  }
+
+  /* Cells hold paragraphs; their bottom margin would double the row height. */
+  .md-edit th > p,
+  .md-edit td > p {
+    margin: 0;
+  }
+
+  /* prosemirror-tables marks every cell a multi-cell selection covers. */
+  .md-edit .selectedCell {
+    background: var(--color-gold-tint);
+  }
+
   .md-edit a {
     color: var(--color-gold);
   }

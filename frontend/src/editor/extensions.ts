@@ -1,5 +1,6 @@
 import { Markdown } from '@tiptap/markdown'
 import Placeholder from '@tiptap/extension-placeholder'
+import { TableKit } from '@tiptap/extension-table'
 import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
 import StarterKit from '@tiptap/starter-kit'
@@ -30,6 +31,19 @@ export function editorExtensions(placeholder?: string): AnyExtension[] {
     }),
     TaskList,
     TaskItem.configure({ nested: true }),
+    /*
+      Tables, which the schema had no home for until now.
+
+      Without these nodes a `table` token has no handler, so the markdown
+      parser dropped the whole block on the floor — the fidelity check below
+      caught that and sent the note to source mode, which is why a recipe with
+      a results table could never be opened in the rich editor at all.
+
+      `resizable: false`: column handles are a mouse affordance, and the app is
+      used on phones round a table. Widths are not expressible in markdown
+      either, so a dragged column would be lost on the next save.
+    */
+    TableKit.configure({ table: { resizable: false } }),
     WikiLink,
     Markdown.configure({
       // A `Marked` instance satisfies everything the extension calls, but its
