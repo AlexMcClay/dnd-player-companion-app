@@ -307,10 +307,10 @@ function ImportSection() {
   const blocked = (preview?.errors.length ?? 0) > 0
   const nothing =
     preview !== null &&
-    preview.entities.create === 0 &&
-    preview.holdings.create === 0 &&
-    preview.notes.create === 0 &&
-    preview.ddb.create === 0 &&
+    preview.entities.creates.length === 0 &&
+    preview.holdings.creates.length === 0 &&
+    preview.notes.creates.length === 0 &&
+    preview.ddb.creates.length === 0 &&
     Object.values(resolutions).every((choice) => choice === 'skip')
 
   return (

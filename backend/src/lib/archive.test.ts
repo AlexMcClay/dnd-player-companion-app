@@ -83,7 +83,7 @@ const plan = (a: Archive, snapshot = db(), resolutions = {}) =>
 
 test('an entry already there by name is a conflict, not a second copy', () => {
   const result = plan(archive({ entities: [{ type: 'player', name: 'rook' }] }))
-  assert.equal(result.preview.entities.create, 0)
+  assert.equal(result.preview.entities.creates.length, 0)
   assert.equal(result.preview.entities.conflicts.length, 1)
   assert.equal(result.preview.entities.conflicts[0]?.key, `entity:${ROOK.id}`)
 })
@@ -283,7 +283,7 @@ test('the same note imported twice is a conflict, not a duplicate', () => {
     }),
     db({ notes: [note] }),
   )
-  assert.equal(result.preview.notes.create, 0)
+  assert.equal(result.preview.notes.creates.length, 0)
   assert.deepEqual(result.preview.notes.conflicts[0]?.changed, [])
 })
 

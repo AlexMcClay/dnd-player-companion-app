@@ -304,7 +304,9 @@ export interface ArchiveConflict {
    */
   key: string
   path: string
-  /** `npc · Krag Bronzebeard` */
+  /** The entry's type, so it can be shown as what it is. See `ArchiveCreate`. */
+  type?: string
+  /** `Krag Bronzebeard` */
   label: string
   /**
    * Fields present in the archive whose value differs, with `data.level` for a
@@ -315,8 +317,33 @@ export interface ArchiveConflict {
   incoming: Record<string, unknown>
 }
 
+/**
+ * One record the import would add.
+ *
+ * Carries no decision — a new record overwrites nothing, so there is nothing to
+ * consent to. It is listed so the DM can see *what* is arriving before they
+ * commit to a batch someone else's AI wrote.
+ */
+export interface ArchiveCreate {
+  /** `entities[3]` — the same locator the issues use. */
+  path: string
+  /**
+   * The entry's type. Absent for holdings, notes and sheets, which are not
+   * entries and have no type of their own.
+   *
+   * Separate from `label` rather than written into it, so the reader can be
+   * shown the type as the app draws it everywhere else — its own word and its
+   * own icon — instead of a slug spliced into a sentence.
+   */
+  type?: string
+  /** The record's own name: `Wren Applesmith`, or `Rook · Moonstone ×3`. */
+  label: string
+  /** What would be written, shaped exactly like a conflict's `incoming`. */
+  incoming: Record<string, unknown>
+}
+
 export interface ArchiveKindPlan {
-  create: number
+  creates: ArchiveCreate[]
   conflicts: ArchiveConflict[]
 }
 

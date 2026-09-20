@@ -2,20 +2,29 @@
  * What an import would do, and the DM's say over the parts that would overwrite
  * something.
  *
- * New entries need no decision — nothing is at risk — so they are a count. Every
- * row that would land on an existing one is listed with the fields that differ,
- * because "replace 659 entries" is not a thing anyone can consent to without
- * being told what changes.
+ * Two questions, answered separately. *What is in this file?* — every record is
+ * named, typed, and can be opened to see the values it carries, because a batch
+ * written by someone's AI is otherwise a number you are asked to trust. *What
+ * would it overwrite?* — every row landing on an existing one shows yours
+ * beside the file's, because "replace 659 entries" is not a thing anyone can
+ * consent to without being told what changes.
+ *
+ * New records carry no choice: they overwrite nothing, so there is nothing to
+ * consent to. They are listed to be read, not decided.
  */
-import { motion } from 'framer-motion'
-import { LuCirclePlus, LuInfo, LuTriangleAlert } from 'react-icons/lu'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useState } from 'react'
+import { LuChevronRight, LuCirclePlus, LuInfo, LuTriangleAlert } from 'react-icons/lu'
 import type {
   ArchiveConflict,
+  ArchiveCreate,
   ArchiveKindPlan,
   ArchivePreview,
   ArchiveResolution,
 } from '@codex/shared'
-import { Pill, PillButton } from './ui'
+import { SPRING } from '../lib/motion'
+import { templateFor } from '../templates'
+import { cx, Pill, PillButton } from './ui'
 
 export interface ImportPreviewProps {
   preview: ArchivePreview
@@ -29,6 +38,53 @@ const KINDS: Array<{ key: keyof ArchivePreview & string; label: string; unit: st
   { key: 'notes', label: 'Notes', unit: 'note' },
   { key: 'ddb', label: 'D&D Beyond', unit: 'sheet' },
 ]
+
+/**
+ * Restoring a backup is hundreds of rows. Past this many the list stops being
+ * something you read and starts being something you scroll past, so it is cut
+ * and counted instead — the same bargain the error list makes.
+ */
+const LIST_CAP = 40
+
+/* ── naming things ────────────────────────────────────────────────── */
+
+/** Columns, which belong to no template and so are named here. */
+const FIELD_LABEL: Record<string, string> = {
+  name: 'Name',
+  summary: 'Summary',
+  bodyMd: 'Body',
+  imageKey: 'Image',
+  knowledge: 'Knowledge',
+  tags: 'Tags',
+  quantity: 'Quantity',
+  note: 'Note',
+  visibility: 'Visibility',
+  title: 'Title',
+  placement: 'Placement',
+  syncedAt: 'Last synced',
+}
+
+/**
+ * `data.armorClass` -> `Armour class`, by asking the same template the entry
+ * page renders with. An unrecognised key keeps its raw name rather than being
+ * hidden or prettified: a key the app does not know is exactly what a
+ * hand-written batch gets wrong, and it has to be visible to be spotted.
+ */
+function fieldLabel(field: string, type?: string): string {
+  if (!field.startsWith('data.')) return FIELD_LABEL[field] ?? field
+  const key = field.slice(5)
+  const def = type ? templateFor(type).fields.find((f) => f.key === key) : undefined
+  return def?.label ?? key
+}
+
+function fieldValue(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '—'
+  if (Array.isArray(value)) return value.length > 0 ? value.join(', ') : '—'
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+  return String(value)
+}
+
+/* ── the preview ──────────────────────────────────────────────────── */
 
 export default function ImportPreview({ preview, resolutions, onChange }: ImportPreviewProps) {
   const set = (keys: string[], choice: ArchiveResolution) => {
@@ -46,14 +102,14 @@ export default function ImportPreview({ preview, resolutions, onChange }: Import
             {preview.errors.length} {preview.errors.length === 1 ? 'problem' : 'problems'} — nothing
             can be imported until these are fixed
           </span>
-          {preview.errors.slice(0, 40).map((issue, index) => (
+          {preview.errors.slice(0, LIST_CAP).map((issue, index) => (
             <span key={index} className="type-meta text-danger">
               <code className="text-ink-faint">{issue.path}</code> {issue.message}
             </span>
           ))}
-          {preview.errors.length > 40 && (
+          {preview.errors.length > LIST_CAP && (
             <span className="type-meta text-ink-faint">
-              …and {preview.errors.length - 40} more
+              …and {preview.errors.length - LIST_CAP} more
             </span>
           )}
         </div>
@@ -72,8 +128,17 @@ export default function ImportPreview({ preview, resolutions, onChange }: Import
 
       {KINDS.map(({ key, label, unit }) => {
         const plan = preview[key] as ArchiveKindPlan
-        if (plan.create === 0 && plan.conflicts.length === 0) return null
-        return <KindBlock key={key} label={label} unit={unit} plan={plan} resolutions={resolutions} set={set} />
+        if (plan.creates.length === 0 && plan.conflicts.length === 0) return null
+        return (
+          <KindBlock
+            key={key}
+            label={label}
+            unit={unit}
+            plan={plan}
+            resolutions={resolutions}
+            set={set}
+          />
+        )
       })}
     </div>
   )
@@ -92,6 +157,10 @@ function KindBlock({
   resolutions: Record<string, ArchiveResolution>
   set: (keys: string[], choice: ArchiveResolution) => void
 }) {
+  // Collapsed by default: the compact summary is what you want on the way to
+  // pressing Import, and a full backup would otherwise open to 800 rows.
+  const [showNew, setShowNew] = useState(false)
+
   const keys = plan.conflicts.map((conflict) => conflict.key)
   // A row that is byte-for-byte what is already there is not a decision worth
   // making. Restoring a backup is almost entirely these.
@@ -103,11 +172,16 @@ function KindBlock({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="type-lab">{label}</span>
         <div className="flex items-center gap-1.5">
-          {plan.create > 0 && (
-            <Pill tone="gold">
+          {plan.creates.length > 0 && (
+            <PillButton
+              tone={showNew ? 'solid' : 'gold'}
+              aria-expanded={showNew}
+              onClick={() => setShowNew((open) => !open)}
+            >
               <LuCirclePlus aria-hidden />
-              {plan.create} new
-            </Pill>
+              {plan.creates.length} new
+              <Caret open={showNew} />
+            </PillButton>
           )}
           {plan.conflicts.length > 0 && (
             <Pill tone="neutral">
@@ -117,6 +191,27 @@ function KindBlock({
           )}
         </div>
       </div>
+
+      <AnimatePresence initial={false}>
+        {showNew && (
+          <motion.div
+            className="flex flex-col overflow-hidden"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={SPRING}
+          >
+            {plan.creates.slice(0, LIST_CAP).map((create) => (
+              <CreateRow key={create.path} create={create} />
+            ))}
+            {plan.creates.length > LIST_CAP && (
+              <span className="type-meta py-2 text-ink-faint">
+                …and {plan.creates.length - LIST_CAP} more
+              </span>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {plan.conflicts.length > 0 && (
         <>
@@ -153,6 +248,75 @@ function KindBlock({
   )
 }
 
+/* ── rows ─────────────────────────────────────────────────────────── */
+
+const ROW = 'flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-line-soft py-2 last:border-b-0'
+const SUMMARY = 'flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden'
+
+/** Rotates with the disclosure it belongs to, which React knows the state of. */
+function Caret({ open }: { open: boolean }) {
+  return <LuChevronRight className={cx('transition-transform', open && 'rotate-90')} aria-hidden />
+}
+
+/**
+ * The same caret for a native <details>, whose open state React never sees —
+ * so the rotation is driven by CSS off the element's own `[open]` instead.
+ */
+function RowCaret() {
+  return (
+    <LuChevronRight
+      className="shrink-0 text-ink-faint transition-transform group-open:rotate-90"
+      aria-hidden
+    />
+  )
+}
+
+/**
+ * What kind of thing this is, in the app's own word for it — "Bestiary" is a
+ * section heading, so `label` is used rather than `plural`.
+ */
+function TypeChip({ type }: { type?: string }) {
+  if (!type) return null
+  const template = templateFor(type)
+  const Icon = template.icon
+  return (
+    <span className="type-meta flex shrink-0 items-center gap-1.25 text-ink-faint">
+      <Icon aria-hidden />
+      {template.label}
+    </span>
+  )
+}
+
+/** Marks a row as adding something or as landing on something already there. */
+function Marker({ adding }: { adding: boolean }) {
+  return (
+    <span
+      className={cx(
+        'w-17 shrink-0 text-[9.5px] tracking-[0.13em] uppercase',
+        adding ? 'text-gold' : 'text-ink-dim',
+      )}
+    >
+      {adding ? 'New' : 'Replaces'}
+    </span>
+  )
+}
+
+function CreateRow({ create }: { create: ArchiveCreate }) {
+  const fields = Object.keys(create.incoming)
+
+  return (
+    <details className={cx(ROW, 'group')}>
+      <summary className={cx(SUMMARY, 'min-w-0 flex-1')}>
+        <RowCaret />
+        <Marker adding />
+        <TypeChip type={create.type} />
+        <span className="type-name truncate text-[15px]">{create.label}</span>
+      </summary>
+      <FieldList type={create.type} fields={fields} incoming={create.incoming} />
+    </details>
+  )
+}
+
 function ConflictRow({
   conflict,
   choice,
@@ -163,21 +327,30 @@ function ConflictRow({
   onChoose: (choice: ArchiveResolution) => void
 }) {
   return (
-    <motion.div
-      className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-line-soft py-2 last:border-b-0"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="type-name truncate text-[15px]">{conflict.label}</span>
-        <div className="flex flex-wrap items-center gap-1">
-          {conflict.changed.map((field) => (
-            <span key={field} className="type-meta text-ink-faint">
-              {field}
-            </span>
-          ))}
-        </div>
-      </div>
+    <motion.div className={ROW} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      {/*
+        The buttons sit outside the <details>, not inside its <summary>. A click
+        anywhere in a summary toggles it, so a Replace button in there would
+        open and close the row every time it was pressed.
+      */}
+      <details className="group min-w-0 flex-1">
+        <summary className={SUMMARY}>
+          <RowCaret />
+          <Marker adding={false} />
+          <TypeChip type={conflict.type} />
+          <span className="type-name truncate text-[15px]">{conflict.label}</span>
+          <span className="type-meta truncate text-ink-faint">
+            {conflict.changed.map((field) => fieldLabel(field, conflict.type)).join(', ')}
+          </span>
+        </summary>
+        <FieldList
+          type={conflict.type}
+          fields={conflict.changed}
+          existing={conflict.existing}
+          incoming={conflict.incoming}
+        />
+      </details>
+
       <div className="flex shrink-0 items-center gap-1.5">
         <PillButton
           tone={choice === 'skip' ? 'solid' : 'neutral'}
@@ -195,5 +368,50 @@ function ConflictRow({
         </PillButton>
       </div>
     </motion.div>
+  )
+}
+
+/**
+ * The values themselves — the whole point of opening a row.
+ *
+ * One component for both cases: with `existing` it reads as a change, without
+ * it as what would be written. The backend sends both maps in the same shape
+ * and clips long strings to a glimpse, so there is nothing to format here
+ * beyond naming the field.
+ */
+function FieldList({
+  type,
+  fields,
+  existing,
+  incoming,
+}: {
+  type?: string
+  fields: string[]
+  existing?: Record<string, unknown>
+  incoming: Record<string, unknown>
+}) {
+  if (fields.length === 0) {
+    return <div className="type-meta py-1.5 pl-8 text-ink-faint">Nothing but its name.</div>
+  }
+
+  return (
+    <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 py-1.5 pl-8 text-[13px]">
+      {fields.map((field) => (
+        <div key={field} className="contents">
+          <dt className="type-meta self-start pt-0.5">{fieldLabel(field, type)}</dt>
+          {/* min-w-0 so a long value wraps in its track instead of widening it. */}
+          <dd className="m-0 flex min-w-0 flex-col gap-0.5">
+            {existing && (
+              <span className="text-ink-dim line-through decoration-ink-ghost">
+                {fieldValue(existing[field])}
+              </span>
+            )}
+            <span className={existing ? 'text-ink' : 'text-ink-soft'}>
+              {fieldValue(incoming[field])}
+            </span>
+          </dd>
+        </div>
+      ))}
+    </dl>
   )
 }
