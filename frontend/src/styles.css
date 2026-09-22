@@ -1084,7 +1084,9 @@
 }
 
 .print-card dt {
-  color: var(--color-ink-faint);
+  /* One step up from ink-faint: at these sizes the lighter grey printed
+     washed out beside the near-black values. */
+  color: var(--color-ink-soft);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-size: 0.75em;
@@ -1283,14 +1285,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  height: 100%;
   color: var(--color-gold);
 }
 
-/* No wordmark: the rose is the whole back, so it takes the room the text had. */
+/*
+ * Sized from the card's shorter side. A percentage width used to resolve
+ * against a shrink-wrapped parent with no size of its own, so the emblem came
+ * out a fixed 21mm on every card, lost on a big one. `cqmin` measures the card
+ * itself — it is the size container — and taking the shorter side keeps the
+ * sigil round and inside a card that spans wide but not tall.
+ */
 .print-card-back-mark svg {
-  width: 52%;
+  width: 43cqmin;
+  height: 43cqmin;
   max-width: 40mm;
-  height: auto;
+  max-height: 40mm;
 }
 
 /*

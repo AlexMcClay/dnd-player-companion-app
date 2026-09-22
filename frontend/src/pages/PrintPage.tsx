@@ -993,6 +993,100 @@ function usePreviewScale(): number {
   return scale
 }
 
+/**
+ * The points of a star polygon `{points/step}` inscribed at radius `r` about
+ * the centre of a 100-unit box, first point straight up. `{7/3}` is the
+ * heptagram: seven points, each joined to the one three along.
+ */
+function starPath(points: number, step: number, r: number): string {
+  const at = (k: number) => {
+    const a = ((-90 + (k * 360) / points) * Math.PI) / 180
+    return `${(50 + r * Math.cos(a)).toFixed(2)} ${(50 + r * Math.sin(a)).toFixed(2)}`
+  }
+  const order = Array.from({ length: points }, (_, i) => (i * step) % points)
+  return `M${order.map(at).join(' L')} Z`
+}
+
+const HEPTAGRAM = starPath(7, 3, 33)
+
+/**
+ * The first eight runes of the Elder Futhark, drawn about their own centre in
+ * a box roughly 3 units wide and 5 tall — fehu, uruz, thurisaz, ansuz, raido,
+ * kenaz, gebo, wunjo.
+ *
+ * Paths, not characters. A rune in a font only prints if the machine doing
+ * the printing has a font with runes in it; a stroke prints everywhere.
+ */
+const RUNES = [
+  'M0 -2.5V2.5M0 -2.5L1.8 -1.2M0 -0.6L1.8 0.7',
+  'M-1.1 2.5V-2.5L1.1 -1V2.5',
+  'M-0.7 -2.5V2.5M-0.7 -1.3L1.1 0L-0.7 1.3',
+  'M-0.9 -2.5V2.5M-0.9 -2.5L1.1 -1.3M-0.9 -1L1.1 0.2',
+  'M-0.9 2.5V-2.5L1 -1.3L-0.9 -0.1L1 2.5',
+  'M0.9 -2.5L-0.9 0L0.9 2.5',
+  'M-1.2 -2.5L1.2 2.5M1.2 -2.5L-1.2 2.5',
+  'M-0.9 2.5V-2.5L1 -1.3L-0.9 0',
+]
+
+/** The band between the two outer rings, where the runes sit. */
+const RUNE_RADIUS = 43
+
+/**
+ * The card back's emblem: a magic circle.
+ *
+ * Two rings hold a band of runes, a heptagram sits inside them, and a small
+ * ring marks the centre where the star's lines cross. Drawn outward from the
+ * middle and entirely in the viewBox, so it holds up at any card size and has
+ * no edge for a misaligned duplex print to show.
+ */
+function Sigil() {
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      {/*
+        A white disc behind the whole emblem, so the weave stops at its edge
+        instead of running through the runes. An SVG fill is foreground paint,
+        so it prints even with background graphics turned off.
+      */}
+      <circle cx="50" cy="50" r="48" fill="#ffffff" stroke="none" />
+
+      <circle cx="50" cy="50" r="47.5" strokeWidth="1.1" />
+      <circle cx="50" cy="50" r="38.5" strokeWidth="0.6" />
+
+      {/* Runes around the band, each turned to face outward. */}
+      {RUNES.map((d, i) => (
+        <g key={i} transform={`rotate(${i * 45} 50 50)`}>
+          <path d={d} transform={`translate(50 ${50 - RUNE_RADIUS})`} strokeWidth="0.55" />
+        </g>
+      ))}
+
+      {/* A small dot between each pair of runes, so the band reads as one ring. */}
+      {RUNES.map((_, i) => (
+        <circle
+          key={i}
+          cx="50"
+          cy={50 - RUNE_RADIUS}
+          r="0.55"
+          fill="currentColor"
+          stroke="none"
+          transform={`rotate(${i * 45 + 22.5} 50 50)`}
+        />
+      ))}
+
+      <path d={HEPTAGRAM} strokeWidth="0.7" />
+      <circle cx="50" cy="50" r="33" strokeWidth="0.35" />
+      <circle cx="50" cy="50" r="7" strokeWidth="0.6" />
+      <circle cx="50" cy="50" r="1.4" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 /** Where a card sits on its sheet, as inline grid placement. */
 function placement(placed: Placed): React.CSSProperties {
   return {
@@ -1008,7 +1102,7 @@ function placement(placed: Placed): React.CSSProperties {
  * Drawn as strokes rather than fills. A printer drops background paint unless
  * asked, and even when asked, a solid block shows every millimetre of the
  * front-to-back drift that consumer duplex produces as a matter of course.
- * Lines radiating from the middle hide it instead.
+ * A centred emblem over a fading weave hides it instead.
  */
 function CardBack({ placed }: { placed: Placed }) {
   return (
@@ -1016,21 +1110,7 @@ function CardBack({ placed }: { placed: Placed }) {
       <div className="print-card-back-field" aria-hidden />
 
       <div className="print-card-back-mark">
-        {/*
-          A compass rose over a ring: no edges to misalign, and it reads at
-          any card size because it is drawn in the viewBox, not in pixels.
-        */}
-        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" aria-hidden>
-          <circle cx="50" cy="50" r="46" strokeWidth="1.2" />
-          <circle cx="50" cy="50" r="38" strokeWidth="0.6" />
-          <circle cx="50" cy="50" r="15" strokeWidth="0.8" />
-          {/* The four cardinal points, as elongated diamonds. */}
-          <path d="M50 6 L57 50 L50 94 L43 50 Z" strokeWidth="0.9" />
-          <path d="M6 50 L50 43 L94 50 L50 57 Z" strokeWidth="0.9" />
-          {/* The diagonals, shorter, so the rose has a clear axis. */}
-          <path d="M22 22 L53 47 L78 78 L47 53 Z" strokeWidth="0.5" />
-          <path d="M78 22 L53 53 L22 78 L47 47 Z" strokeWidth="0.5" />
-        </svg>
+        <Sigil />
       </div>
     </article>
   )
