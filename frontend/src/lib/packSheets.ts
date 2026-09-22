@@ -41,6 +41,14 @@ export interface Pick {
   h: number
   /** Copies to print. */
   n: number
+  /**
+   * Trade the art band for a thumbnail beside the name.
+   *
+   * The band is well over a third of a card. An entry whose value is its
+   * words — an item's rules, an NPC's history — would rather spend that on
+   * text and keep just enough picture to recognise it by.
+   */
+  simple: boolean
 }
 
 export interface Card {
@@ -317,14 +325,19 @@ export function excerptBudget(
   grid: Grid,
   w: number,
   h: number,
-  { specRows = 0, summary = false }: { specRows?: number; summary?: boolean } = {},
+  {
+    specRows = 0,
+    summary = false,
+    simple = false,
+  }: { specRows?: number; summary?: boolean; simple?: boolean } = {},
 ): number {
   const size = cardSizeMm(grid, w, h)
   const fontMm = cardFontPx(size.w) / PX_PER_MM
 
-  // Everything above the prose: the art band, the body padding, the name and
-  // type lines, an optional summary, and the spec table.
-  const artMm = size.h * (size.w <= NARROW_MM ? 0.24 : 0.38)
+  // Everything above the prose: the art, the body padding, the name and type
+  // lines, an optional summary, and the spec table. A simplified card spends
+  // no height on art at all — its thumbnail sits on the name's own line.
+  const artMm = simple ? 0 : size.h * (size.w <= NARROW_MM ? 0.24 : 0.38)
   const headerMm = fontMm * (2.6 + specRows * 1.1 + (summary ? 2.6 : 0))
   const proseMm = size.h - artMm - 6 - headerMm
   if (proseMm <= 0) return 0
@@ -343,9 +356,11 @@ export function excerptBudget(
  * eight rows was throwing away fields it had room for. The CSS trims further
  * on a card too short for even this.
  */
-export function specRowBudget(grid: Grid, h: number): number {
+export function specRowBudget(grid: Grid, h: number, simple = false): number {
   const size = cardSizeMm(grid, 1, h)
-  return clamp(Math.round(size.h / 11), 3, 16)
+  // A simplified card has the art band's height back, so it can show the
+  // fields a normal one of the same size had to drop.
+  return clamp(Math.round((simple ? size.h * 1.45 : size.h) / 11), 3, 16)
 }
 
 /* ── the query string ─────────────────────────────────────────────── */
@@ -372,11 +387,13 @@ export function formatGrid(grid: Grid): string {
 }
 
 /**
- * `ids=abc:2x2*3,def,ghi:1x2`.
+ * `ids=abc:2x2*3!,def,ghi:1x2`.
  *
- * The span and the count are both optional and both omitted at their defaults,
- * so the common case stays the plain comma-separated list of ids it has always
- * been, and a link written before this existed still opens.
+ * Span, count and the simplified flag are all optional and all omitted at
+ * their defaults, so the common case stays the plain comma-separated list of
+ * ids it has always been, and a link written before any of this existed still
+ * opens. A trailing `!` means simplified; it cannot collide with an id, which
+ * is a UUID.
  *
  * An id appearing twice is merged rather than repeated: two entries for the
  * same thing would be two rows in the Selected panel saying different things
@@ -388,7 +405,7 @@ export function parsePicks(raw: string | null): Pick[] {
   const byId = new Map<string, Pick>()
 
   for (const token of raw.split(',')) {
-    const match = /^([^:*]+)(?::(\d+)x(\d+))?(?:\*(\d+))?$/.exec(token.trim())
+    const match = /^([^:*!]+)(?::(\d+)x(\d+))?(?:\*(\d+))?(!)?$/.exec(token.trim())
     if (!match) continue
 
     const id = match[1]
@@ -399,6 +416,7 @@ export function parsePicks(raw: string | null): Pick[] {
       w: match[2] ? clamp(Number(match[2]), 1, 4) : 1,
       h: match[3] ? clamp(Number(match[3]), 1, 6) : 1,
       n: match[4] ? clamp(Number(match[4]), 1, MAX_COUNT) : 1,
+      simple: Boolean(match[5]),
     }
 
     const existing = byId.get(id)
@@ -407,6 +425,7 @@ export function parsePicks(raw: string | null): Pick[] {
       existing.w = Math.max(existing.w, pick.w)
       existing.h = Math.max(existing.h, pick.h)
       existing.n = clamp(existing.n + pick.n, 1, MAX_COUNT)
+      existing.simple = existing.simple || pick.simple
     } else {
       byId.set(id, pick)
     }
@@ -417,10 +436,10 @@ export function parsePicks(raw: string | null): Pick[] {
 
 export function formatPicks(picks: Pick[]): string {
   return picks
-    .map(({ id, w, h, n }) => {
+    .map(({ id, w, h, n, simple }) => {
       const span = w === 1 && h === 1 ? '' : `:${w}x${h}`
       const count = n === 1 ? '' : `*${n}`
-      return `${id}${span}${count}`
+      return `${id}${span}${count}${simple ? '!' : ''}`
     })
     .join(',')
 }

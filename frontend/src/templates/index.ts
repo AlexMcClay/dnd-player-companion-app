@@ -38,6 +38,11 @@ export interface FieldDef {
   label: string
   kind: FieldKind
   placeholder?: string
+  /**
+   * Edited in the form but never shown on the entry or its printed card —
+   * bookkeeping the app uses, not something a reader wants to see.
+   */
+  hidden?: boolean
 }
 
 export interface EntityTemplate {
@@ -68,7 +73,7 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
       // The person at the table, as opposed to the character. Two fields
       // because a name is what you say out loud and a handle is what you type.
       { key: 'player', label: 'Played by', kind: 'text', placeholder: 'Gabe' },
-      { key: 'handle', label: 'D&D Beyond', kind: 'text', placeholder: 'britto09' },
+      { key: 'handle', label: 'D&D Beyond', kind: 'text', placeholder: 'britto09', hidden: true },
       // The number in the character's D&D Beyond URL. Set this and the sheet
       // can be synced from the Me tab.
       {
@@ -76,6 +81,7 @@ export const TEMPLATES: Record<string, EntityTemplate> = {
         label: 'D&D Beyond character id',
         kind: 'text',
         placeholder: '166021024',
+        hidden: true,
       },
     ],
   },
@@ -199,14 +205,15 @@ export function templateFor(type: string): EntityTemplate {
  *
  * Both the entry page's spec list and a printed card read this, so the two
  * cannot drift about which fields count. `ingredients` is excluded because it
- * is a list of reagents with its own rendering, not a label/value pair.
+ * is a list of reagents with its own rendering, not a label/value pair, and
+ * `hidden` fields because they are only there for the app.
  */
 export function specRowsFor(
   type: string,
   data: EntityData,
 ): Array<{ field: FieldDef; value: unknown }> {
   return templateFor(type)
-    .fields.filter((field) => field.kind !== 'ingredients')
+    .fields.filter((field) => field.kind !== 'ingredients' && !field.hidden)
     .map((field) => ({ field, value: data[field.key] }))
     .filter(({ value }) => value !== undefined && value !== null && value !== '')
 }

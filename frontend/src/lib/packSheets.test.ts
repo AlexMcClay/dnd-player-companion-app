@@ -158,23 +158,23 @@ test('every card is placed exactly once', () => {
 /* ── counts ───────────────────────────────────────────────────────── */
 
 test('a count expands into that many cards with distinct keys', () => {
-  const out = expandPicks([{ id: 'x', w: 1, h: 1, n: 3 }])
+  const out = expandPicks([{ id: 'x', w: 1, h: 1, n: 3, simple: false }])
   assert.deepEqual(out.map((c) => c.key), ['x#0', 'x#1', 'x#2'])
 })
 
 test('copies keep the span of the entry they came from', () => {
-  const out = expandPicks([{ id: 'x', w: 2, h: 3, n: 2 }])
+  const out = expandPicks([{ id: 'x', w: 2, h: 3, n: 2, simple: false }])
   assert.ok(out.every((c) => c.w === 2 && c.h === 3))
 })
 
 test('expansion stops at the cap rather than running away', () => {
-  const out = expandPicks([{ id: 'x', w: 1, h: 1, n: 99 }], 10)
+  const out = expandPicks([{ id: 'x', w: 1, h: 1, n: 99, simple: false }], 10)
   assert.equal(out.length, 10)
 })
 
 test('the default cap is the documented one', () => {
   const out = expandPicks(
-    Array.from({ length: 50 }, (_, i) => ({ id: `e${i}`, w: 1, h: 1, n: 99 })),
+    Array.from({ length: 50 }, (_, i) => ({ id: `e${i}`, w: 1, h: 1, n: 99, simple: false })),
   )
   assert.equal(out.length, MAX_CARDS)
 })
@@ -199,31 +199,33 @@ test('a grid in range round-trips', () => {
 
 test('a link written before spans existed still parses', () => {
   assert.deepEqual(parsePicks('abc,def'), [
-    { id: 'abc', w: 1, h: 1, n: 1 },
-    { id: 'def', w: 1, h: 1, n: 1 },
+    { id: 'abc', w: 1, h: 1, n: 1, simple: false },
+    { id: 'def', w: 1, h: 1, n: 1, simple: false },
   ])
 })
 
 test('span and count are both optional', () => {
   assert.deepEqual(parsePicks('a:2x2*3,b,c:1x2,d*4'), [
-    { id: 'a', w: 2, h: 2, n: 3 },
-    { id: 'b', w: 1, h: 1, n: 1 },
-    { id: 'c', w: 1, h: 2, n: 1 },
-    { id: 'd', w: 1, h: 1, n: 4 },
+    { id: 'a', w: 2, h: 2, n: 3, simple: false },
+    { id: 'b', w: 1, h: 1, n: 1, simple: false },
+    { id: 'c', w: 1, h: 2, n: 1, simple: false },
+    { id: 'd', w: 1, h: 1, n: 4, simple: false },
   ])
 })
 
 test('picks round-trip, and defaults are left out of the string', () => {
   const picks = [
-    { id: 'a', w: 1, h: 1, n: 1 },
-    { id: 'b', w: 2, h: 2, n: 3 },
+    { id: 'a', w: 1, h: 1, n: 1, simple: false },
+    { id: 'b', w: 2, h: 2, n: 3, simple: true },
   ]
-  assert.equal(formatPicks(picks), 'a,b:2x2*3')
+  assert.equal(formatPicks(picks), 'a,b:2x2*3!')
   assert.deepEqual(parsePicks(formatPicks(picks)), picks)
 })
 
 test('the same id twice is merged, not duplicated', () => {
-  assert.deepEqual(parsePicks('a*2,a:2x1*3'), [{ id: 'a', w: 2, h: 1, n: 5 }])
+  assert.deepEqual(parsePicks('a*2,a:2x1*3'), [
+    { id: 'a', w: 2, h: 1, n: 5, simple: false },
+  ])
 })
 
 test('order of first appearance is kept', () => {
@@ -431,4 +433,51 @@ test('a nudge never moves cards, only where the sheet is painted', () => {
   const before = packSheets(cards(['a', 2, 2], ['b', 1, 1]), 3, 3)
   const after = packSheets(cards(['a', 2, 2], ['b', 1, 1]), 3, 3)
   assert.deepEqual(before, after)
+})
+
+/* ── the simplified card ──────────────────────────────────────────── */
+
+test('a trailing bang means simplified, and is left off when it is not', () => {
+  assert.equal(parsePicks('a!')[0]?.simple, true)
+  assert.equal(parsePicks('a')[0]?.simple, false)
+  assert.equal(formatPicks([{ id: 'a', w: 1, h: 1, n: 1, simple: true }]), 'a!')
+})
+
+test('the flag survives alongside a span and a count', () => {
+  assert.deepEqual(parsePicks('a:2x3*4!'), [{ id: 'a', w: 2, h: 3, n: 4, simple: true }])
+  assert.deepEqual(parsePicks(formatPicks(parsePicks('a:2x3*4!'))), parsePicks('a:2x3*4!'))
+})
+
+test('merging two mentions keeps the flag if either had it', () => {
+  assert.equal(parsePicks('a,a!')[0]?.simple, true)
+  assert.equal(parsePicks('a!,a')[0]?.simple, true)
+  assert.equal(parsePicks('a,a')[0]?.simple, false)
+})
+
+test('a bang cannot be mistaken for part of an id', () => {
+  assert.equal(parsePicks('abc-123!')[0]?.id, 'abc-123')
+})
+
+test('simplifying buys real room for prose', () => {
+  const opts = { specRows: 4, summary: true }
+  const normal = excerptBudget(DEFAULT_GRID, 1, 1, opts)
+  const simple = excerptBudget(DEFAULT_GRID, 1, 1, { ...opts, simple: true })
+  assert.ok(simple > normal * 1.5, `expected a large gain, got ${normal} -> ${simple}`)
+})
+
+test('simplifying also buys spec rows', () => {
+  assert.ok(specRowBudget(DEFAULT_GRID, 1, true) > specRowBudget(DEFAULT_GRID, 1, false))
+})
+
+test('a simplified card still cannot have a negative budget', () => {
+  for (const cols of [2, 3, 4]) {
+    for (const rows of [2, 3, 4, 5, 6]) {
+      const budget = excerptBudget({ cols, rows }, 1, 1, {
+        specRows: 16,
+        summary: true,
+        simple: true,
+      })
+      assert.ok(budget >= 0, `${cols}x${rows} produced ${budget}`)
+    }
+  }
 })

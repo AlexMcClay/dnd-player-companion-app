@@ -188,7 +188,7 @@ export default function PrintPage() {
       write({
         picks: picks.some((p) => p.id === id)
           ? picks.filter((p) => p.id !== id)
-          : [...picks, { id, w: 1, h: 1, n: 1 }],
+          : [...picks, { id, w: 1, h: 1, n: 1, simple: false }],
       }),
     [picks, write],
   )
@@ -248,6 +248,15 @@ export default function PrintPage() {
 
   const chosen = useMemo(() => new Set(picks.map((p) => p.id)), [picks])
 
+  /*
+    The packer only knows keys and spans, and rightly: whether a card is drawn
+    simplified has no bearing on where it goes. The renderer looks it up here.
+  */
+  const simpleIds = useMemo(
+    () => new Set(live.filter((p) => p.simple).map((p) => p.id)),
+    [live],
+  )
+
   /** What the picks asked for, before the cap trimmed it. */
   const wanted = useMemo(
     () => live.reduce((sum, p) => sum + Math.max(1, Math.min(p.n, MAX_COUNT)), 0),
@@ -300,6 +309,7 @@ export default function PrintPage() {
         grid={grid}
         nudge={nudge}
         byId={byId}
+        simpleIds={simpleIds}
         bodyById={bodyById}
       />
     </div>
@@ -688,6 +698,17 @@ function SelectedPanel({
               onChange={(n) => onEdit(pick.id, { n })}
             />
 
+            {/* Trades the art band for a thumbnail beside the name, for an
+                entry whose value is in its words rather than its picture. */}
+            <PillButton
+              tone={pick.simple ? 'solid' : 'neutral'}
+              aria-pressed={pick.simple}
+              title="Swap the art for a small portrait, leaving more room for text"
+              onClick={() => onEdit(pick.id, { simple: !pick.simple })}
+            >
+              Simple
+            </PillButton>
+
             <StepButton label={`Remove ${entity.name}`} onClick={() => onRemove(pick.id)}>
               <LuX aria-hidden />
             </StepButton>
@@ -877,12 +898,14 @@ function Preview({
   grid,
   nudge,
   byId,
+  simpleIds,
   bodyById,
 }: {
   pages: Array<{ side: 'front' | 'back'; cards: Placed[] }>
   grid: Grid
   nudge: Nudge
   byId: Map<string, EntitySummary>
+  simpleIds: Set<string>
   bodyById: Map<string, string>
 }) {
   const scale = usePreviewScale()
@@ -944,6 +967,7 @@ function Preview({
                     entity={entity}
                     placed={card}
                     grid={grid}
+                    simple={simpleIds.has(entity.id)}
                     bodyMd={bodyById.get(entity.id)}
                   />
                 )
@@ -1024,11 +1048,14 @@ function PrintCard({
   entity,
   placed,
   grid,
+  simple,
   bodyMd,
 }: {
   entity: EntitySummary
   placed: Placed
   grid: Grid
+  /** Thumbnail beside the name instead of the art band. */
+  simple: boolean
   bodyMd?: string
 }) {
   const template = templateFor(entity.type)
@@ -1045,7 +1072,7 @@ function PrintCard({
   */
   const rows = specRowsFor(entity.type, entity.data).slice(
     0,
-    specRowBudget(grid, placed.h),
+    specRowBudget(grid, placed.h, simple),
   )
 
   const ingredients =
@@ -1054,6 +1081,7 @@ function PrintCard({
   const budget = excerptBudget(grid, placed.w, placed.h, {
     specRows: rows.length,
     summary: Boolean(entity.summary),
+    simple,
   })
 
   const html = useMemo(() => {
@@ -1061,35 +1089,35 @@ function PrintCard({
     return DOMPurify.sanitize(printMarked.parse(excerptOf(bodyMd, budget)) as string)
   }, [bodyMd, budget])
 
+  // Eager and synchronous, unlike `Portrait`, which is lazy — a card below the
+  // fold must still have its art in hand when print fires. Built once and
+  // placed in either the band or the thumbnail, so the two cannot disagree
+  // about how a broken image is handled.
+  const art = src ? (
+    <img src={src} alt="" loading="eager" decoding="sync" onError={() => setBroken(true)} />
+  ) : null
+
   return (
     <article
-      className="print-card"
+      className={cx('print-card', simple && 'print-card-simple')}
       // Explicit placement from the packer. Auto-flow is left alone on
       // purpose: `dense` would be a no-op here and would hide a lost
       // placement instead of letting it show up in the preview.
       style={placement(placed)}
     >
-      <div className="print-card-art">
-        {src ? (
-          // Eager and synchronous, unlike `Portrait`, which is lazy — a card
-          // below the fold must still have its art in hand when print fires.
-          <img
-            src={src}
-            alt=""
-            loading="eager"
-            decoding="sync"
-            onError={() => setBroken(true)}
-          />
-        ) : (
-          // The band already centres its child, so this only stacks the two.
-          <div className="print-card-fallback flex flex-col items-center gap-1 text-ink-muted">
-            <Icon aria-hidden />
-            <span className="text-[0.85em] tracking-[0.14em] uppercase">
-              {template.portraitWord}
-            </span>
-          </div>
-        )}
-      </div>
+      {!simple && (
+        <div className="print-card-art">
+          {art ?? (
+            // The band already centres its child, so this only stacks the two.
+            <div className="print-card-fallback flex flex-col items-center gap-1 text-ink-muted">
+              <Icon aria-hidden />
+              <span className="text-[0.85em] tracking-[0.14em] uppercase">
+                {template.portraitWord}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="print-card-body">
         <div className="flex flex-col">
@@ -1099,6 +1127,11 @@ function PrintCard({
               The icon carries it — a bare grey word made every card in a
               stack look identical from across the table. */}
           <div className="print-card-head">
+            {simple && (
+              // The thumbnail. With no art it shows the type's icon, so a
+              // simplified card never has a hole where a picture should be.
+              <div className="print-card-thumb">{art ?? <Icon aria-hidden />}</div>
+            )}
             <h2 className={cx('print-card-name', entity.name.length > 28 && 'is-long')}>
               {entity.name}
             </h2>

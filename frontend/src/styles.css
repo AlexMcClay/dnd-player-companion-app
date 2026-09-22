@@ -939,8 +939,60 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  justify-content: space-between;
   gap: 0.2em 0.6em;
+}
+
+/* Pushed to the far end by its own margin rather than by space-between, which
+   would spread three children apart once a thumbnail joins the row. */
+.print-card-head .print-card-kind {
+  margin-left: auto;
+}
+
+/*
+ * The simplified card's portrait, at the start of the name row.
+ *
+ * Sized in `em` so it scales with the card like the type does: about 12mm on
+ * a roomy card, under 7mm on a 4x6. Centred on the row rather than sat on the
+ * baseline, because a picture has no baseline to share.
+ *
+ * `contain`, never `cover`, for the same reason as the full band: a thumbnail
+ * that crops the face off a character defeats the point of keeping one.
+ */
+.print-card-thumb {
+  display: flex;
+  flex: none;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  width: 4.6em;
+  height: 4.6em;
+  overflow: hidden;
+  border: 0.3mm solid var(--color-line);
+  background: var(--color-port-top);
+  color: var(--color-ink-muted);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/*
+ * On a normal card the top-left corner bracket lands on the art band. Without
+ * the band it would land on the thumbnail, so the text column starts below
+ * the bracket's reach (1.1mm inset plus 3.2mm long) instead.
+ */
+.print-card-simple .print-card-body {
+  padding-top: 4.8mm;
+}
+
+.print-card-thumb img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.print-card-thumb svg {
+  width: 48%;
+  height: 48%;
 }
 
 .print-card-name {
