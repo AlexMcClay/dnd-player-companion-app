@@ -149,6 +149,116 @@ export function packSheets(cards: Card[], cols: number, rows: number): Placed[][
   return sheets
 }
 
+/* ── backs, for printing double sided ─────────────────────────────── */
+
+/**
+ * Which way the printer turns the paper between sides.
+ *
+ * Almost every driver defaults to the long edge, which for a portrait page
+ * means the sheet flips about its vertical axis. Short edge flips about the
+ * horizontal one instead. Getting this wrong does not fail loudly — it prints
+ * an entire run with every back on the wrong front.
+ */
+export type Flip = 'long' | 'short'
+
+/**
+ * The same cards, placed where they will land once the sheet is turned over.
+ *
+ * A long-edge flip mirrors columns: what was leftmost on the front is
+ * rightmost on the back. A span is mirrored by its far edge, not its near one,
+ * or a wide card would drift by its own width.
+ *
+ * Rows are untouched for a long-edge flip, and columns for a short-edge one.
+ */
+export function mirrorForBack(sheet: Placed[], cols: number, rows: number, flip: Flip = 'long'): Placed[] {
+  return sheet.map((card) =>
+    flip === 'long'
+      ? { ...card, col: cols - card.col - card.w + 2 }
+      : { ...card, row: rows - card.row - card.h + 2 },
+  )
+}
+
+/**
+ * Fronts and backs in the order a duplex printer wants them: interleaved, one
+ * back immediately after its own front, never all the fronts and then all the
+ * backs.
+ *
+ * Each entry says which side it is so the renderer knows whether to draw a
+ * card or the common back.
+ */
+export function withBacks(
+  sheets: Placed[][],
+  cols: number,
+  rows: number,
+  flip: Flip = 'long',
+): Array<{ side: 'front' | 'back'; cards: Placed[] }> {
+  return sheets.flatMap((cards) => [
+    { side: 'front' as const, cards },
+    { side: 'back' as const, cards: mirrorForBack(cards, cols, rows, flip) },
+  ])
+}
+
+/**
+ * How far to shift the backs, in millimetres, to cancel a printer's drift.
+ *
+ * Duplex registration is never perfect: the sheet takes a second trip through
+ * the rollers and lands a fraction off where it did the first time. A
+ * millimetre or two is ordinary on consumer hardware. The saving grace is that
+ * a given printer drifts by very nearly the same amount every time, so one
+ * measurement cancels it for good.
+ *
+ * Positive `y` moves the backs down the page, positive `x` moves them right.
+ */
+export interface Nudge {
+  x: number
+  y: number
+}
+
+export const NO_NUDGE: Nudge = { x: 0, y: 0 }
+
+/**
+ * The furthest the backs may be shifted.
+ *
+ * Comfortably inside the sheet's 8mm padding, so a nudge can never push a card
+ * into the strip a printer cannot reach. A drift bigger than this is not
+ * registration, it is a paper size or a scaling setting.
+ */
+export const MAX_NUDGE_MM = 4
+
+/** Steppers move by this much. Finer than most people can measure. */
+export const NUDGE_STEP_MM = 0.1
+
+function roundToStep(value: number): number {
+  const stepped = Math.round(value / NUDGE_STEP_MM) * NUDGE_STEP_MM
+  // Binary floats leave 0.30000000000000004 behind, which then renders into
+  // the URL and the label.
+  return Math.round(stepped * 100) / 100
+}
+
+function clampNudge(value: number): number {
+  if (!Number.isFinite(value)) return 0
+  return roundToStep(Math.min(Math.max(value, -MAX_NUDGE_MM), MAX_NUDGE_MM))
+}
+
+/** `nudge=x,y` in millimetres. Anything unreadable means no shift at all. */
+export function parseNudge(raw: string | null): Nudge {
+  if (!raw) return NO_NUDGE
+  const [x, y] = raw.split(',')
+  return { x: clampNudge(Number(x)), y: clampNudge(Number(y)) }
+}
+
+export function formatNudge(nudge: Nudge): string {
+  return `${clampNudge(nudge.x)},${clampNudge(nudge.y)}`
+}
+
+export function withNudge(nudge: Nudge, patch: Partial<Nudge>): Nudge {
+  return { x: clampNudge(patch.x ?? nudge.x), y: clampNudge(patch.y ?? nudge.y) }
+}
+
+export function isNudged(nudge: Nudge): boolean {
+  return nudge.x !== 0 || nudge.y !== 0
+}
+
 /* ── how big a card actually is ───────────────────────────────────── */
 
 /*

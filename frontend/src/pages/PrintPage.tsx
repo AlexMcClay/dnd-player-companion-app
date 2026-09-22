@@ -23,15 +23,23 @@ import {
   excerptBudget,
   expandPicks,
   formatGrid,
+  formatNudge,
   formatPicks,
   MAX_CARDS,
   MAX_COUNT,
   packSheets,
   parseGrid,
+  isNudged,
+  MAX_NUDGE_MM,
+  NUDGE_STEP_MM,
+  parseNudge,
   parsePicks,
   ROW_CHOICES,
   specRowBudget,
+  withBacks,
+  withNudge,
   type Grid,
+  type Nudge,
   type Pick,
   type Placed,
 } from '../lib/packSheets'
@@ -127,6 +135,18 @@ export default function PrintPage() {
   */
   const withBody = params.get('body') !== '0'
 
+  /*
+    Off by default: most sheets get cut up and used straight away, and a back
+    doubles the paper through the printer. `backs=1` turns it on.
+  */
+  const withBacksOn = params.get('backs') === '1'
+
+  /*
+    A standing correction for this printer's duplex registration. It shifts
+    where the backs are painted and nothing else — see the note on `Nudge`.
+  */
+  const nudge = useMemo(() => parseNudge(params.get('nudge')), [params])
+
   const all = useAllEntities()
   const pool = useMemo(() => all.data ?? [], [all.data])
   const byId = useMemo(() => new Map(pool.map((e) => [e.id, e])), [pool])
@@ -141,10 +161,12 @@ export default function PrintPage() {
 
   /** One writer, so the three controls cannot disagree about the other two. */
   const write = useCallback(
-    (next: { grid?: Grid; picks?: Pick[]; body?: boolean }) => {
+    (next: { grid?: Grid; picks?: Pick[]; body?: boolean; backs?: boolean; nudge?: Nudge }) => {
       const nextGrid = next.grid ?? grid
       const nextPicks = next.picks ?? picks
       const nextBody = next.body ?? withBody
+      const nextBacks = next.backs ?? withBacksOn
+      const nextNudge = next.nudge ?? nudge
 
       const out = new URLSearchParams()
       if (nextPicks.length > 0) out.set('ids', formatPicks(nextPicks))
@@ -152,11 +174,13 @@ export default function PrintPage() {
         out.set('grid', formatGrid(nextGrid))
       }
       if (!nextBody) out.set('body', '0')
+      if (nextBacks) out.set('backs', '1')
+      if (isNudged(nextNudge)) out.set('nudge', formatNudge(nextNudge))
       // Replace, so picking ten entries does not leave ten history entries
       // between the sheet and the page the DM came from.
       setParams(out, { replace: true })
     },
-    [grid, picks, withBody, setParams],
+    [grid, picks, withBody, withBacksOn, nudge, setParams],
   )
 
   const toggle = useCallback(
@@ -209,6 +233,19 @@ export default function PrintPage() {
     [cards, grid.cols, grid.rows],
   )
 
+  /*
+    What actually goes through the printer. With backs on, each front is
+    followed immediately by its own mirrored back — interleaved, because that
+    is the order a duplex printer consumes pages in.
+  */
+  const pages = useMemo(
+    () =>
+      withBacksOn
+        ? withBacks(sheets, grid.cols, grid.rows)
+        : sheets.map((cardsOnSheet) => ({ side: 'front' as const, cards: cardsOnSheet })),
+    [sheets, grid.cols, grid.rows, withBacksOn],
+  )
+
   const chosen = useMemo(() => new Set(picks.map((p) => p.id)), [picks])
 
   /** What the picks asked for, before the cap trimmed it. */
@@ -226,6 +263,10 @@ export default function PrintPage() {
         trimmed={wanted - cards.length}
         withBody={withBody}
         onBody={(body) => write({ body })}
+        withBacks={withBacksOn}
+        onBacks={(backs) => write({ backs })}
+        nudge={nudge}
+        onNudge={(patch) => write({ nudge: withNudge(nudge, patch) })}
         onClear={() => write({ picks: [] })}
         onBack={() => navigate(-1)}
         placed={sheets}
@@ -254,7 +295,13 @@ export default function PrintPage() {
         />
       </div>
 
-      <Preview sheets={sheets} grid={grid} byId={byId} bodyById={bodyById} />
+      <Preview
+        pages={pages}
+        grid={grid}
+        nudge={nudge}
+        byId={byId}
+        bodyById={bodyById}
+      />
     </div>
   )
 }
@@ -268,6 +315,10 @@ function Controls({
   trimmed,
   withBody,
   onBody,
+  withBacks: backsOn,
+  onBacks,
+  nudge,
+  onNudge,
   onClear,
   onBack,
   placed,
@@ -280,6 +331,10 @@ function Controls({
   trimmed: number
   withBody: boolean
   onBody: (on: boolean) => void
+  withBacks: boolean
+  onBacks: (on: boolean) => void
+  nudge: Nudge
+  onNudge: (patch: Partial<Nudge>) => void
   onClear: () => void
   onBack: () => void
   placed: Placed[][]
@@ -303,7 +358,9 @@ function Controls({
         <span className="type-meta tabular-nums">
           {cards === 0
             ? 'Nothing selected'
-            : `${cards} card${cards === 1 ? '' : 's'} · ${sheets} sheet${sheets === 1 ? '' : 's'}`}
+            : `${cards} card${cards === 1 ? '' : 's'} · ${sheets} sheet${sheets === 1 ? '' : 's'}${
+                backsOn ? ', both sides' : ''
+              }`}
         </span>
 
         <label className="type-meta flex cursor-pointer items-center gap-1.75">
@@ -314,6 +371,16 @@ function Controls({
             onChange={(e) => onBody(e.target.checked)}
           />
           Include body excerpt
+        </label>
+
+        <label className="type-meta flex cursor-pointer items-center gap-1.75">
+          <input
+            type="checkbox"
+            className="size-3.5 accent-[#666]"
+            checked={backsOn}
+            onChange={(e) => onBacks(e.target.checked)}
+          />
+          Print backs
         </label>
 
         <div className="ml-auto flex items-center gap-2.5">
@@ -337,6 +404,15 @@ function Controls({
           </button>
         </div>
 
+        {backsOn && (
+          <div className="type-meta basis-full text-ink-faint">
+            Set your printer to double sided, flipping on the <strong>long edge</strong>. A
+            short-edge flip puts every back on the wrong card.
+          </div>
+        )}
+
+        {backsOn && <Registration nudge={nudge} onNudge={onNudge} />}
+
         {missing > 0 && (
           <div className="type-meta basis-full text-ink-faint">
             {missing} {missing === 1 ? 'entry was' : 'entries were'} skipped — deleted, or not
@@ -350,6 +426,95 @@ function Controls({
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+/**
+ * A standing correction for this printer's duplex registration.
+ *
+ * Every duplex printer lands the second side a fraction off the first: the
+ * sheet takes another trip through the rollers and does not come back to
+ * exactly the same place. A millimetre or two is ordinary, and no stylesheet
+ * can prevent it. What saves it is that a given printer is consistent, so
+ * measuring the drift once and shifting the backs by the same amount the
+ * other way cancels it for good — and the query string remembers it.
+ */
+function Registration({
+  nudge,
+  onNudge,
+}: {
+  nudge: Nudge
+  onNudge: (patch: Partial<Nudge>) => void
+}) {
+  return (
+    <div className="type-meta flex basis-full flex-wrap items-center gap-x-4 gap-y-2">
+      <span>Back alignment</span>
+
+      <Nudger
+        label="Across"
+        value={nudge.x}
+        onChange={(x) => onNudge({ x })}
+        less="left"
+        more="right"
+      />
+      <Nudger
+        label="Down"
+        value={nudge.y}
+        onChange={(y) => onNudge({ y })}
+        less="up"
+        more="down"
+      />
+
+      {isNudged(nudge) && (
+        <button
+          type="button"
+          className="cursor-pointer underline-offset-2 hover:underline"
+          onClick={() => onNudge({ x: 0, y: 0 })}
+        >
+          Reset
+        </button>
+      )}
+
+      <span className="text-ink-faint">
+        Print one sheet, hold it to the light, and shift the backs by whatever you measure.
+      </span>
+    </div>
+  )
+}
+
+function Nudger({
+  label,
+  value,
+  onChange,
+  less,
+  more,
+}: {
+  label: string
+  value: number
+  onChange: (next: number) => void
+  less: string
+  more: string
+}) {
+  return (
+    <div className="flex shrink-0 items-center gap-1">
+      <span className="w-11 text-right">{label}</span>
+      <StepButton
+        label={`Move the backs ${less}`}
+        disabled={value <= -MAX_NUDGE_MM}
+        onClick={() => onChange(value - NUDGE_STEP_MM)}
+      >
+        <LuMinus aria-hidden />
+      </StepButton>
+      {/* Wide enough for "-0.4mm" so the row does not jitter as it changes. */}
+      <span className="w-12 text-center text-ink tabular-nums">{value.toFixed(1)}mm</span>
+      <StepButton
+        label={`Move the backs ${more}`}
+        disabled={value >= MAX_NUDGE_MM}
+        onClick={() => onChange(value + NUDGE_STEP_MM)}
+      >
+        <LuPlus aria-hidden />
+      </StepButton>
     </div>
   )
 }
@@ -708,19 +873,21 @@ function PickerRow({
 /* ── the sheets ───────────────────────────────────────────────────── */
 
 function Preview({
-  sheets,
+  pages,
   grid,
+  nudge,
   byId,
   bodyById,
 }: {
-  sheets: Placed[][]
+  pages: Array<{ side: 'front' | 'back'; cards: Placed[] }>
   grid: Grid
+  nudge: Nudge
   byId: Map<string, EntitySummary>
   bodyById: Map<string, string>
 }) {
   const scale = usePreviewScale()
 
-  if (sheets.length === 0) {
+  if (pages.length === 0) {
     return (
       <div className="print-hide mx-auto w-full max-w-195 px-4.5 pb-16">
         <Empty>Tick an entry above to build a sheet</Empty>
@@ -742,7 +909,7 @@ function Preview({
       */}
       <div className="print-scale" style={{ zoom: scale }}>
         <div className="print-stack flex flex-col items-center gap-6">
-          {sheets.map((cards, i) => (
+          {pages.map((page, i) => (
             // The outline separates one sheet from the next on screen. On
             // paper the sheet *is* the page, so the print rules drop it.
             <div
@@ -752,13 +919,26 @@ function Preview({
                 {
                   '--cols': grid.cols,
                   '--rows': grid.rows,
+                  /*
+                    The registration correction, on the backs only.
+
+                    A transform rather than a margin or padding on purpose: it
+                    moves where the sheet is painted without touching where it
+                    sits in the flow, so a nudge can never shunt a card onto
+                    another page. Pagination is decided before this applies.
+                  */
+                  ...(page.side === 'back' && isNudged(nudge)
+                    ? { transform: `translate(${nudge.x}mm, ${nudge.y}mm)` }
+                    : null),
                 } as React.CSSProperties
               }
             >
-              {cards.map((card) => {
+              {page.cards.map((card) => {
                 const entity = byId.get(idOfKey(card.key))
                 if (!entity) return null
-                return (
+                return page.side === 'back' ? (
+                  <CardBack key={card.key} placed={card} />
+                ) : (
                   <PrintCard
                     key={card.key}
                     entity={entity}
@@ -795,6 +975,49 @@ function usePreviewScale(): number {
   }, [])
 
   return scale
+}
+
+/** Where a card sits on its sheet, as inline grid placement. */
+function placement(placed: Placed): React.CSSProperties {
+  return {
+    gridColumn: `${placed.col} / span ${placed.w}`,
+    gridRow: `${placed.row} / span ${placed.h}`,
+  }
+}
+
+/**
+ * The common back. One design for every card, whatever is on the front —
+ * a deck you can shuffle face down should not leak what it is hiding.
+ *
+ * Drawn as strokes rather than fills. A printer drops background paint unless
+ * asked, and even when asked, a solid block shows every millimetre of the
+ * front-to-back drift that consumer duplex produces as a matter of course.
+ * Lines radiating from the middle hide it instead.
+ */
+function CardBack({ placed }: { placed: Placed }) {
+  return (
+    <article className="print-card print-card-back" style={placement(placed)}>
+      <div className="print-card-back-field" aria-hidden />
+
+      <div className="print-card-back-mark">
+        {/*
+          A compass rose over a ring: no edges to misalign, and it reads at
+          any card size because it is drawn in the viewBox, not in pixels.
+        */}
+        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" aria-hidden>
+          <circle cx="50" cy="50" r="46" strokeWidth="1.2" />
+          <circle cx="50" cy="50" r="38" strokeWidth="0.6" />
+          <circle cx="50" cy="50" r="15" strokeWidth="0.8" />
+          {/* The four cardinal points, as elongated diamonds. */}
+          <path d="M50 6 L57 50 L50 94 L43 50 Z" strokeWidth="0.9" />
+          <path d="M6 50 L50 43 L94 50 L50 57 Z" strokeWidth="0.9" />
+          {/* The diagonals, shorter, so the rose has a clear axis. */}
+          <path d="M22 22 L53 47 L78 78 L47 53 Z" strokeWidth="0.5" />
+          <path d="M78 22 L53 53 L22 78 L47 47 Z" strokeWidth="0.5" />
+        </svg>
+      </div>
+    </article>
+  )
 }
 
 function PrintCard({
@@ -844,10 +1067,7 @@ function PrintCard({
       // Explicit placement from the packer. Auto-flow is left alone on
       // purpose: `dense` would be a no-op here and would hide a lost
       // placement instead of letting it show up in the preview.
-      style={{
-        gridColumn: `${placed.col} / span ${placed.w}`,
-        gridRow: `${placed.row} / span ${placed.h}`,
-      }}
+      style={placement(placed)}
     >
       <div className="print-card-art">
         {src ? (
@@ -872,15 +1092,22 @@ function PrintCard({
       </div>
 
       <div className="print-card-body">
-        <div>
-          <h2 className={cx('print-card-name', entity.name.length > 28 && 'is-long')}>
-            {entity.name}
-          </h2>
-          {/* Type only. A handout is always going to a player, so what the
-              party is allowed to know is not a question the card answers. */}
-          <div className="mt-0.5 text-[0.84em] tracking-[0.13em] text-ink-faint uppercase">
-            {template.label}
+        <div className="flex flex-col">
+          {/* The name sits directly under the art, with the type beside it.
+              Type only: a handout is always going to a player, so what the
+              party is allowed to know is not a question the card answers.
+              The icon carries it — a bare grey word made every card in a
+              stack look identical from across the table. */}
+          <div className="print-card-head">
+            <h2 className={cx('print-card-name', entity.name.length > 28 && 'is-long')}>
+              {entity.name}
+            </h2>
+            <div className="print-card-kind">
+              <Icon aria-hidden />
+              {template.label}
+            </div>
           </div>
+          <div className="print-card-crest" aria-hidden />
         </div>
 
         {entity.summary && (

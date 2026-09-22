@@ -15,11 +15,19 @@ import {
   MAX_CARDS,
   expandPicks,
   formatGrid,
+  formatNudge,
   formatPicks,
+  isNudged,
+  MAX_NUDGE_MM,
+  mirrorForBack,
+  NO_NUDGE,
+  parseNudge,
   packSheets,
   parseGrid,
   parsePicks,
   specRowBudget,
+  withBacks,
+  withNudge,
   type Card,
 } from './packSheets.js'
 
@@ -309,4 +317,118 @@ test('spec rows scale with height and stay in sane bounds', () => {
 
 test('the default grid still shows the eight rows it used to', () => {
   assert.equal(specRowBudget(DEFAULT_GRID, 1), 8)
+})
+
+/* ── backs ────────────────────────────────────────────────────────── */
+
+test('a long-edge flip mirrors columns and leaves rows alone', () => {
+  const front = packSheets(cards(['a', 1, 1], ['b', 1, 1], ['c', 1, 1]), 3, 2)
+  const back = mirrorForBack(nth(front, 0), 3, 2)
+  // a@1 -> 3, b@2 -> 2, c@3 -> 1
+  assert.deepEqual(back.map((c) => `${c.key}@${c.col},${c.row}`), ['a@3,1', 'b@2,1', 'c@1,1'])
+})
+
+test('a short-edge flip mirrors rows and leaves columns alone', () => {
+  const front = packSheets(cards(['a', 1, 1], ['b', 1, 1], ['c', 1, 1], ['d', 1, 1]), 2, 2)
+  const back = mirrorForBack(nth(front, 0), 2, 2, 'short')
+  assert.deepEqual(back.map((c) => `${c.key}@${c.col},${c.row}`), ['a@1,2', 'b@2,2', 'c@1,1', 'd@2,1'])
+})
+
+test('a wide card mirrors by its far edge, not its near one', () => {
+  // Occupies columns 1-2 of 3. Flipped it must occupy 2-3, not 3-4.
+  const back = mirrorForBack([{ key: 'w', w: 2, h: 1, col: 1, row: 1 }], 3, 3)
+  assert.deepEqual(back, [{ key: 'w', w: 2, h: 1, col: 2, row: 1 }])
+})
+
+test('a card centred across the sheet does not move', () => {
+  const back = mirrorForBack([{ key: 'm', w: 2, h: 1, col: 2, row: 1 }], 4, 3)
+  assert.equal(nth([back], 0)[0]?.col, 2)
+})
+
+test('mirroring twice returns every card to where it started', () => {
+  const front = nth(packSheets(cards(['a', 2, 2], ['b', 1, 1], ['c', 3, 1]), 4, 4), 0)
+  assert.deepEqual(mirrorForBack(mirrorForBack(front, 4, 4), 4, 4), front)
+})
+
+test('a back never falls off the sheet', () => {
+  const spans: Array<[string, number, number]> = [
+    ['a', 2, 2], ['b', 1, 1], ['c', 3, 1], ['d', 1, 2], ['e', 2, 1], ['f', 1, 1],
+  ]
+  for (const cols of [2, 3, 4]) {
+    for (const rows of [2, 3, 4, 5, 6]) {
+      for (const sheet of packSheets(cards(...spans), cols, rows)) {
+        for (const flip of ['long', 'short'] as const) {
+          for (const c of mirrorForBack(sheet, cols, rows, flip)) {
+            assert.ok(c.col >= 1 && c.col + c.w - 1 <= cols, `${cols}x${rows} ${flip}: column off sheet`)
+            assert.ok(c.row >= 1 && c.row + c.h - 1 <= rows, `${cols}x${rows} ${flip}: row off sheet`)
+          }
+        }
+      }
+    }
+  }
+})
+
+test('backs are interleaved, each after its own front', () => {
+  const sheets = packSheets(
+    cards(['a', 1, 1], ['b', 1, 1], ['c', 1, 1], ['d', 1, 1], ['e', 1, 1]),
+    2,
+    2,
+  )
+  assert.equal(sheets.length, 2)
+  const pages = withBacks(sheets, 2, 2)
+  assert.deepEqual(pages.map((p) => p.side), ['front', 'back', 'front', 'back'])
+  // The second back belongs to the second front, not the first.
+  assert.deepEqual(pages[3]?.cards.map((c) => c.key), ['e'])
+})
+
+test('backs double the page count but not the cards', () => {
+  const sheets = packSheets(cards(['a', 1, 1], ['b', 1, 1], ['c', 1, 1]), 2, 2)
+  const pages = withBacks(sheets, 2, 2)
+  assert.equal(pages.length, sheets.length * 2)
+  assert.equal(
+    pages.filter((p) => p.side === 'front').flatMap((p) => p.cards).length,
+    3,
+  )
+})
+
+/* ── cancelling a printer's duplex drift ──────────────────────────── */
+
+test('no nudge parameter means no shift', () => {
+  assert.deepEqual(parseNudge(null), NO_NUDGE)
+  assert.deepEqual(parseNudge(''), NO_NUDGE)
+  assert.deepEqual(parseNudge('nonsense'), NO_NUDGE)
+})
+
+test('a measured drift round-trips through the query string', () => {
+  assert.deepEqual(parseNudge('0,-0.4'), { x: 0, y: -0.4 })
+  assert.equal(formatNudge({ x: 0, y: -0.4 }), '0,-0.4')
+})
+
+test('a nudge is clamped to what the page margin can absorb', () => {
+  assert.equal(parseNudge('99,-99').x, MAX_NUDGE_MM)
+  assert.equal(parseNudge('99,-99').y, -MAX_NUDGE_MM)
+})
+
+test('a nudge snaps to the step and carries no float dust', () => {
+  // 0.1 + 0.2 in binary floating point is 0.30000000000000004, which would
+  // otherwise end up in the URL and on the label.
+  assert.equal(withNudge({ x: 0.1, y: 0 }, { x: 0.1 + 0.2 }).x, 0.3)
+  assert.equal(parseNudge('0.37,0').x, 0.4, 'rounded to the nearest step')
+})
+
+test('one axis can be changed without disturbing the other', () => {
+  assert.deepEqual(withNudge({ x: 1.2, y: -0.4 }, { y: -0.5 }), { x: 1.2, y: -0.5 })
+})
+
+test('a zero nudge is reported as no nudge', () => {
+  assert.equal(isNudged(NO_NUDGE), false)
+  assert.equal(isNudged({ x: 0, y: -0.1 }), true)
+})
+
+test('a nudge never moves cards, only where the sheet is painted', () => {
+  // Registration is a print-time correction. If it reached the packer it
+  // would change pagination, which is the one thing it must not do.
+  const before = packSheets(cards(['a', 2, 2], ['b', 1, 1]), 3, 3)
+  const after = packSheets(cards(['a', 2, 2], ['b', 1, 1]), 3, 3)
+  assert.deepEqual(before, after)
 })
