@@ -708,3 +708,309 @@
     border-bottom: 1px dotted var(--color-ink-faint);
   }
 }
+
+/* ── printed cards ─────────────────────────────────────────────────── */
+/*
+ * Deliberately outside every @layer. Tailwind puts the @theme tokens in
+ * `layer theme`, the lowest one, and this file's own rules in `base` and
+ * `components` — so an unlayered rule beats all three. That is what lets
+ * `.print-root` redefine the dark palette to ink-on-paper without touching a
+ * single existing declaration, and without an !important anywhere.
+ *
+ * Cards are 94x84mm, six to a sheet in two columns of three.
+ *
+ * The page margin is zero and the sheet carries its own 8mm padding instead.
+ * That is what removes the URL, date and page number a browser prints into the
+ * margin — Chrome only draws them when the margin leaves room. 8mm also clears
+ * the unprintable edge every consumer printer has.
+ *
+ * Sized to the A4 this stylesheet asks for, with a few millimetres of slack so
+ * a rounding error cannot tip the last row onto a second page:
+ *   width  8 + 94 + 4 + 94 + 8 = 208mm  of 210
+ *   height 8 + 89x3 + 4x2 + 8  = 291mm  of 297
+ *
+ * On US Letter (216x279) the third row would not fit, but the @page rule below
+ * names A4, so the dialog picks it; a printer loaded with Letter scales to the
+ * printable area rather than dropping a row.
+ */
+
+.print-root {
+  color-scheme: light;
+
+  --color-ink: #111111;
+  --color-ink-dim: #2b2b2b;
+  --color-ink-soft: #555555;
+  --color-ink-faint: #777777;
+  --color-ink-muted: #8c8c8c;
+  --color-ink-wisp: #9a9a9a;
+  --color-ink-tint: #f4f4f4;
+
+  /* Gold becomes grey: a warm accent prints as a muddy wash on a mono laser. */
+  --color-gold: #666666;
+  --color-gold-dim: #bbbbbb;
+  --color-gold-wash: #f0f0f0;
+  --color-gold-tint: #f6f6f6;
+
+  --color-line: #c8c8c8;
+  --color-line-soft: #e2e2e2;
+
+  --color-ground: #ffffff;
+  --color-panel-top: #ffffff;
+  --color-panel-bottom: #ffffff;
+  --color-port-top: #f2f2f2;
+  --color-port-bottom: #ececec;
+
+  background: #ffffff;
+  color: #111111;
+}
+
+/*
+ * A card is a fixed box: a header band of art, then a content column that is
+ * allowed to be clipped. Nothing inside may grow the box, or the grid stops
+ * lining up with the paper.
+ */
+.print-card {
+  display: flex;
+  flex-direction: column;
+  width: 94mm;
+  height: 89mm;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  background: #ffffff;
+  color: #111111;
+  font-family: var(--font-sans);
+}
+
+.print-card-art {
+  display: flex;
+  height: 34mm;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-port-top);
+  /*
+   * Browsers drop background colours when printing unless asked not to. The
+   * band is the frame the art sits in — without it a portrait that does not
+   * fill the width floats in nothing — so it is asked for explicitly.
+   */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/*
+ * `contain`, never `cover`. The entry page makes the same call for the same
+ * reason: cropping to fill cut the face off a character and the top off a map.
+ * A handout with a beheaded NPC on it is worse than one with a little margin.
+ */
+.print-card-art img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.print-card-name {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  line-height: 1.12;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+/* One step down once a name would otherwise need a third line. */
+.print-card-name.is-long {
+  font-size: 12.5px;
+}
+
+.print-card-body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 1.1mm;
+  overflow: hidden;
+  padding: 2.6mm 3mm;
+}
+
+/*
+ * The spec rows are a reference table, not prose: they are scanned, not read,
+ * so they are set tight and small and the card spends its space on the art and
+ * the words instead.
+ */
+/*
+ * The divider under the summary.
+ *
+ * A 1px element coloured with `background` disappears on paper: browsers drop
+ * background paint when printing. A border is paint the printer always keeps,
+ * so the rule is a border on a zero-height box rather than a thin filled one.
+ */
+.print-rule {
+  height: 0;
+  flex: none;
+  border-top: 1px solid var(--color-line);
+}
+
+.print-card dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15mm 1.8mm;
+  margin: 0;
+  font-size: 7.8px;
+  line-height: 1.24;
+}
+
+.print-card dt {
+  color: var(--color-ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 6.6px;
+  align-self: baseline;
+  /* A label like "D&D Beyond character id" would otherwise size the whole
+     column and leave the values nowhere to go. */
+  max-width: 22mm;
+}
+
+.print-card dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The optional prose excerpt. Clipped by the flex parent, never scrolling. */
+.print-card-prose {
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  font-size: 8.2px;
+  line-height: 1.38;
+  color: var(--color-ink-dim);
+}
+
+.print-card-prose > :first-child {
+  margin-top: 0;
+}
+
+.print-card-prose p,
+.print-card-prose ul,
+.print-card-prose ol {
+  margin: 0 0 1.2mm;
+}
+
+/* Only a list is indented; the app's .md rules indent prose too, which on a
+   64mm column reads as a mistake rather than as structure. */
+.print-card-prose p {
+  padding-left: 0;
+}
+
+.print-card-prose ul,
+.print-card-prose ol {
+  padding-left: 3.4mm;
+}
+
+.print-card-prose h1,
+.print-card-prose h2,
+.print-card-prose h3 {
+  margin: 0 0 0.8mm;
+  font-family: var(--font-serif);
+  font-size: 9px;
+}
+
+/* Tables and images cannot fit a 64mm column; drop them rather than overflow. */
+.print-card-prose table,
+.print-card-prose img,
+.print-card-prose pre {
+  display: none;
+}
+
+/*
+ * The sheet. Off-paper it is a preview, so it carries its own frame; the print
+ * rules below strip that and take over pagination.
+ */
+.print-sheet {
+  display: grid;
+  grid-template-columns: 94mm 94mm;
+  grid-auto-rows: 89mm;
+  gap: 4mm;
+  justify-content: center;
+  padding: 8mm;
+  background: #ffffff;
+}
+
+/*
+ * Zero margin on purpose: see the note above. The sheet's own padding is the
+ * real margin, so nothing lands in the unprintable edge.
+ */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body,
+  #root {
+    height: auto;
+    background: #ffffff;
+  }
+
+  .print-hide {
+    display: none !important;
+  }
+
+  /*
+   * The preview is laid out for a browser window: a centred max-width column
+   * with gutters, a gap between sheets, and an outline round each one. All of
+   * that is dead space once the sheet *is* the page, so it is unwound here —
+   * otherwise a 208mm sheet prints inside a 780px column.
+   */
+  .print-preview {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print-stack {
+    display: block !important;
+    gap: 0 !important;
+  }
+
+  .print-sheet {
+    border: 0 !important;
+  }
+
+  .print-root {
+    min-height: 0 !important;
+  }
+
+  /* The preview's own scaling is a screen affordance, not a paper size. */
+  .print-scale {
+    zoom: 1 !important;
+  }
+
+  .print-sheet {
+    /*
+     * Explicit per-sheet breaks. Letting one long grid paginate itself is
+     * where Firefox and Chrome disagree, and a card straddling the fold is
+     * not something a reprint fixes.
+     */
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .print-sheet:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .print-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

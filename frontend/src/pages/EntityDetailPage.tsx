@@ -15,6 +15,7 @@ import {
   LuImage,
   LuLink,
   LuPencil,
+  LuPrinter,
   LuScrollText,
   LuX,
 } from "react-icons/lu";
@@ -52,7 +53,7 @@ import { useIsDm, usePlayerId } from "../lib/identity";
 import { rowVariants, SPRING } from "../lib/motion";
 import { firstNameOf } from "../lib/names";
 import { reagentStatus, stockFor } from "../lib/recipes";
-import { templateFor } from "../templates";
+import { specRowsFor, templateFor } from "../templates";
 
 const ICON_BTN =
   "inline-flex cursor-pointer items-center gap-1.25 py-1 text-[9.5px] uppercase tracking-[0.13em]";
@@ -99,17 +100,29 @@ export default function EntityDetailPage() {
             <LuChevronLeft aria-hidden />
             Back
           </motion.button>
-          {isDm && (
+          <div className="flex items-center gap-4">
             <motion.span whileTap={{ scale: 0.92 }} transition={SPRING}>
+              {/* Seeds the sheet with this entry; more can be added there. */}
               <Link
-                to={`/e/${e.id}/edit`}
-                className={cx(ICON_BTN, "text-gold")}
+                to={`/print?ids=${e.id}`}
+                className={cx(ICON_BTN, "text-ink-faint")}
               >
-                <LuPencil aria-hidden />
-                Edit
+                <LuPrinter aria-hidden />
+                Print
               </Link>
             </motion.span>
-          )}
+            {isDm && (
+              <motion.span whileTap={{ scale: 0.92 }} transition={SPRING}>
+                <Link
+                  to={`/e/${e.id}/edit`}
+                  className={cx(ICON_BTN, "text-gold")}
+                >
+                  <LuPencil aria-hidden />
+                  Edit
+                </Link>
+              </motion.span>
+            )}
+          </div>
         </div>
 
         {/* One column on a phone, hero beside the title from md up. */}
@@ -544,13 +557,9 @@ function About({ entity }: { entity: Entity }) {
 
 /** Template-driven `data` fields, minus the ones with their own rendering. */
 function SpecList({ entity }: { entity: Entity }) {
-  const template = templateFor(entity.type);
-  const rows = template.fields
-    .filter((field) => field.kind !== "ingredients")
-    .map((field) => ({ field, value: entity.data[field.key] }))
-    .filter(
-      ({ value }) => value !== undefined && value !== null && value !== "",
-    );
+  // Shared with the printed card, so the two cannot disagree about which
+  // fields are worth showing.
+  const rows = specRowsFor(entity.type, entity.data);
 
   if (rows.length === 0) return null;
 

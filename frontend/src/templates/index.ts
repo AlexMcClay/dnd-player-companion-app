@@ -4,7 +4,7 @@
  * "spells" later means adding a template here — no migration, no API change.
  */
 
-import type { Knowledge } from '@codex/shared'
+import type { EntityData, Knowledge } from '@codex/shared'
 import type { IconType } from 'react-icons'
 
 /**
@@ -192,6 +192,23 @@ export function templateFor(type: string): EntityTemplate {
       fields: [],
     }
   )
+}
+
+/**
+ * The `data` fields worth showing for an entry, in template order.
+ *
+ * Both the entry page's spec list and a printed card read this, so the two
+ * cannot drift about which fields count. `ingredients` is excluded because it
+ * is a list of reagents with its own rendering, not a label/value pair.
+ */
+export function specRowsFor(
+  type: string,
+  data: EntityData,
+): Array<{ field: FieldDef; value: unknown }> {
+  return templateFor(type)
+    .fields.filter((field) => field.kind !== 'ingredients')
+    .map((field) => ({ field, value: data[field.key] }))
+    .filter(({ value }) => value !== undefined && value !== null && value !== '')
 }
 
 /**
