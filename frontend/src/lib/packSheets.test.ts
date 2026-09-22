@@ -1,0 +1,312 @@
+/**
+ * Run with `npm -w @codex/frontend test`.
+ *
+ * Same shape as `backend/src/lib/archive.test.ts`: node:test, node:assert, no
+ * framework. Packing is the one part of the print sheet whose bugs are
+ * invisible until paper comes out of a printer, so it is the part with tests.
+ */
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+import {
+  cardFontPx,
+  cardSizeMm,
+  DEFAULT_GRID,
+  excerptBudget,
+  MAX_CARDS,
+  expandPicks,
+  formatGrid,
+  formatPicks,
+  packSheets,
+  parseGrid,
+  parsePicks,
+  specRowBudget,
+  type Card,
+} from './packSheets.js'
+
+/** `[key, w, h]` triples, so a test case reads as the shape it describes. */
+function cards(...spans: Array<[string, number, number]>): Card[] {
+  return spans.map(([key, w, h]) => ({ key, w, h }))
+}
+
+/** Placements as `key@col,row` strings — easier to read than nested objects. */
+function at(sheet: ReturnType<typeof packSheets>[number]): string[] {
+  return sheet.map((c) => `${c.key}@${c.col},${c.row}`)
+}
+
+/**
+ * One sheet, asserted to exist.
+ *
+ * `noUncheckedIndexedAccess` is on, so `nth(sheets, 0)` is `Placed[] | undefined`.
+ * Failing loudly here beats sprinkling non-null assertions, which would hide a
+ * packer that quietly returned nothing.
+ */
+function nth(sheets: ReturnType<typeof packSheets>, i: number) {
+  const sheet = sheets[i]
+  assert.ok(sheet, `expected a sheet at index ${i}`)
+  return sheet
+}
+
+test('no cards means no sheets', () => {
+  assert.deepEqual(packSheets([], 3, 3), [])
+})
+
+test('a full grid is one sheet, not two', () => {
+  const sheets = packSheets(cards(['a', 1, 1], ['b', 1, 1], ['c', 1, 1], ['d', 1, 1]), 2, 2)
+  assert.equal(sheets.length, 1)
+  assert.deepEqual(at(nth(sheets, 0)), ['a@1,1', 'b@2,1', 'c@1,2', 'd@2,2'])
+})
+
+test('one more than a full grid opens a second sheet', () => {
+  const sheets = packSheets(
+    cards(['a', 1, 1], ['b', 1, 1], ['c', 1, 1], ['d', 1, 1], ['e', 1, 1]),
+    2,
+    2,
+  )
+  assert.equal(sheets.length, 2)
+  assert.deepEqual(at(nth(sheets, 1)), ['e@1,1'])
+})
+
+test('holes are backfilled by later small cards', () => {
+  // The 2x2 takes the top-left block, leaving column 3 and the bottom row.
+  const sheets = packSheets(cards(['big', 2, 2], ['a', 1, 1], ['b', 1, 1], ['c', 1, 1]), 3, 3)
+  assert.equal(sheets.length, 1)
+  assert.deepEqual(at(nth(sheets, 0)), ['big@1,1', 'a@3,1', 'b@3,2', 'c@1,3'])
+})
+
+test('a wide card moves to the next row rather than splitting', () => {
+  // 'a' takes 1,1. The 2-wide 'w' cannot start at column 2 of 3... it can:
+  // columns 2 and 3 are free. 'x' then cannot fit row 1 and drops to row 2.
+  const sheets = packSheets(cards(['a', 1, 1], ['w', 2, 1], ['x', 2, 1]), 3, 3)
+  assert.deepEqual(at(nth(sheets, 0)), ['a@1,1', 'w@2,1', 'x@1,2'])
+})
+
+test('a wide card skips a row it cannot start in', () => {
+  // Columns 1 and 2 taken in row 1, so a 2-wide card cannot fit row 1 at all.
+  const sheets = packSheets(cards(['a', 1, 1], ['b', 1, 1], ['w', 2, 1]), 3, 2)
+  assert.deepEqual(at(nth(sheets, 0)), ['a@1,1', 'b@2,1', 'w@1,2'])
+})
+
+test('a card spanning the whole grid takes a sheet to itself', () => {
+  const sheets = packSheets(cards(['a', 1, 1], ['full', 3, 3]), 3, 3)
+  assert.equal(sheets.length, 2)
+  assert.deepEqual(at(nth(sheets, 0)), ['a@1,1'])
+  assert.deepEqual(at(nth(sheets, 1)), ['full@1,1'])
+})
+
+test('a span larger than the grid is clamped, never wedged', () => {
+  const sheets = packSheets(cards(['huge', 9, 9]), 3, 3)
+  assert.equal(sheets.length, 1)
+  assert.deepEqual(nth(sheets, 0), [{ key: 'huge', w: 3, h: 3, col: 1, row: 1 }])
+})
+
+test('shrinking the grid under an oversized span still terminates', () => {
+  const sheets = packSheets(cards(['a', 3, 3], ['b', 3, 3]), 2, 2)
+  assert.equal(sheets.length, 2)
+  assert.deepEqual(nth(sheets, 0), [{ key: 'a', w: 2, h: 2, col: 1, row: 1 }])
+  assert.deepEqual(nth(sheets, 1), [{ key: 'b', w: 2, h: 2, col: 1, row: 1 }])
+})
+
+test('a zero or negative span is treated as one cell', () => {
+  const sheets = packSheets(cards(['a', 0, -4]), 3, 3)
+  assert.deepEqual(nth(sheets, 0), [{ key: 'a', w: 1, h: 1, col: 1, row: 1 }])
+})
+
+test('placements never overlap, across every allowed grid', () => {
+  const spans: Array<[string, number, number]> = [
+    ['a', 2, 2], ['b', 1, 1], ['c', 3, 1], ['d', 1, 2],
+    ['e', 1, 1], ['f', 2, 1], ['g', 1, 3], ['h', 1, 1],
+  ]
+  for (const cols of [2, 3, 4]) {
+    for (const rows of [2, 3, 4, 5, 6]) {
+      for (const sheet of packSheets(cards(...spans), cols, rows)) {
+        const seen = new Set<string>()
+        for (const c of sheet) {
+          assert.ok(c.col >= 1 && c.col + c.w - 1 <= cols, `${cols}x${rows} overflows a column`)
+          assert.ok(c.row >= 1 && c.row + c.h - 1 <= rows, `${cols}x${rows} overflows a row`)
+          for (let y = c.row; y < c.row + c.h; y++) {
+            for (let x = c.col; x < c.col + c.w; x++) {
+              const cell = `${x},${y}`
+              assert.ok(!seen.has(cell), `${cols}x${rows} put two cards on ${cell}`)
+              seen.add(cell)
+            }
+          }
+        }
+      }
+    }
+  }
+})
+
+test('the same input always packs the same way', () => {
+  const input = cards(['a', 2, 2], ['b', 1, 1], ['c', 2, 1])
+  assert.deepEqual(packSheets(input, 3, 4), packSheets(input, 3, 4))
+})
+
+test('every card is placed exactly once', () => {
+  const input = cards(['a', 2, 2], ['b', 1, 1], ['c', 3, 2], ['d', 1, 1], ['e', 2, 3])
+  const placed = packSheets(input, 3, 4).flat().map((c) => c.key)
+  assert.deepEqual([...placed].sort(), ['a', 'b', 'c', 'd', 'e'])
+})
+
+/* ── counts ───────────────────────────────────────────────────────── */
+
+test('a count expands into that many cards with distinct keys', () => {
+  const out = expandPicks([{ id: 'x', w: 1, h: 1, n: 3 }])
+  assert.deepEqual(out.map((c) => c.key), ['x#0', 'x#1', 'x#2'])
+})
+
+test('copies keep the span of the entry they came from', () => {
+  const out = expandPicks([{ id: 'x', w: 2, h: 3, n: 2 }])
+  assert.ok(out.every((c) => c.w === 2 && c.h === 3))
+})
+
+test('expansion stops at the cap rather than running away', () => {
+  const out = expandPicks([{ id: 'x', w: 1, h: 1, n: 99 }], 10)
+  assert.equal(out.length, 10)
+})
+
+test('the default cap is the documented one', () => {
+  const out = expandPicks(
+    Array.from({ length: 50 }, (_, i) => ({ id: `e${i}`, w: 1, h: 1, n: 99 })),
+  )
+  assert.equal(out.length, MAX_CARDS)
+})
+
+/* ── the query string ─────────────────────────────────────────────── */
+
+test('a missing or broken grid falls back to the old fixed layout', () => {
+  assert.deepEqual(parseGrid(null), DEFAULT_GRID)
+  assert.deepEqual(parseGrid(''), DEFAULT_GRID)
+  assert.deepEqual(parseGrid('nonsense'), DEFAULT_GRID)
+  assert.deepEqual(parseGrid('9x9'), DEFAULT_GRID, 'out of range is not honoured')
+  assert.deepEqual(parseGrid('1x1'), DEFAULT_GRID, 'below range is not honoured')
+})
+
+test('a grid in range round-trips', () => {
+  for (const cols of [2, 3, 4]) {
+    for (const rows of [2, 3, 4, 5, 6]) {
+      assert.deepEqual(parseGrid(formatGrid({ cols, rows })), { cols, rows })
+    }
+  }
+})
+
+test('a link written before spans existed still parses', () => {
+  assert.deepEqual(parsePicks('abc,def'), [
+    { id: 'abc', w: 1, h: 1, n: 1 },
+    { id: 'def', w: 1, h: 1, n: 1 },
+  ])
+})
+
+test('span and count are both optional', () => {
+  assert.deepEqual(parsePicks('a:2x2*3,b,c:1x2,d*4'), [
+    { id: 'a', w: 2, h: 2, n: 3 },
+    { id: 'b', w: 1, h: 1, n: 1 },
+    { id: 'c', w: 1, h: 2, n: 1 },
+    { id: 'd', w: 1, h: 1, n: 4 },
+  ])
+})
+
+test('picks round-trip, and defaults are left out of the string', () => {
+  const picks = [
+    { id: 'a', w: 1, h: 1, n: 1 },
+    { id: 'b', w: 2, h: 2, n: 3 },
+  ]
+  assert.equal(formatPicks(picks), 'a,b:2x2*3')
+  assert.deepEqual(parsePicks(formatPicks(picks)), picks)
+})
+
+test('the same id twice is merged, not duplicated', () => {
+  assert.deepEqual(parsePicks('a*2,a:2x1*3'), [{ id: 'a', w: 2, h: 1, n: 5 }])
+})
+
+test('order of first appearance is kept', () => {
+  assert.deepEqual(parsePicks('c,a,b').map((p) => p.id), ['c', 'a', 'b'])
+})
+
+test('empty and malformed tokens are dropped, not thrown on', () => {
+  assert.deepEqual(parsePicks(''), [])
+  assert.deepEqual(parsePicks(',,').map((p) => p.id), [])
+  assert.deepEqual(parsePicks('a,,b').map((p) => p.id), ['a', 'b'])
+})
+
+/* ── how much a card can hold ─────────────────────────────────────── */
+
+test('a cell is the page divided by the grid, gutters included', () => {
+  // 194mm of printable width, one 4mm gutter, two columns.
+  const one = cardSizeMm({ cols: 2, rows: 3 }, 1, 1)
+  assert.equal(Math.round(one.w), 95)
+  assert.equal(Math.round(one.h), 91)
+})
+
+test('a span is its cells plus the gutters it swallows', () => {
+  const grid = { cols: 3, rows: 3 }
+  const one = cardSizeMm(grid, 1, 1)
+  const two = cardSizeMm(grid, 2, 2)
+  assert.ok(Math.abs(two.w - (one.w * 2 + 4)) < 0.01)
+  assert.ok(Math.abs(two.h - (one.h * 2 + 4)) < 0.01)
+})
+
+test('a span beyond the grid is clamped to it', () => {
+  const grid = { cols: 2, rows: 2 }
+  assert.deepEqual(cardSizeMm(grid, 9, 9), cardSizeMm(grid, 2, 2))
+})
+
+test('the text scale tracks width, between its floor and ceiling', () => {
+  assert.equal(cardFontPx(20), 5.5, 'floor')
+  assert.equal(cardFontPx(400), 9.5, 'ceiling')
+  assert.ok(cardFontPx(62) > 5.5 && cardFontPx(62) < 9.5, 'scales in between')
+  assert.ok(cardFontPx(95) > cardFontPx(62))
+})
+
+test('a bigger card gets a bigger excerpt — the whole point', () => {
+  const opts = { specRows: 4, summary: true }
+  const grid = { cols: 2, rows: 3 }
+  const oneCell = excerptBudget(grid, 1, 1, opts)
+  const twoTall = excerptBudget(grid, 1, 2, opts)
+  const wideTall = excerptBudget(grid, 2, 2, opts)
+
+  assert.ok(twoTall > oneCell, 'taller shows more')
+  assert.ok(wideTall > twoTall, 'wider as well as taller shows more still')
+})
+
+test('a roomier grid gets a bigger excerpt than a dense one', () => {
+  const opts = { specRows: 4, summary: true }
+  assert.ok(
+    excerptBudget({ cols: 2, rows: 2 }, 1, 1, opts) >
+      excerptBudget({ cols: 4, rows: 6 }, 1, 1, opts),
+  )
+})
+
+test('the default card still holds a typical body whole', () => {
+  // Bodies in a real campaign run to about 480 characters; the old flat cap
+  // of 420 truncated the longest of them even on a card with room to spare.
+  const budget = excerptBudget(DEFAULT_GRID, 1, 1, { specRows: 4, summary: true })
+  assert.ok(budget > 480, `expected room for a long body, got ${budget}`)
+})
+
+test('spec rows crowd out prose rather than being ignored', () => {
+  const grid = DEFAULT_GRID
+  assert.ok(
+    excerptBudget(grid, 1, 1, { specRows: 0 }) > excerptBudget(grid, 1, 1, { specRows: 8 }),
+  )
+})
+
+test('a budget is never negative', () => {
+  for (const cols of [2, 3, 4]) {
+    for (const rows of [2, 3, 4, 5, 6]) {
+      const budget = excerptBudget({ cols, rows }, 1, 1, { specRows: 12, summary: true })
+      assert.ok(budget >= 0, `${cols}x${rows} produced ${budget}`)
+    }
+  }
+})
+
+test('spec rows scale with height and stay in sane bounds', () => {
+  const tall = specRowBudget({ cols: 2, rows: 2 }, 1)
+  const short = specRowBudget({ cols: 2, rows: 6 }, 1)
+  assert.ok(tall > short, 'a taller card shows more fields')
+  assert.ok(short >= 3, 'never so few that a card says nothing')
+  assert.ok(tall <= 16)
+})
+
+test('the default grid still shows the eight rows it used to', () => {
+  assert.equal(specRowBudget(DEFAULT_GRID, 1), 8)
+})

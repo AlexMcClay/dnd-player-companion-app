@@ -85,8 +85,11 @@ which is why it is listed after it.
 ## Done
 
 - **Print entries as cards.** `/print` picks any number of entries and lays them
-  out six to a sheet, two columns of three, ink-light on white. Reached from the
-  Print link on any entry, or opened directly. Built 2026-09-22.
+  out on A4, ink-light on white. The grid is yours to choose, 2 to 4 columns by
+  2 to 6 rows; an entry can span several cells and can print more than one copy.
+  Cards are packed to fill holes, and the small ones shed prose rather than
+  clipping it. Reached from the Print link on any entry, or opened directly.
+  Built 2026-09-22.
 
 ## Polish
 

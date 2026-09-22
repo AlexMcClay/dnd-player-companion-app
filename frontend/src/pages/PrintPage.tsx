@@ -2,26 +2,44 @@ import { useQueries } from '@tanstack/react-query'
 import type { Entity, EntitySummary, RecipeData } from '@codex/shared'
 import DOMPurify from 'dompurify'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { LuChevronLeft, LuPrinter, LuSearch } from 'react-icons/lu'
+import { LuChevronLeft, LuMinus, LuPlus, LuPrinter, LuSearch, LuX } from 'react-icons/lu'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import VirtualList from '../components/VirtualList'
 import { Empty, Loading, Portrait } from '../components/bits'
-import { Chip, cx, ctaClass, inputClass, panelClass, rowClass } from '../components/ui'
+import {
+  Chip,
+  cx,
+  ctaClass,
+  inputClass,
+  panelClass,
+  PillButton,
+  rowClass,
+  StepButton,
+} from '../components/ui'
+import {
+  COLUMN_CHOICES,
+  DEFAULT_GRID,
+  excerptBudget,
+  expandPicks,
+  formatGrid,
+  formatPicks,
+  MAX_CARDS,
+  MAX_COUNT,
+  packSheets,
+  parseGrid,
+  parsePicks,
+  ROW_CHOICES,
+  specRowBudget,
+  type Grid,
+  type Pick,
+  type Placed,
+} from '../lib/packSheets'
 import { tokenMatch } from '../lib/textMatch'
 import { useAllEntities } from '../lib/useAllEntities'
 import { splitWikiText } from '../lib/wikiLinks'
 import { createWikiMarked } from '../lib/wikiMarked'
 import { specRowsFor, templateFor, TEMPLATES } from '../templates'
-
-/** Cards to a printed sheet. Mirrors the 2-column, 3-row grid in `.print-sheet`. */
-const PER_SHEET = 6
-
-/** How many spec rows fit a 94x84mm card before the overflow clips them. */
-const MAX_SPEC_ROWS = 8
-
-/** Characters of prose a card can hold under a full spec list. */
-const EXCERPT_CHARS = 420
 
 /**
  * One instance, deliberately built with **no name index**.
@@ -59,49 +77,48 @@ function sortTypes(types: string[]): string[] {
   })
 }
 
-function chunk<T>(items: T[], size: number): T[][] {
-  const out: T[][] = []
-  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size))
-  return out
+/** `expandPicks` keys a copy as `<id>#<n>`; this reads the entry back out. */
+function idOfKey(key: string): string {
+  const cut = key.lastIndexOf('#')
+  return cut < 0 ? key : key.slice(0, cut)
 }
 
 /**
- * Trim prose to something that fits the card, on a word boundary.
+ * Trim prose to the card's budget, on a word boundary.
  *
- * The CSS clips anything left over, so this is not what keeps the card honest
- * — it is what stops us handing the sanitiser half a megabyte of SRD rules
- * text per card and then hiding almost all of it.
+ * The budget comes from the card's real size, so a bigger card genuinely
+ * shows more. The CSS clips anything left over, so this is not what keeps the
+ * card honest — it is what stops us handing the sanitiser half a megabyte of
+ * SRD rules text and then hiding almost all of it.
  */
-function excerptOf(bodyMd: string): string {
-  if (bodyMd.length <= EXCERPT_CHARS) return bodyMd
-  const cut = bodyMd.slice(0, EXCERPT_CHARS)
+function excerptOf(bodyMd: string, budget: number): string {
+  if (bodyMd.length <= budget) return bodyMd
+  const cut = bodyMd.slice(0, budget)
   const lastSpace = cut.lastIndexOf(' ')
-  return `${(lastSpace > EXCERPT_CHARS * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`
+  return `${(lastSpace > budget * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`
 }
 
 /**
- * Pick entries, get a sheet of playing-card handouts.
+ * Pick entries, size the grid, get sheets of handouts.
  *
  * Rendered outside `Layout` — see the route split in `App.tsx`. The app chrome
  * is sticky, full-height and dark, none of which survives contact with a
  * printer, and framer-motion's inline `opacity: 0` cannot be overridden from a
- * print stylesheet. So this page owns its own frame and uses no motion at all.
+ * print stylesheet. So this page owns its own frame, and the cards themselves
+ * use no motion at all.
  */
 export default function PrintPage() {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
 
   /*
-    The selection lives in the query string rather than in state: a reload keeps
-    it, the back button works, and a DM can send someone the exact sheet.
+    Grid and selection both live in the query string rather than in state: a
+    reload keeps them, the back button works, and a DM can send someone the
+    exact sheet. Every reader falls back to a default, so a hand-edited or
+    pre-spans link still opens.
   */
-  const ids = useMemo(() => {
-    const raw = params.get('ids')
-    if (!raw) return [] as string[]
-    // Deduplicated, because a link can be hand-edited and a card printed twice
-    // by accident is wasted paper.
-    return [...new Set(raw.split(',').filter(Boolean))]
-  }, [params])
+  const grid = useMemo(() => parseGrid(params.get('grid')), [params])
+  const picks = useMemo(() => parsePicks(params.get('ids')), [params])
 
   /*
     On by default. An item card without its rules text, or an NPC card without
@@ -112,7 +129,6 @@ export default function PrintPage() {
 
   const all = useAllEntities()
   const pool = useMemo(() => all.data ?? [], [all.data])
-
   const byId = useMemo(() => new Map(pool.map((e) => [e.id, e])), [pool])
 
   /*
@@ -120,50 +136,57 @@ export default function PrintPage() {
     it, and a player following a DM's link may simply not be allowed to see one
     of them. Neither is an error worth a screen — drop them and say how many.
   */
-  const selected = useMemo(
-    () => ids.map((id) => byId.get(id)).filter((e): e is EntitySummary => Boolean(e)),
-    [ids, byId],
-  )
-  const missing = all.isLoading ? 0 : ids.length - selected.length
+  const live = useMemo(() => picks.filter((p) => byId.has(p.id)), [picks, byId])
+  const missing = all.isLoading ? 0 : picks.length - live.length
 
-  const setIds = useCallback(
-    (next: string[]) => {
-      const params = new URLSearchParams()
-      if (next.length > 0) params.set('ids', next.join(','))
-      if (!withBody) params.set('body', '0')
+  /** One writer, so the three controls cannot disagree about the other two. */
+  const write = useCallback(
+    (next: { grid?: Grid; picks?: Pick[]; body?: boolean }) => {
+      const nextGrid = next.grid ?? grid
+      const nextPicks = next.picks ?? picks
+      const nextBody = next.body ?? withBody
+
+      const out = new URLSearchParams()
+      if (nextPicks.length > 0) out.set('ids', formatPicks(nextPicks))
+      if (nextGrid.cols !== DEFAULT_GRID.cols || nextGrid.rows !== DEFAULT_GRID.rows) {
+        out.set('grid', formatGrid(nextGrid))
+      }
+      if (!nextBody) out.set('body', '0')
       // Replace, so picking ten entries does not leave ten history entries
       // between the sheet and the page the DM came from.
-      setParams(params, { replace: true })
+      setParams(out, { replace: true })
     },
-    [setParams, withBody],
+    [grid, picks, withBody, setParams],
   )
 
   const toggle = useCallback(
-    (id: string) => setIds(ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]),
-    [ids, setIds],
+    (id: string) =>
+      write({
+        picks: picks.some((p) => p.id === id)
+          ? picks.filter((p) => p.id !== id)
+          : [...picks, { id, w: 1, h: 1, n: 1 }],
+      }),
+    [picks, write],
   )
 
-  const setBody = useCallback(
-    (on: boolean) => {
-      const params = new URLSearchParams()
-      if (ids.length > 0) params.set('ids', ids.join(','))
-      if (!on) params.set('body', '0')
-      setParams(params, { replace: true })
-    },
-    [ids, setParams],
+  /** Change one entry's span or count, leaving its place in the order alone. */
+  const edit = useCallback(
+    (id: string, patch: Partial<Pick>) =>
+      write({ picks: picks.map((p) => (p.id === id ? { ...p, ...patch } : p)) }),
+    [picks, write],
   )
 
   /*
     `bodyMd` is deliberately absent from list responses, so the one thing the
     cached pool cannot answer is the prose excerpt. Fetch it per entry, and only
     when the toggle is on — keyed exactly as the entry page keys it, so coming
-    here from an entry costs nothing.
+    here from an entry costs nothing. One request per *entry*, not per copy.
   */
   const bodies = useQueries({
     queries: withBody
-      ? selected.map((e) => ({
-          queryKey: ['entity', e.id],
-          queryFn: (): Promise<Entity> => api.getEntity(e.id),
+      ? live.map((p) => ({
+          queryKey: ['entity', p.id],
+          queryFn: (): Promise<Entity> => api.getEntity(p.id),
           staleTime: 60_000,
         }))
       : [],
@@ -180,28 +203,58 @@ export default function PrintPage() {
 
   const bodiesLoading = withBody && bodies.some((q) => q.isLoading)
 
-  const sheets = useMemo(() => chunk(selected, PER_SHEET), [selected])
+  const cards = useMemo(() => expandPicks(live), [live])
+  const sheets = useMemo(
+    () => packSheets(cards, grid.cols, grid.rows),
+    [cards, grid.cols, grid.rows],
+  )
+
+  const chosen = useMemo(() => new Set(picks.map((p) => p.id)), [picks])
+
+  /** What the picks asked for, before the cap trimmed it. */
+  const wanted = useMemo(
+    () => live.reduce((sum, p) => sum + Math.max(1, Math.min(p.n, MAX_COUNT)), 0),
+    [live],
+  )
 
   return (
     <div className="print-root min-h-screen">
       <Controls
-        count={selected.length}
+        cards={cards.length}
         sheets={sheets.length}
         missing={missing}
+        trimmed={wanted - cards.length}
         withBody={withBody}
-        onBody={setBody}
-        onClear={() => setIds([])}
+        onBody={(body) => write({ body })}
+        onClear={() => write({ picks: [] })}
         onBack={() => navigate(-1)}
-        cards={sheets}
+        placed={sheets}
         bodyById={bodyById}
         waiting={all.isLoading || bodiesLoading}
       />
 
-      <div className="print-hide mx-auto w-full max-w-195 px-4.5 pb-10">
-        <Picker pool={pool} loading={all.isLoading} ids={ids} onToggle={toggle} />
+      <div className="print-hide mx-auto flex w-full max-w-195 flex-col gap-4 px-4.5 pb-10">
+        <GridPicker grid={grid} onChange={(next) => write({ grid: next })} />
+
+        {live.length > 0 && (
+          <SelectedPanel
+            picks={live}
+            byId={byId}
+            grid={grid}
+            onEdit={edit}
+            onRemove={(id) => write({ picks: picks.filter((p) => p.id !== id) })}
+          />
+        )}
+
+        <Picker
+          pool={pool}
+          loading={all.isLoading}
+          chosen={chosen}
+          onToggle={toggle}
+        />
       </div>
 
-      <Preview sheets={sheets} bodyById={bodyById} empty={selected.length === 0} />
+      <Preview sheets={sheets} grid={grid} byId={byId} bodyById={bodyById} />
     </div>
   )
 }
@@ -209,29 +262,31 @@ export default function PrintPage() {
 /* ── the bar above the sheet ──────────────────────────────────────── */
 
 function Controls({
-  count,
+  cards,
   sheets,
   missing,
+  trimmed,
   withBody,
   onBody,
   onClear,
   onBack,
-  cards,
+  placed,
   bodyById,
   waiting,
 }: {
-  count: number
+  cards: number
   sheets: number
   missing: number
+  trimmed: number
   withBody: boolean
   onBody: (on: boolean) => void
   onClear: () => void
   onBack: () => void
-  cards: EntitySummary[][]
+  placed: Placed[][]
   bodyById: Map<string, string>
   waiting: boolean
 }) {
-  const ready = useArtReady(cards, bodyById, waiting)
+  const ready = useArtReady(placed, bodyById, waiting)
 
   return (
     <div className="print-hide sticky top-0 z-10 border-b border-line bg-white/95 backdrop-blur">
@@ -246,9 +301,9 @@ function Controls({
         </button>
 
         <span className="type-meta tabular-nums">
-          {count === 0
+          {cards === 0
             ? 'Nothing selected'
-            : `${count} selected · ${sheets} sheet${sheets === 1 ? '' : 's'}`}
+            : `${cards} card${cards === 1 ? '' : 's'} · ${sheets} sheet${sheets === 1 ? '' : 's'}`}
         </span>
 
         <label className="type-meta flex cursor-pointer items-center gap-1.75">
@@ -262,7 +317,7 @@ function Controls({
         </label>
 
         <div className="ml-auto flex items-center gap-2.5">
-          {count > 0 && (
+          {cards > 0 && (
             <button
               type="button"
               className="type-meta cursor-pointer underline-offset-2 hover:underline"
@@ -274,11 +329,11 @@ function Controls({
           <button
             type="button"
             className={ctaClass('primary', 'w-auto px-5')}
-            disabled={count === 0 || !ready}
+            disabled={cards === 0 || !ready}
             onClick={() => window.print()}
           >
             <LuPrinter aria-hidden />
-            {count === 0 ? 'Print' : ready ? 'Print' : 'Loading art…'}
+            {cards === 0 ? 'Print' : ready ? 'Print' : 'Loading art…'}
           </button>
         </div>
 
@@ -286,6 +341,12 @@ function Controls({
           <div className="type-meta basis-full text-ink-faint">
             {missing} {missing === 1 ? 'entry was' : 'entries were'} skipped — deleted, or not
             yours to see.
+          </div>
+        )}
+
+        {trimmed > 0 && (
+          <div className="type-meta basis-full text-ink-faint">
+            Stopped at {MAX_CARDS} cards; {trimmed} more were not laid out.
           </div>
         )}
       </div>
@@ -297,19 +358,22 @@ function Controls({
  * Whether every card's art has actually decoded.
  *
  * `window.print()` freezes the page as it stands, so a click landing before the
- * images arrive prints a sheet of empty frames — and with four cards to a sheet
- * there are a lot of images in flight at once. The Print button stays disabled
+ * images arrive prints a sheet of empty frames — and a dense grid with copies
+ * puts a great many images in flight at once. The Print button stays disabled
  * until this says yes, which makes the race unreachable rather than unlikely.
  */
 function useArtReady(
-  cards: EntitySummary[][],
+  placed: Placed[][],
   bodyById: Map<string, string>,
   waiting: boolean,
 ): boolean {
   const [ready, setReady] = useState(false)
   // The identity of what is on the sheet, so a re-render does not re-arm this
-  // but changing the selection does.
-  const signature = cards.flat().map((e) => `${e.id}:${e.imageUrl ?? ''}`).join('|')
+  // but changing the selection or the grid does.
+  const signature = placed
+    .flat()
+    .map((c) => `${c.key}:${c.col},${c.row},${c.w}x${c.h}`)
+    .join('|')
 
   useEffect(() => {
     if (waiting) {
@@ -357,17 +421,167 @@ function useArtReady(
   return ready
 }
 
+/* ── how the sheet is divided ─────────────────────────────────────── */
+
+function GridPicker({ grid, onChange }: { grid: Grid; onChange: (next: Grid) => void }) {
+  return (
+    <div className={panelClass('flex flex-col gap-2.5')}>
+      <div className="type-lab">Sheet</div>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <Row label="Columns">
+          {COLUMN_CHOICES.map((cols) => (
+            <PillButton
+              key={cols}
+              tone={grid.cols === cols ? 'solid' : 'neutral'}
+              aria-pressed={grid.cols === cols}
+              onClick={() => onChange({ ...grid, cols })}
+            >
+              {cols}
+            </PillButton>
+          ))}
+        </Row>
+
+        <Row label="Rows">
+          {ROW_CHOICES.map((rows) => (
+            <PillButton
+              key={rows}
+              tone={grid.rows === rows ? 'solid' : 'neutral'}
+              aria-pressed={grid.rows === rows}
+              onClick={() => onChange({ ...grid, rows })}
+            >
+              {rows}
+            </PillButton>
+          ))}
+        </Row>
+
+        <span className="type-meta tabular-nums">
+          {grid.cols * grid.rows} cards a sheet
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-1.75">
+      <span className="type-meta">{label}</span>
+      {children}
+    </div>
+  )
+}
+
+/* ── what has been chosen, and how big ────────────────────────────── */
+
+function SelectedPanel({
+  picks,
+  byId,
+  grid,
+  onEdit,
+  onRemove,
+}: {
+  picks: Pick[]
+  byId: Map<string, EntitySummary>
+  grid: Grid
+  onEdit: (id: string, patch: Partial<Pick>) => void
+  onRemove: (id: string) => void
+}) {
+  return (
+    <div className={panelClass('flex flex-col gap-1')}>
+      <div className="type-lab">Selected</div>
+
+      {picks.map((pick) => {
+        const entity = byId.get(pick.id)
+        if (!entity) return null
+
+        return (
+          <div key={pick.id} className={cx(rowClass, 'flex-wrap gap-y-2')}>
+            <span className="min-w-0 flex-1 truncate">{entity.name}</span>
+
+            {/* Capped at the grid: a span wider than the sheet is clamped by
+                the packer anyway, so offering it would only mislead. */}
+            <Span
+              label="Wide"
+              value={pick.w}
+              max={grid.cols}
+              name={entity.name}
+              onChange={(w) => onEdit(pick.id, { w })}
+            />
+            <Span
+              label="Tall"
+              value={pick.h}
+              max={grid.rows}
+              name={entity.name}
+              onChange={(h) => onEdit(pick.id, { h })}
+            />
+            <Span
+              label="Copies"
+              value={pick.n}
+              max={MAX_COUNT}
+              name={entity.name}
+              onChange={(n) => onEdit(pick.id, { n })}
+            />
+
+            <StepButton label={`Remove ${entity.name}`} onClick={() => onRemove(pick.id)}>
+              <LuX aria-hidden />
+            </StepButton>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/** A labelled minus/number/plus triple, floored at one. */
+function Span({
+  label,
+  value,
+  max,
+  name,
+  onChange,
+}: {
+  label: string
+  value: number
+  max: number
+  name: string
+  onChange: (next: number) => void
+}) {
+  const shown = Math.min(value, max)
+
+  return (
+    <div className="flex shrink-0 items-center gap-1">
+      <span className="type-meta w-11 text-right">{label}</span>
+      <StepButton
+        label={`${name}: less ${label.toLowerCase()}`}
+        disabled={shown <= 1}
+        onClick={() => onChange(shown - 1)}
+      >
+        <LuMinus aria-hidden />
+      </StepButton>
+      <span className="type-meta w-5 text-center text-ink tabular-nums">{shown}</span>
+      <StepButton
+        label={`${name}: more ${label.toLowerCase()}`}
+        disabled={shown >= max}
+        onClick={() => onChange(shown + 1)}
+      >
+        <LuPlus aria-hidden />
+      </StepButton>
+    </div>
+  )
+}
+
 /* ── choosing what to print ───────────────────────────────────────── */
 
 function Picker({
   pool,
   loading,
-  ids,
+  chosen,
   onToggle,
 }: {
   pool: EntitySummary[]
   loading: boolean
-  ids: string[]
+  chosen: Set<string>
   onToggle: (id: string) => void
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -403,10 +617,8 @@ function Picker({
     return [...rows].sort((a, b) => a.name.localeCompare(b.name))
   }, [named, type])
 
-  const selectedSet = useMemo(() => new Set(ids), [ids])
-
   return (
-    <div className={panelClass('mt-4 flex flex-col gap-3')}>
+    <div className={panelClass('flex flex-col gap-3')}>
       <div className="relative flex items-center">
         <LuSearch
           className="pointer-events-none absolute left-3.25 size-3.75 text-ink-faint"
@@ -458,7 +670,7 @@ function Picker({
             renderItem={(e) => (
               <PickerRow
                 entity={e}
-                checked={selectedSet.has(e.id)}
+                checked={chosen.has(e.id)}
                 onToggle={() => onToggle(e.id)}
               />
             )}
@@ -497,16 +709,18 @@ function PickerRow({
 
 function Preview({
   sheets,
+  grid,
+  byId,
   bodyById,
-  empty,
 }: {
-  sheets: EntitySummary[][]
+  sheets: Placed[][]
+  grid: Grid
+  byId: Map<string, EntitySummary>
   bodyById: Map<string, string>
-  empty: boolean
 }) {
   const scale = usePreviewScale()
 
-  if (empty) {
+  if (sheets.length === 0) {
     return (
       <div className="print-hide mx-auto w-full max-w-195 px-4.5 pb-16">
         <Empty>Tick an entry above to build a sheet</Empty>
@@ -517,12 +731,12 @@ function Preview({
   return (
     <div className="print-preview mx-auto w-full max-w-195 px-4.5 pb-16">
       {/*
-        The sheet is a fixed 165mm wide so it prints true to size, which is far
-        wider than a phone. Scaling the preview keeps it honest — the card is
-        still 70x120mm, we are just looking at it from further away.
+        The sheet is a full 210mm page so it prints true to size, which is far
+        wider than a phone. Scaling the preview keeps it honest — the cards are
+        still their real size, we are just looking from further away.
 
         `zoom` rather than `transform: scale`, because a transform does not
-        change the layout box: the sheet would still claim its full 624px and
+        change the layout box: the sheet would still claim its full width and
         push a horizontal scrollbar onto the page it is supposed to fit inside.
         Print resets it, so none of this reaches the paper.
       */}
@@ -531,10 +745,29 @@ function Preview({
           {sheets.map((cards, i) => (
             // The outline separates one sheet from the next on screen. On
             // paper the sheet *is* the page, so the print rules drop it.
-            <div key={i} className="print-sheet border border-line">
-              {cards.map((entity) => (
-                <PrintCard key={entity.id} entity={entity} bodyMd={bodyById.get(entity.id)} />
-              ))}
+            <div
+              key={i}
+              className="print-sheet border border-line"
+              style={
+                {
+                  '--cols': grid.cols,
+                  '--rows': grid.rows,
+                } as React.CSSProperties
+              }
+            >
+              {cards.map((card) => {
+                const entity = byId.get(idOfKey(card.key))
+                if (!entity) return null
+                return (
+                  <PrintCard
+                    key={card.key}
+                    entity={entity}
+                    placed={card}
+                    grid={grid}
+                    bodyMd={bodyById.get(entity.id)}
+                  />
+                )
+              })}
             </div>
           ))}
         </div>
@@ -543,8 +776,8 @@ function Preview({
   )
 }
 
-/** The preview's on-screen scale. 208mm of sheet is about 786px at 96dpi. */
-const SHEET_PX = 786
+/** The preview's on-screen scale. A 210mm sheet is about 794px at 96dpi. */
+const SHEET_PX = 794
 
 function usePreviewScale(): number {
   const [scale, setScale] = useState(1)
@@ -564,7 +797,17 @@ function usePreviewScale(): number {
   return scale
 }
 
-function PrintCard({ entity, bodyMd }: { entity: EntitySummary; bodyMd?: string }) {
+function PrintCard({
+  entity,
+  placed,
+  grid,
+  bodyMd,
+}: {
+  entity: EntitySummary
+  placed: Placed
+  grid: Grid
+  bodyMd?: string
+}) {
   const template = templateFor(entity.type)
   const Icon = template.icon
   const [broken, setBroken] = useState(false)
@@ -572,22 +815,40 @@ function PrintCard({ entity, bodyMd }: { entity: EntitySummary; bodyMd?: string 
   const src = entity.imageUrl && !broken ? entity.imageUrl : null
 
   /*
-    Template order is priority order, so clipping the tail is the right cut:
-    an item's rarity matters more than its charges. The CSS would hide the
-    overflow anyway; capping here keeps the DOM honest about what is shown.
+    Template order is priority order, so dropping the tail is the right cut:
+    an item's rarity matters more than its charges. How many survive depends
+    on the card's height — a tall card used to throw away fields it had room
+    for. The CSS trims further on a card too short even for this.
   */
-  const rows = specRowsFor(entity.type, entity.data).slice(0, MAX_SPEC_ROWS)
+  const rows = specRowsFor(entity.type, entity.data).slice(
+    0,
+    specRowBudget(grid, placed.h),
+  )
 
   const ingredients =
     entity.type === 'recipe' ? ((entity.data as RecipeData).ingredients ?? []) : []
 
+  const budget = excerptBudget(grid, placed.w, placed.h, {
+    specRows: rows.length,
+    summary: Boolean(entity.summary),
+  })
+
   const html = useMemo(() => {
     if (!bodyMd) return null
-    return DOMPurify.sanitize(printMarked.parse(excerptOf(bodyMd)) as string)
-  }, [bodyMd])
+    return DOMPurify.sanitize(printMarked.parse(excerptOf(bodyMd, budget)) as string)
+  }, [bodyMd, budget])
 
   return (
-    <article className="print-card">
+    <article
+      className="print-card"
+      // Explicit placement from the packer. Auto-flow is left alone on
+      // purpose: `dense` would be a no-op here and would hide a lost
+      // placement instead of letting it show up in the preview.
+      style={{
+        gridColumn: `${placed.col} / span ${placed.w}`,
+        gridRow: `${placed.row} / span ${placed.h}`,
+      }}
+    >
       <div className="print-card-art">
         {src ? (
           // Eager and synchronous, unlike `Portrait`, which is lazy — a card
@@ -601,9 +862,9 @@ function PrintCard({ entity, bodyMd }: { entity: EntitySummary; bodyMd?: string 
           />
         ) : (
           // The band already centres its child, so this only stacks the two.
-          <div className="flex flex-col items-center gap-1 text-ink-muted">
-            <Icon aria-hidden className="size-6" />
-            <span className="text-[7.5px] tracking-[0.14em] uppercase">
+          <div className="print-card-fallback flex flex-col items-center gap-1 text-ink-muted">
+            <Icon aria-hidden />
+            <span className="text-[0.85em] tracking-[0.14em] uppercase">
               {template.portraitWord}
             </span>
           </div>
@@ -617,13 +878,13 @@ function PrintCard({ entity, bodyMd }: { entity: EntitySummary; bodyMd?: string 
           </h2>
           {/* Type only. A handout is always going to a player, so what the
               party is allowed to know is not a question the card answers. */}
-          <div className="mt-0.5 text-[7.4px] tracking-[0.13em] text-ink-faint uppercase">
+          <div className="mt-0.5 text-[0.84em] tracking-[0.13em] text-ink-faint uppercase">
             {template.label}
           </div>
         </div>
 
         {entity.summary && (
-          <p className="m-0 line-clamp-3 text-[8.4px] leading-[1.32] text-ink-dim">
+          <p className="print-card-summary m-0 line-clamp-3 text-[0.95em] leading-[1.32] text-ink-dim">
             {plainValue(entity.summary)}
           </p>
         )}
@@ -646,8 +907,8 @@ function PrintCard({ entity, bodyMd }: { entity: EntitySummary; bodyMd?: string 
             a printed card cannot know what the party is carrying by the time
             someone reads it. */}
         {ingredients.length > 0 && (
-          <div className="text-[8.2px] leading-[1.3] text-ink-dim">
-            <span className="text-[7.4px] tracking-[0.07em] text-ink-faint uppercase">
+          <div className="text-[0.92em] leading-[1.3] text-ink-dim">
+            <span className="text-[0.84em] tracking-[0.07em] text-ink-faint uppercase">
               Reagents{' '}
             </span>
             {ingredients.map((r) => `${r.qty}x ${r.name}`).join(' · ')}

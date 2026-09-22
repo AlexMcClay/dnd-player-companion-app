@@ -717,21 +717,19 @@
  * `.print-root` redefine the dark palette to ink-on-paper without touching a
  * single existing declaration, and without an !important anywhere.
  *
- * Cards are 94x84mm, six to a sheet in two columns of three.
+ * The sheet *is* the page: one A4, divided into `--cols` by `--rows` cells
+ * that a card fills. Nothing is measured in millimetres any more, so the grid
+ * cannot drift out of step with a count in JavaScript the way a hard-coded
+ * card size did.
  *
  * The page margin is zero and the sheet carries its own 8mm padding instead.
  * That is what removes the URL, date and page number a browser prints into the
  * margin — Chrome only draws them when the margin leaves room. 8mm also clears
  * the unprintable edge every consumer printer has.
  *
- * Sized to the A4 this stylesheet asks for, with a few millimetres of slack so
- * a rounding error cannot tip the last row onto a second page:
- *   width  8 + 94 + 4 + 94 + 8 = 208mm  of 210
- *   height 8 + 89x3 + 4x2 + 8  = 291mm  of 297
- *
- * On US Letter (216x279) the third row would not fit, but the @page rule below
- * names A4, so the dialog picks it; a printer loaded with Letter scales to the
- * printable area rather than dropping a row.
+ * A card therefore ranges from about 95x138mm at 2x2 down to 45x43mm at 4x6.
+ * Type scales with the card (see the clamp on `.print-card`) and the smallest
+ * cards drop content rather than clipping it mid-word.
  */
 
 .print-root {
@@ -765,25 +763,58 @@
 }
 
 /*
- * A card is a fixed box: a header band of art, then a content column that is
- * allowed to be clipped. Nothing inside may grow the box, or the grid stops
- * lining up with the paper.
+ * A card fills whatever cell the packer gave it: a header band of art, then a
+ * content column that is allowed to be clipped. Nothing inside may grow the
+ * box, or the grid stops lining up with the paper.
+ *
+ * `container: pcard / size` makes the card the reference for the `@container`
+ * rules below. It is named so a nested container cannot resolve to the wrong
+ * element, and the size flavour is safe here because a grid item in a fixed
+ * track does not take its size from its contents.
+ *
+ * The height is explicit rather than left to grid stretch: Firefox is
+ * unreliable sizing a size-container that only stretches.
+ *
+ * The scale itself is set one level down, on the card's two children, not on
+ * the card. A container-query unit used *on* the container resolves against
+ * that container's own ancestor, not against itself — the same trap as a
+ * container being unable to match its own query — so a clamp written here
+ * would silently measure the viewport and pin to its ceiling.
  */
 .print-card {
   display: flex;
   flex-direction: column;
-  width: 94mm;
-  height: 89mm;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
   overflow: hidden;
-  border: 1px solid var(--color-line);
+  /* Black, not the grey used for rules inside the card: this is the line
+     someone cuts along, so it wants to be unambiguous on paper. */
+  border: 1px solid #000000;
   background: #ffffff;
   color: #111111;
   font-family: var(--font-sans);
+  container: pcard / size;
+}
+
+/*
+ * The card's scale, and the only place a size is written in pixels: everything
+ * below is `em`, so this one clamp resizes a whole card.
+ *
+ * The affine form matters. A bare `2.12cqw` would sit on the 5.5px floor
+ * across most of the range and stop scaling exactly where it is needed; the
+ * offset lifts the small end so the curve actually runs between the two.
+ */
+.print-card-art,
+.print-card-body {
+  font-size: clamp(5.5px, calc(1.9px + 2.12cqw), 9.5px);
 }
 
 .print-card-art {
   display: flex;
-  height: 34mm;
+  /* A share of the card rather than a fixed band, so it tracks the cell. */
+  height: 38%;
   flex: none;
   align-items: center;
   justify-content: center;
@@ -797,6 +828,15 @@
    */
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
+}
+
+/*
+ * The stand-in when there is no art. Sized in `em` like everything else, so it
+ * does not sit lost in a big card or swamp a small one.
+ */
+.print-card-fallback svg {
+  width: 2.8em;
+  height: 2.8em;
 }
 
 /*
@@ -815,7 +855,7 @@
 
 .print-card-name {
   font-family: var(--font-serif);
-  font-size: 15px;
+  font-size: 1.72em;
   line-height: 1.12;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -826,7 +866,7 @@
 
 /* One step down once a name would otherwise need a third line. */
 .print-card-name.is-long {
-  font-size: 12.5px;
+  font-size: 1.43em;
 }
 
 .print-card-body {
@@ -862,7 +902,7 @@
   grid-template-columns: auto 1fr;
   gap: 0.15mm 1.8mm;
   margin: 0;
-  font-size: 7.8px;
+  font-size: 0.88em;
   line-height: 1.24;
 }
 
@@ -870,7 +910,7 @@
   color: var(--color-ink-faint);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  font-size: 6.6px;
+  font-size: 0.75em;
   align-self: baseline;
   /* A label like "D&D Beyond character id" would otherwise size the whole
      column and leave the values nowhere to go. */
@@ -888,7 +928,7 @@
   min-height: 0;
   flex: 1;
   overflow: hidden;
-  font-size: 8.2px;
+  font-size: 0.93em;
   line-height: 1.38;
   color: var(--color-ink-dim);
 }
@@ -919,7 +959,7 @@
 .print-card-prose h3 {
   margin: 0 0 0.8mm;
   font-family: var(--font-serif);
-  font-size: 9px;
+  font-size: 1.05em;
 }
 
 /* Tables and images cannot fit a 64mm column; drop them rather than overflow. */
@@ -930,15 +970,63 @@
 }
 
 /*
- * The sheet. Off-paper it is a preview, so it carries its own frame; the print
- * rules below strip that and take over pagination.
+ * What a small card gives up.
+ *
+ * Keyed on height, not width: shedding content is about how much room is left
+ * below the art, and the width is whatever the span asked for. Each rule
+ * targets a descendant, because a container cannot match its own query.
+ */
+@container pcard (max-height: 52mm) {
+  .print-card-prose {
+    display: none;
+  }
+}
+
+@container pcard (max-height: 44mm) {
+  .print-card-summary {
+    display: none;
+  }
+}
+
+@container pcard (max-height: 38mm) {
+  /* Template order is priority order, so the tail is the right thing to lose. */
+  .print-card dl > :nth-child(n + 7) {
+    display: none;
+  }
+}
+
+@container pcard (max-width: 50mm) {
+  .print-card-art {
+    height: 24%;
+  }
+}
+
+/*
+ * The sheet is exactly one page, divided into cells.
+ *
+ * `minmax(0, 1fr)` rather than a bare `1fr`: the bare form is
+ * `minmax(auto, 1fr)`, whose minimum is content-based, so one overfull card
+ * would stretch its track and knock the whole grid off the paper.
+ *
+ * 296mm rather than 297. Chromium's A4 page box is 1122.5px at 96dpi and
+ * layout floors it, so a full-height sheet is a sub-pixel too tall and emits a
+ * blank page after every sheet.
+ *
+ * `overflow: hidden` so a mis-sized card clips instead of fragmenting onto an
+ * extra page ahead of the break.
+ *
+ * Off-paper this is a preview and carries its own frame; the print rules below
+ * strip that and take over pagination.
  */
 .print-sheet {
+  box-sizing: border-box;
   display: grid;
-  grid-template-columns: 94mm 94mm;
-  grid-auto-rows: 89mm;
+  width: 210mm;
+  height: 296mm;
+  grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows, 3), minmax(0, 1fr));
   gap: 4mm;
-  justify-content: center;
+  overflow: hidden;
   padding: 8mm;
   background: #ffffff;
 }

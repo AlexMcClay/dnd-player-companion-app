@@ -131,6 +131,52 @@ export function Cta({
   )
 }
 
+/**
+ * A small square icon button, sized for a row of them.
+ *
+ * Lives here rather than beside its first caller because the print sheet needs
+ * the same control for spans and copies, and two of these drifting apart would
+ * show up as two different-looking steppers on one screen.
+ */
+export function StepButton({
+  label,
+  disabled,
+  onClick,
+  children,
+  tone = 'plain',
+  type = 'button',
+}: {
+  label: string
+  disabled?: boolean
+  onClick: () => void
+  children: ReactNode
+  /** Gold marks a button that does something other than nudge a number. */
+  tone?: 'plain' | 'gold'
+  type?: 'button' | 'submit'
+}) {
+  return (
+    <motion.button
+      type={type}
+      aria-label={label}
+      // Same words as the accessible name: an icon-only control needs to be
+      // answerable with a hover as well as with a screen reader.
+      title={label}
+      disabled={disabled}
+      className={cx(
+        'grid size-7 shrink-0 cursor-pointer place-items-center border disabled:opacity-40 [&>svg]:size-3',
+        tone === 'gold'
+          ? 'border-gold-dim bg-gold-tint text-gold'
+          : 'border-line text-ink-faint',
+      )}
+      whileTap={{ scale: 0.9 }}
+      transition={SPRING}
+      onClick={onClick}
+    >
+      {children}
+    </motion.button>
+  )
+}
+
 /* ── surfaces ─────────────────────────────────────────────────────── */
 
 /** Gold corner brackets, drawn with the two pseudo-elements. */
