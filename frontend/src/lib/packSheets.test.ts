@@ -8,6 +8,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  CARD_FONT,
+  cardFontCss,
   cardFontPx,
   cardSizeMm,
   DEFAULT_GRID,
@@ -261,10 +263,38 @@ test('a span beyond the grid is clamped to it', () => {
 })
 
 test('the text scale tracks width, between its floor and ceiling', () => {
-  assert.equal(cardFontPx(20), 5.5, 'floor')
-  assert.equal(cardFontPx(400), 9.5, 'ceiling')
-  assert.ok(cardFontPx(62) > 5.5 && cardFontPx(62) < 9.5, 'scales in between')
+  assert.equal(cardFontPx(20), CARD_FONT.floorPx, 'floor')
+  assert.equal(cardFontPx(400), CARD_FONT.ceilPx, 'ceiling')
+  assert.ok(cardFontPx(62) > CARD_FONT.floorPx && cardFontPx(62) < CARD_FONT.ceilPx)
   assert.ok(cardFontPx(95) > cardFontPx(62))
+})
+
+test('the smallest card text is not drastically smaller than the largest', () => {
+  // Card widths at four columns and at two, the extremes of the grid.
+  const narrow = cardFontPx(cardSizeMm({ cols: 4, rows: 3 }, 1, 1).w)
+  const wide = cardFontPx(cardSizeMm({ cols: 2, rows: 3 }, 1, 1).w)
+  const ratio = narrow / wide
+  // It used to be 0.58: 5.5px against 9.5px, about 4pt on paper.
+  assert.ok(ratio >= 0.72, `four-column text is ${(ratio * 100).toFixed(0)}% of two-column`)
+})
+
+test('no card text drops below a readable size', () => {
+  for (const cols of [2, 3, 4]) {
+    for (const rows of [2, 3, 4, 5, 6]) {
+      const px = cardFontPx(cardSizeMm({ cols, rows }, 1, 1).w)
+      assert.ok(px >= 7, `${cols}x${rows} renders at ${px.toFixed(2)}px`)
+    }
+  }
+})
+
+test('the CSS and the budgets read one curve', () => {
+  // The stylesheet takes this string verbatim, so its numbers must be the
+  // same constants cardFontPx computes with.
+  const css = cardFontCss()
+  for (const n of [CARD_FONT.floorPx, CARD_FONT.basePx, CARD_FONT.perCqw, CARD_FONT.ceilPx]) {
+    assert.ok(css.includes(String(n)), `${n} missing from ${css}`)
+  }
+  assert.match(css, /^clamp\(.+px, calc\(.+px \+ .+cqw\), .+px\)$/)
 })
 
 test('a bigger card gets a bigger excerpt — the whole point', () => {

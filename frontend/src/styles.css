@@ -800,16 +800,21 @@
 }
 
 /*
- * The card's scale, and the only place a size is written in pixels: everything
- * below is `em`, so this one clamp resizes a whole card.
+ * The card's scale. Everything below is `em`, so this one value resizes a
+ * whole card.
  *
- * The affine form matters. A bare `2.12cqw` would sit on the 5.5px floor
- * across most of the range and stop scaling exactly where it is needed; the
- * offset lifts the small end so the curve actually runs between the two.
+ * The curve itself is not written here. It lives in `CARD_FONT` in
+ * packSheets.ts, which the text budgets also read, and each sheet passes it
+ * down as `--card-font`. A copy here would drift from theirs, and the result —
+ * text cut short or clipped — gives no error to notice it by.
+ *
+ * No fallback on purpose. If the variable ever goes missing the cards render
+ * at the page's body size, which is obviously wrong in the preview, rather
+ * than at a plausible-looking stale value that quietly disagrees.
  */
 .print-card-art,
 .print-card-body {
-  font-size: clamp(5.5px, calc(1.9px + 2.12cqw), 9.5px);
+  font-size: var(--card-font);
 }
 
 .print-card-art {
@@ -928,24 +933,26 @@
 }
 
 /*
- * The title row: the name against the left edge, the type badge against the
- * right, sharing a baseline.
+ * The title: the name, with the type badge in the top-right corner of it and
+ * the name's words wrapping round the badge.
  *
- * It wraps rather than squeezing. On the narrowest cards a 45mm column cannot
- * hold both, and a badge shoved onto its own line below the name is far
- * better than a name crushed to three characters beside it.
+ * Floats, not flexbox. Flex items never share a line, so when a long name and
+ * its badge would not both fit — which the larger text on a four-column card
+ * made routine — flexbox could only drop one of them onto a line of its own.
+ * Text flows around a float instead: the badge keeps its place on the first
+ * line and the name takes whatever room is left, then the full width below.
+ *
+ * `flow-root` contains the floats, so the rule under the title always starts
+ * below them however short the name is.
  */
 .print-card-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.2em 0.6em;
+  display: flow-root;
 }
 
-/* Pushed to the far end by its own margin rather than by space-between, which
-   would spread three children apart once a thumbnail joins the row. */
 .print-card-head .print-card-kind {
-  margin-left: auto;
+  float: right;
+  /* Level with the name's first line rather than flush with its top edge. */
+  margin: 0.45em 0 0.3em 0.6em;
 }
 
 /*
@@ -960,8 +967,6 @@
  */
 .print-card-thumb {
   display: flex;
-  flex: none;
-  align-self: center;
   align-items: center;
   justify-content: center;
   width: 4.6em;
@@ -972,6 +977,34 @@
   color: var(--color-ink-muted);
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
+}
+
+/*
+ * The simplified card's portrait floats left, so the name wraps round it as
+ * well as round the badge: beside the portrait first, then the full width once
+ * past it. It used to sit in a flex row, where a name too long to fit beside
+ * it dropped below whole and left a blank strip.
+ */
+.print-card-simple .print-card-thumb {
+  float: left;
+  margin: 0 0.7em 0.3em 0;
+}
+
+/*
+ * The type, leading a simplified card's summary line.
+ *
+ * Set like the badge it replaces — dark, tracked capitals — so it still reads
+ * as a label rather than as the first word of the summary.
+ */
+.print-card-meta-kind {
+  color: #1f1f1f;
+  font-size: 0.86em;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.print-card-meta-sep {
+  color: var(--color-ink-faint);
 }
 
 /*
@@ -995,16 +1028,17 @@
   height: 48%;
 }
 
+/*
+ * Ordinary text on purpose. It used to be clamped to two lines, but the clamp
+ * needs `display: -webkit-box`, and that — like `overflow: hidden` — starts a
+ * new formatting context, which sits beside a float as a narrowed block instead
+ * of wrapping round it. A very long name can now reach a third line; the
+ * card's own overflow remains the backstop.
+ */
 .print-card-name {
   font-family: var(--font-serif);
   font-size: 1.72em;
   line-height: 1.12;
-  min-width: 0;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
 }
 
 /* One step down once a name would otherwise need a third line. */
@@ -1125,6 +1159,12 @@
   }
 }
 
+/*
+ * On a normal card `.print-card-summary` is the whole line. On a simplified
+ * card it is only the summary *text*, sitting after the type in the same line
+ * — so a small simplified card loses its summary but keeps its type, which by
+ * then is the only place the type appears.
+ */
 @container pcard (max-height: 44mm) {
   .print-card-summary {
     display: none;

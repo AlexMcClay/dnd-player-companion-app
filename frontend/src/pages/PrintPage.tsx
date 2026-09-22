@@ -20,6 +20,7 @@ import {
 import {
   COLUMN_CHOICES,
   DEFAULT_GRID,
+  cardFontCss,
   excerptBudget,
   expandPicks,
   formatGrid,
@@ -942,6 +943,8 @@ function Preview({
                 {
                   '--cols': grid.cols,
                   '--rows': grid.rows,
+                  // The text scale, from the one definition the budgets use.
+                  '--card-font': CARD_FONT_CSS,
                   /*
                     The registration correction, on the backs only.
 
@@ -979,6 +982,9 @@ function Preview({
     </div>
   )
 }
+
+/** Built once: it depends on nothing but the constants. */
+const CARD_FONT_CSS = cardFontCss()
 
 /** The preview's on-screen scale. A 210mm sheet is about 794px at 96dpi. */
 const SHEET_PX = 794
@@ -1080,7 +1086,8 @@ function PrintCard({
 
   const budget = excerptBudget(grid, placed.w, placed.h, {
     specRows: rows.length,
-    summary: Boolean(entity.summary),
+    // A simplified card always has a summary line: it carries the type.
+    summary: simple || Boolean(entity.summary),
     simple,
   })
 
@@ -1096,6 +1103,13 @@ function PrintCard({
   const art = src ? (
     <img src={src} alt="" loading="eager" decoding="sync" onError={() => setBroken(true)} />
   ) : null
+
+  const kind = (
+    <div className="print-card-kind">
+      <Icon aria-hidden />
+      {template.label}
+    </div>
+  )
 
   return (
     <article
@@ -1132,21 +1146,46 @@ function PrintCard({
               // simplified card never has a hole where a picture should be.
               <div className="print-card-thumb">{art ?? <Icon aria-hidden />}</div>
             )}
+            {/* The badge floats right, and a float only shapes the text that
+                comes after it — so it has to precede the name for the name's
+                first line to wrap round it.
+
+                A simplified card has none: its title row already holds the
+                portrait, and a badge squeezed in beside both left the name a
+                sliver. The type moves down into the summary line instead. */}
+            {!simple && kind}
             <h2 className={cx('print-card-name', entity.name.length > 28 && 'is-long')}>
               {entity.name}
             </h2>
-            <div className="print-card-kind">
-              <Icon aria-hidden />
-              {template.label}
-            </div>
           </div>
           <div className="print-card-crest" aria-hidden />
         </div>
 
-        {entity.summary && (
-          <p className="print-card-summary m-0 line-clamp-3 text-[0.95em] leading-[1.32] text-ink-dim">
-            {plainValue(entity.summary)}
+        {simple ? (
+          /*
+            The type leads the summary. This line always renders on a
+            simplified card, summary or not, because it is now the only place
+            the type appears. The summary text is its own span so the smallest
+            cards can drop it and still keep the type — see the container
+            query that trims summaries.
+          */
+          <p className="print-card-meta m-0 line-clamp-3 text-[0.95em] leading-[1.32] text-ink-dim">
+            <span className="print-card-meta-kind">{template.label}</span>
+            {entity.summary && (
+              <span className="print-card-summary">
+                <span className="print-card-meta-sep" aria-hidden>
+                  {' · '}
+                </span>
+                {plainValue(entity.summary)}
+              </span>
+            )}
           </p>
+        ) : (
+          entity.summary && (
+            <p className="print-card-summary m-0 line-clamp-3 text-[0.95em] leading-[1.32] text-ink-dim">
+              {plainValue(entity.summary)}
+            </p>
+          )
         )}
 
         {(rows.length > 0 || ingredients.length > 0) && <div className="print-rule" />}

@@ -296,14 +296,45 @@ export function cardSizeMm(grid: Grid, w: number, h: number): { w: number; h: nu
 }
 
 /**
- * The card's text scale, in pixels.
+ * How a card's text scales with its width.
  *
- * Mirrors the `clamp(5.5px, calc(1.9px + 2.12cqw), 9.5px)` on the card's
- * children, because the number of characters that fit depends on it. Two
- * copies of one curve is a real cost, so the CSS names this function.
+ * The one definition. The stylesheet does not carry its own copy: the sheet
+ * hands it this curve as a CSS variable, because how many characters fit on a
+ * card depends on it and two copies drift. They had — and the symptom is text
+ * cut off too early or clipped too late, which nothing would flag.
+ *
+ * The floor is deliberately high. It was 5.5px, about 4pt on paper, which is
+ * where four-column cards landed and where they stopped being comfortable to
+ * read. The smallest text is now about three quarters of the largest rather
+ * than a little over half, and a narrow card that cannot fit as much simply
+ * shows less — the content tiers and the text budgets already handle that.
  */
+export const CARD_FONT = {
+  /** Never smaller than this, in px. About 5.25pt on paper. */
+  floorPx: 7,
+  /** Never larger than this, in px. */
+  ceilPx: 9.5,
+  /** The curve between: `basePx + perCqw% of the card's width`. */
+  basePx: 5.1,
+  perCqw: 1.22,
+} as const
+
+/** The card's text scale in pixels, for a card this many millimetres wide. */
 export function cardFontPx(widthMm: number): number {
-  return Math.min(9.5, Math.max(5.5, 1.9 + 0.0212 * widthMm * PX_PER_MM))
+  const widthPx = widthMm * PX_PER_MM
+  const raw = CARD_FONT.basePx + (CARD_FONT.perCqw / 100) * widthPx
+  return Math.min(CARD_FONT.ceilPx, Math.max(CARD_FONT.floorPx, raw))
+}
+
+/**
+ * The same curve, as CSS, for the sheet to hand down as `--card-font`.
+ *
+ * `cqw` inside a custom property is resolved where the property is *used*, not
+ * where it is set, so declaring it on the sheet still measures each card.
+ */
+export function cardFontCss(): string {
+  const { floorPx, basePx, perCqw, ceilPx } = CARD_FONT
+  return `clamp(${floorPx}px, calc(${basePx}px + ${perCqw}cqw), ${ceilPx}px)`
 }
 
 /** Card width below which the art band shrinks. Mirrors the container query. */
