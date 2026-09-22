@@ -1079,7 +1079,7 @@
   grid-template-columns: auto 1fr;
   gap: 0.15mm 1.8mm;
   margin: 0;
-  font-size: 0.88em;
+  font-size: 0.95em;
   line-height: 1.24;
 }
 
@@ -1105,7 +1105,7 @@
   min-height: 0;
   flex: 1;
   overflow: hidden;
-  font-size: 0.93em;
+  font-size: 1em;
   line-height: 1.38;
   color: var(--color-ink-dim);
 }
@@ -1139,11 +1139,63 @@
   font-size: 1.05em;
 }
 
-/* Tables and images cannot fit a 64mm column; drop them rather than overflow. */
-.print-card-prose table,
+/*
+ * Images and code blocks stay out: the card has its own art, and a code block
+ * is not something a handout needs. Tables used to be dropped too, on the
+ * grounds that they could not fit a 64mm column — true when every card was
+ * that size, and wrong once a card could span the sheet. They print now.
+ */
 .print-card-prose img,
 .print-card-prose pre {
   display: none;
+}
+
+/*
+ * Tables, sized with the card.
+ *
+ * The prose carries the app's `.md` class, whose table rules are in fixed
+ * pixels for a screen — 12.5px text and 7px of padding, fine in a browser and
+ * far too big on a card. These are in `em`, so a table scales with the card
+ * like the rest of it, and they win because they sit outside every layer.
+ *
+ * Rules are borders, which a printer always keeps, in the darker line tone: the
+ * `.md` hairline is #e2e2e2 here and all but vanishes once printed. Cells wrap
+ * rather than widening the table, so it never pushes past the card's edge.
+ */
+.print-card-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.2em 0 1.2mm;
+  font-size: 0.94em;
+}
+
+.print-card-prose th,
+.print-card-prose td {
+  padding: 0.22em 0.5em;
+  border-bottom: 0.25mm solid var(--color-line);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+/* Flush with the paragraph above it rather than indented by its padding. */
+.print-card-prose th:first-child,
+.print-card-prose td:first-child {
+  padding-left: 0;
+}
+
+.print-card-prose th {
+  font-size: 0.82em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  /* A firmer rule under the header than between the rows. */
+  border-bottom-color: var(--color-ink-muted);
+}
+
+.print-card-prose tr:last-child td {
+  border-bottom: 0;
 }
 
 /*

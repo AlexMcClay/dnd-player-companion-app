@@ -369,7 +369,11 @@ export function excerptBudget(
   // lines, an optional summary, and the spec table. A simplified card spends
   // no height on art at all — its thumbnail sits on the name's own line.
   const artMm = simple ? 0 : size.h * (size.w <= NARROW_MM ? 0.24 : 0.38)
-  const headerMm = fontMm * (2.6 + specRows * 1.1 + (summary ? 2.6 : 0))
+  // Heights in multiples of the card's text size: the name and type lines, a
+  // spec row (0.95em at 1.24 line height), and a summary of about two lines.
+  // These track the stylesheet; enlarge the text there and they must follow,
+  // or the budget over-promises and the prose runs off the bottom of the card.
+  const headerMm = fontMm * (2.6 + specRows * 1.2 + (summary ? 2.8 : 0))
   const proseMm = size.h - artMm - 6 - headerMm
   if (proseMm <= 0) return 0
 
@@ -392,6 +396,80 @@ export function specRowBudget(grid: Grid, h: number, simple = false): number {
   // A simplified card has the art band's height back, so it can show the
   // fields a normal one of the same size had to drop.
   return clamp(Math.round((simple ? size.h * 1.45 : size.h) / 11), 3, 16)
+}
+
+/* ── trimming prose to fit ────────────────────────────────────────── */
+
+/** A markdown table row: GFM tables are runs of lines that start with a pipe. */
+const TABLE_ROW = /^\s*\|/
+
+/**
+ * How far past its budget an excerpt may run to keep a table whole.
+ *
+ * A table the cut lands in is either kept entire or dropped entire, because
+ * half a table is worse than none: the markdown breaks and prints as a row of
+ * stray pipes. When the whole table ends within this much of the budget it is
+ * kept — the card's own overflow clips anything genuinely too tall — and past
+ * that it is left out, with the ellipsis saying there was more.
+ */
+const TABLE_SLACK = 1.5
+
+/**
+ * Trim markdown to a character budget without ever cutting through a table.
+ *
+ * Prose is cut on a word boundary, as it always was. The difference is tables:
+ * a cut that would land inside one either takes the whole table or stops just
+ * before it, and a word-boundary backtrack is never allowed to reach back into
+ * a table that ended before the budget.
+ */
+export function excerptOf(bodyMd: string, budget: number): string {
+  if (bodyMd.length <= budget) return bodyMd
+
+  const lines = bodyMd.split('\n')
+  // The end of the last table that finishes before the budget. A word-boundary
+  // backtrack must not reach back past it.
+  let floor = 0
+  let offset = 0
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i] ?? ''
+    if (!TABLE_ROW.test(line)) {
+      offset += line.length + 1
+      continue
+    }
+
+    // The whole table block this row starts.
+    const start = offset
+    let end = offset + line.length
+    let j = i
+    while (j + 1 < lines.length && TABLE_ROW.test(lines[j + 1] ?? '')) {
+      j++
+      end += 1 + (lines[j] ?? '').length
+    }
+
+    if (end <= budget) {
+      // Wholly inside the budget: keep it, and never cut back into it.
+      floor = end
+    } else if (start < budget) {
+      // The budget lands inside this table.
+      const more = end < bodyMd.trimEnd().length
+      if (end <= budget * TABLE_SLACK) {
+        return bodyMd.slice(0, end).trimEnd() + (more ? '\n\n…' : '')
+      }
+      return `${bodyMd.slice(0, start).trimEnd()}\n\n…`
+    } else {
+      // Starts after the budget, so the prose cut below never reaches it.
+      break
+    }
+
+    offset = end + 1
+    i = j
+  }
+
+  const cut = bodyMd.slice(0, budget)
+  const lastSpace = cut.lastIndexOf(' ')
+  const at = lastSpace > budget * 0.6 && lastSpace >= floor ? lastSpace : budget
+  return `${bodyMd.slice(0, Math.max(at, floor)).trimEnd()}…`
 }
 
 /* ── the query string ─────────────────────────────────────────────── */

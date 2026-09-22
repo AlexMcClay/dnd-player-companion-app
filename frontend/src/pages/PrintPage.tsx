@@ -22,6 +22,7 @@ import {
   DEFAULT_GRID,
   cardFontCss,
   excerptBudget,
+  excerptOf,
   expandPicks,
   formatGrid,
   formatNudge,
@@ -90,21 +91,6 @@ function sortTypes(types: string[]): string[] {
 function idOfKey(key: string): string {
   const cut = key.lastIndexOf('#')
   return cut < 0 ? key : key.slice(0, cut)
-}
-
-/**
- * Trim prose to the card's budget, on a word boundary.
- *
- * The budget comes from the card's real size, so a bigger card genuinely
- * shows more. The CSS clips anything left over, so this is not what keeps the
- * card honest — it is what stops us handing the sanitiser half a megabyte of
- * SRD rules text and then hiding almost all of it.
- */
-function excerptOf(bodyMd: string, budget: number): string {
-  if (bodyMd.length <= budget) return bodyMd
-  const cut = bodyMd.slice(0, budget)
-  const lastSpace = cut.lastIndexOf(' ')
-  return `${(lastSpace > budget * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`
 }
 
 /**
@@ -1096,6 +1082,57 @@ function PrintCard({
     return DOMPurify.sanitize(printMarked.parse(excerptOf(bodyMd, budget)) as string)
   }, [bodyMd, budget])
 
+  const proseRef = useRef<HTMLDivElement>(null)
+
+  /*
+    A table either fits on the card or is left out — never sliced by the
+    card's bottom edge. The character budget cannot judge this: a table row
+    costs a full line however few characters it holds, so a short table can
+    still be far too tall. So it is measured, after layout, and any table that
+    runs past the bottom is hidden along with every table after it, leaving an
+    ellipsis where it stood.
+
+    Measured again once the webfonts land, because they change line heights.
+    The DOM is edited in place rather than through state: the prose is set as
+    innerHTML, which React leaves alone while the string is unchanged, and
+    re-rendering to hide a table would change the very layout being measured.
+  */
+  useLayoutEffect(() => {
+    const prose = proseRef.current
+    const body = prose?.parentElement
+    if (!prose || !body) return
+
+    const fit = () => {
+      const tables = [...prose.querySelectorAll('table')]
+      if (tables.length === 0) return
+
+      // Start from everything shown, so a re-measure can bring one back.
+      prose.querySelector('.print-card-more')?.remove()
+      for (const table of tables) table.style.display = ''
+
+      // A pixel of clearance, so a table that only just fits on screen does
+      // not tip over the edge once print re-lays it out at full size.
+      const limit = body.getBoundingClientRect().bottom - 1
+      const first = tables.findIndex((t) => t.getBoundingClientRect().bottom > limit)
+      if (first < 0) return
+
+      for (const table of tables.slice(first)) table.style.display = 'none'
+      const more = document.createElement('p')
+      more.className = 'print-card-more'
+      more.textContent = '…'
+      tables[first]?.before(more)
+    }
+
+    fit()
+    let live = true
+    void document.fonts?.ready.then(() => {
+      if (live) fit()
+    })
+    return () => {
+      live = false
+    }
+  }, [html])
+
   // Eager and synchronous, unlike `Portrait`, which is lazy — a card below the
   // fold must still have its art in hand when print fires. Built once and
   // placed in either the band or the thumbnail, so the two cannot disagree
@@ -1169,7 +1206,7 @@ function PrintCard({
             cards can drop it and still keep the type — see the container
             query that trims summaries.
           */
-          <p className="print-card-meta m-0 line-clamp-3 text-[0.95em] leading-[1.32] text-ink-dim">
+          <p className="print-card-meta m-0 line-clamp-3 text-[1.02em] leading-[1.32] text-ink-dim">
             <span className="print-card-meta-kind">{template.label}</span>
             {entity.summary && (
               <span className="print-card-summary">
@@ -1182,7 +1219,7 @@ function PrintCard({
           </p>
         ) : (
           entity.summary && (
-            <p className="print-card-summary m-0 line-clamp-3 text-[0.95em] leading-[1.32] text-ink-dim">
+            <p className="print-card-summary m-0 line-clamp-3 text-[1.02em] leading-[1.32] text-ink-dim">
               {plainValue(entity.summary)}
             </p>
           )
@@ -1215,7 +1252,11 @@ function PrintCard({
         )}
 
         {html && (
-          <div className="print-card-prose md" dangerouslySetInnerHTML={{ __html: html }} />
+          <div
+            ref={proseRef}
+            className="print-card-prose md"
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
         )}
       </div>
     </article>

@@ -14,6 +14,7 @@ import {
   cardSizeMm,
   DEFAULT_GRID,
   excerptBudget,
+  excerptOf,
   MAX_CARDS,
   expandPicks,
   formatGrid,
@@ -510,4 +511,78 @@ test('a simplified card still cannot have a negative budget', () => {
       assert.ok(budget >= 0, `${cols}x${rows} produced ${budget}`)
     }
   }
+})
+
+/* ── trimming a body without breaking its tables ──────────────────── */
+
+const POTION = [
+  'You regain hit points when you drink this potion.',
+  '',
+  'Potions of Healing (table)',
+  '',
+  '| Potion of | Rarity | HP Regained |',
+  '|---|---|---|',
+  '| Healing | Common | 2d4 + 2 |',
+  '| Greater healing | Uncommon | 4d4 + 4 |',
+  '| Superior healing | Rare | 8d4 + 8 |',
+].join('\n')
+
+const tableStart = POTION.indexOf('| Potion of')
+
+/** Every table row that survives has all of its cells, or none survive. */
+function tableIsWhole(out: string): boolean {
+  const rows = out.split('\n').filter((l) => l.trim().startsWith('|'))
+  return rows.length === 0 || rows.length === 5
+}
+
+test('a body within budget comes back untouched', () => {
+  assert.equal(excerptOf(POTION, 10_000), POTION)
+})
+
+test('ordinary prose is still cut on a word boundary', () => {
+  const out = excerptOf('one two three four five six seven', 20)
+  assert.ok(out.endsWith('…'))
+  assert.ok(!/\w…$/.test(out.replace(/ …$/, '')) || out === 'one two three four…')
+})
+
+test('a cut landing inside a table keeps the table whole when it nearly fits', () => {
+  // A budget that lands in the table's last row, so its end is well within
+  // the slack. (A budget only just into the table is too far short: this
+  // table is 159 characters, more than half the whole body.)
+  const out = excerptOf(POTION, POTION.length - 10)
+  assert.ok(tableIsWhole(out), out)
+  assert.ok(out.includes('Superior healing'), 'the whole table was kept')
+})
+
+test('a cut landing inside a table drops it when it is far too big', () => {
+  // A tiny budget that only just reaches the table.
+  const out = excerptOf(POTION, tableStart + 2)
+  const slackEnd = POTION.length
+  if (slackEnd > (tableStart + 2) * 1.5) {
+    assert.ok(!out.includes('|'), 'no stray pipes')
+    assert.ok(out.includes('Potions of Healing (table)'), 'the prose before it survives')
+    assert.ok(out.endsWith('…'), 'and says there was more')
+  }
+})
+
+test('a table is never printed as a fragment, at any budget', () => {
+  for (let budget = 1; budget <= POTION.length + 5; budget++) {
+    assert.ok(tableIsWhole(excerptOf(POTION, budget)), `budget ${budget} broke the table`)
+  }
+})
+
+test('a word-boundary backtrack never reaches back into an earlier table', () => {
+  const body = `${POTION}\n\nAfterwardswithoutanyspacesatallforaverylongstretch.`
+  for (let budget = POTION.length; budget <= body.length; budget++) {
+    assert.ok(tableIsWhole(excerptOf(body, budget)), `budget ${budget} broke the table`)
+  }
+})
+
+test('prose after a kept table is cut normally', () => {
+  const body = `${POTION}\n\nThe liquid glimmers when agitated, and tastes faintly of copper.`
+  // Far enough past the table to reach "glimmers", short of the whole line.
+  const out = excerptOf(body, POTION.length + 32)
+  assert.ok(tableIsWhole(out))
+  assert.ok(out.includes('glimmers'))
+  assert.ok(out.endsWith('…'))
 })
