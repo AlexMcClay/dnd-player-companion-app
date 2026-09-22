@@ -1,4 +1,4 @@
-import { useQueries } from '@tanstack/react-query'
+import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query'
 import type { Entity, EntitySummary, RecipeData } from '@codex/shared'
 import DOMPurify from 'dompurify'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
@@ -45,8 +45,8 @@ import {
   type Pick,
   type Placed,
 } from '../lib/packSheets'
-import { tokenMatch } from '../lib/textMatch'
 import { useAllEntities } from '../lib/useAllEntities'
+import { useDebounced } from '../lib/useDebounced'
 import { splitWikiText } from '../lib/wikiLinks'
 import { createWikiMarked } from '../lib/wikiMarked'
 import { specRowsFor, templateFor, TEMPLATES } from '../templates'
@@ -764,31 +764,57 @@ function Picker({
   const needle = query.trim()
 
   /*
-    Name-only and client-side, the same call `AddItemSheet` makes and for the
-    same reason: by the time you are printing a card you know what it is
-    called, and matching body text would bury "Red Larch" under every entry
-    whose prose mentions it. `tokenMatch` is token-AND, so "veln harbour"
-    finds "Harbourmaster Veln".
+    The same search the Search page runs, not a lookalike. It goes to the
+    server, which matches name, summary, body and tags, finds partial words
+    ("harbour" finds the Harbourmaster) and ranks by relevance. The query key
+    and debounce are the Search page's exactly, so a search run on either page
+    is already cached for the other.
+
+    It used to be a name-only match done here in the browser, which is why the
+    two pages disagreed about what a search should find.
   */
-  const named = useMemo(
-    () => (needle ? pool.filter((e) => tokenMatch(e.name, needle)) : pool),
-    [pool, needle],
+  const debounced = useDebounced(query)
+  const searched = useQuery({
+    queryKey: ['entities', 'search', { q: debounced, tag: '' }],
+    queryFn: () => api.listEntities({ q: debounced || undefined }),
+    enabled: debounced.trim().length > 0,
+    // Keep the last results up while the next request is in flight, rather
+    // than blanking the list on every keystroke.
+    placeholderData: keepPreviousData,
+  })
+
+  /*
+    With nothing typed, the picker still lists everything: unlike the Search
+    page it has to offer something to pick from. With a query, it shows what
+    the server found — and waits for that rather than showing a false
+    "nothing matches" in the moment before the first answer arrives.
+  */
+  const searching = needle.length > 0
+  const waiting = searching && searched.data === undefined
+  const base = useMemo(
+    () => (searching ? (searched.data ?? []) : pool),
+    [searching, searched.data, pool],
   )
 
-  // Counts come off the name-filtered set, so a chip tells you what it would
+  // Counts come off what the search found, so a chip tells you what it would
   // actually yield rather than what the whole codex holds.
   const counts = useMemo(() => {
     const map = new Map<string, number>()
-    for (const e of named) map.set(e.type, (map.get(e.type) ?? 0) + 1)
+    for (const e of base) map.set(e.type, (map.get(e.type) ?? 0) + 1)
     return map
-  }, [named])
+  }, [base])
 
   const types = useMemo(() => sortTypes([...counts.keys()]), [counts])
 
+  /*
+    Search results keep the server's order, which is relevance: re-sorting
+    them by name would throw away the one thing that makes the best match
+    come first. Browsing, with nothing typed, is alphabetical.
+  */
   const matches = useMemo(() => {
-    const rows = type ? named.filter((e) => e.type === type) : named
-    return [...rows].sort((a, b) => a.name.localeCompare(b.name))
-  }, [named, type])
+    const rows = type ? base.filter((e) => e.type === type) : base
+    return searching ? rows : [...rows].sort((a, b) => a.name.localeCompare(b.name))
+  }, [base, type, searching])
 
   return (
     <div className={panelClass('flex flex-col gap-3')}>
@@ -799,8 +825,9 @@ function Picker({
         />
         <input
           className={cx(inputClass, 'pl-9.5')}
+          type="search"
           value={query}
-          placeholder="Search entries…"
+          placeholder="People, beasts, items, recipes…"
           onChange={(e) => {
             setQuery(e.target.value)
             scrollRef.current?.scrollTo({ top: 0 })
@@ -811,7 +838,7 @@ function Picker({
       <div className="flex flex-wrap gap-1.75">
         <Chip
           label="All"
-          count={named.length}
+          count={base.length}
           selected={type === null}
           onClick={() => setType(null)}
         />
@@ -830,7 +857,7 @@ function Picker({
       </div>
 
       <div ref={scrollRef} className="max-h-96 overflow-y-auto">
-        {loading ? (
+        {loading || waiting ? (
           <Loading />
         ) : matches.length === 0 ? (
           <Empty>Nothing matches</Empty>
